@@ -1,0 +1,17 @@
+METHOD          : POST
+PROTOCOL        : https
+HOSTNAME        : adwords.google.com
+PATH            : /api/adwords/reportdownload/
+
+API_VERSION     : v201509
+
+AWQL_QUERY      : __rdquery
+RESPONSE_FORMAT : __fmt
+
+AUTHORIZATION   : Authorization
+TOKEN_TYPE      : Bearer
+ADWORDS_ID      : clientCustomerId
+DEVELOPER_TOKEN : developerToken
+
+CONNECT_TIME_OUT: 1
+TIME_OUT        : 600
