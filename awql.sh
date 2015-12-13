@@ -3,33 +3,31 @@
 ##
 # Provide interface to request Google Adwords with AWQL queries
 
-source inc.common.sh
-
 # Envionnement
-getDirectoryPath "${BASH_SOURCE[0]}"
-SCRIPT_ROOT="$DIRECTORY_PATH"
 SCRIPT=$(basename ${BASH_SOURCE[0]})
+SCRIPT_PATH="$0"; while [ -h "$SCRIPT_PATH" ]; do SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"; done
+ROOT_DIR=$(dirname $SCRIPT_PATH)
 
-# Workspace
-if [ -n "$WRK_DIR" ]; then
-    mkdir -p "$WRK_DIR"
-fi
+# Requires
+source "${ROOT_DIR}/conf/awql.sh"
+source "${ROOT_DIR}/inc.common.sh"
 
 # Default values
-AUTH_FILE="${SCRIPT_ROOT}${AUTH_FILE_NAME}"
+AUTH_FILE="${ROOT_DIR}/${AUTH_FILE_NAME}"
 AWQL_FILE=""
 QUERY=""
 VERBOSE=0
-CACHING=1
+CACHING=0
 
+# Usage
 function usage ()
 {
-    echo "Usage: ${SCRIPT} -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-l] [-v]"
+    echo "Usage: ${SCRIPT} -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]"
     echo "-i for Adwords account ID"
     echo "-a for Yaml authorization file path with access and developper tokens"
     echo "-f for the filepath to save raw AWQL response"
     echo "-e for AWQL query, if not set here, a prompt will be launch"
-    echo "-l used to disable cache"
+    echo "-c used to enable cache"
     echo "-v used to print more informations"
 
     if [ "$1" != "" ]; then
@@ -96,7 +94,6 @@ function awql ()
             cp "$OUTPUT_FILE" "$AWQL_FILE"
             exitOnError $? "FileError.UNABLE_TO_SAVE" "$VERBOSE"
         fi
-
         # Print response
         print "$OUTPUT_FILE" "$OUTPUT_CACHED" "$TIME_DURATION" "$LIMIT_QUERY" "$ORDER_QUERY" "$VERBOSE"
     fi
@@ -110,7 +107,7 @@ function awql ()
 # @return string AWQL_EXTRA with formated string for array bash from yaml file
 function awqlExtra ()
 {
-    yamlToArray "${SCRIPT_ROOT}${API_DOC_DIR}/$1/${API_DOC_EXTRA_FILE_NAME}"
+    yamlToArray "${ROOT_DIR}/${API_DOC_DIR_NAME}/$1/${API_DOC_EXTRA_FILE_NAME}"
     if [ $? -ne 0 ]; then
         ERR_MSG="InternalError.INVALID_CONF_EXTRA"
         return 1
@@ -126,7 +123,7 @@ function awqlExtra ()
 # @return string AWQL_FIELDS with formated string for array bash from yaml file
 function awqlFields ()
 {
-    yamlToArray "${SCRIPT_ROOT}${API_DOC_DIR}/$1/${API_DOC_FIELDS_FILE_NAME}"
+    yamlToArray "${ROOT_DIR}/${API_DOC_DIR_NAME}/$1/${API_DOC_FIELDS_FILE_NAME}"
     if [ $? -ne 0 ]; then
         ERR_MSG="InternalError.INVALID_CONF_FIELDS"
         return 1
@@ -142,7 +139,7 @@ function awqlFields ()
 # @return string AWQL_KEYS with formated string for array bash from yaml file
 function awqlKeys ()
 {
-    yamlToArray "${SCRIPT_ROOT}${API_DOC_DIR}/$1/${API_DOC_KEYS_FILE_NAME}"
+    yamlToArray "${ROOT_DIR}/${API_DOC_DIR_NAME}/$1/${API_DOC_KEYS_FILE_NAME}"
     if [ $? -ne 0 ]; then
         ERR_MSG="InternalError.INVALID_CONF_KEYS"
         return 1
@@ -158,7 +155,7 @@ function awqlKeys ()
 # @return string AWQL_TABLES with formated string for array bash from yaml file
 function awqlTables ()
 {
-    yamlToArray "${SCRIPT_ROOT}${API_DOC_DIR}/$1/${API_DOC_TABLES_FILE_NAME}"
+    yamlToArray "${ROOT_DIR}/${API_DOC_DIR_NAME}/$1/${API_DOC_TABLES_FILE_NAME}"
     if [ $? -ne 0 ]; then
         ERR_MSG="InternalError.INVALID_CONF_TABLES"
         return 1
@@ -177,7 +174,7 @@ function cached ()
     local CHECKSUM="$1"
     local ENABLED="$2"
 
-    OUTPUT_FILE="${WRK_DIR}${CHECKSUM}${AWQL_FILE_EXT}"
+    OUTPUT_FILE="${WRK_DIR}/${CHECKSUM}${AWQL_FILE_EXT}"
 
     if [ -z "$CHECKSUM" ]; then
         ERR_MSG="CacheError.INVALID_KEY"
@@ -208,18 +205,20 @@ function call ()
     cached "$5" "$7"
     if [ $? -gt 0 ]; then
         OUTPUT_CACHED=0
+        declare -A -r GOOGLE_REQUEST="$4"
+        local API_VERSION=${GOOGLE_REQUEST[API_VERSION]}
         local QUERY_METHOD=$(echo "$QUERY" | awk '{ print tolower($1) }')
         if [ "$QUERY_METHOD" = "select" ]; then
             download "$1" "$2" "$3" "$4" "$5" "$6"
         elif [ "$QUERY_METHOD" = "desc" ]; then
-            desc "$2" "$4" "$5" "$6"
+            desc "$2" "${API_VERSION}" "$5" "$6"
         elif [ "$QUERY_METHOD" = "show" ]; then
-            show "$2" "$4" "$5" "$6"
+            show "$2" "${API_VERSION}" "$5" "$6"
         fi
         local ERR_TYPE="$?"
         if [ ${ERR_TYPE} -ne 0 ]; then
             # An error occured, remove cache file
-            rm -f "${WRK_DIR}${5}${AWQL_FILE_EXT}"
+            rm -f "${WRK_DIR}/${5}${AWQL_FILE_EXT}"
             return ${ERR_TYPE}
         fi
     else
@@ -342,24 +341,23 @@ function context ()
 # @return string OUTPUT_FILE Raw CSV filepath
 function desc ()
 {
-    declare -A -r GOOGLE_REQUEST="$2"
-
     declare -a QUERY="($(echo "$1" | sed -e "s/${AWQL_QUERY_DESC}//g" -e "s/;//g"))"
     local TABLE="${QUERY[0]}"
     local COLUMN="${QUERY[1]}"
+    local API_VERSION="$2"
     local CHECKSUM="$3"
-    local OUTPUT_FILE="${WRK_DIR}${CHECKSUM}${AWQL_FILE_EXT}"
+    local OUTPUT_FILE="${WRK_DIR}/${CHECKSUM}${AWQL_FILE_EXT}"
     local VERBOSE="$4"
 
-    awqlTables "${GOOGLE_REQUEST[API_VERSION]}"
+    awqlTables "${API_VERSION}"
     exitOnError $? "$ERR_MSG" "$VERBOSE"
     declare -A -r AWQL_TABLES="$AWQL_TABLES"
 
-    awqlFields "${GOOGLE_REQUEST[API_VERSION]}"
+    awqlFields "${API_VERSION}"
     exitOnError $? "$ERR_MSG" "$VERBOSE"
     declare -A -r AWQL_FIELDS="$AWQL_FIELDS"
 
-    awqlKeys "${GOOGLE_REQUEST[API_VERSION]}"
+    awqlKeys "${API_VERSION}"
     exitOnError $? "$ERR_MSG" "$VERBOSE"
     declare -A -r AWQL_KEYS="$AWQL_KEYS"
 
@@ -405,13 +403,13 @@ function download ()
     local ADWORDS_ID="$1"
     local QUERY="$2"
     local CHECKSUM="$5"
-    local OUTPUT_FILE="${WRK_DIR}${CHECKSUM}${AWQL_FILE_EXT}"
+    local OUTPUT_FILE="${WRK_DIR}/${CHECKSUM}${AWQL_FILE_EXT}"
     local VERBOSE="$6"
 
     # Define curl default properties
     local OPTIONS="--silent"
     if [ "$VERBOSE" -eq 1 ]; then
-        OPTIONS="$OPTIONS --trace-ascii ${WRK_DIR}${CHECKSUM}${AWQL_HTTP_RESPONSE_EXT}"
+        OPTIONS="$OPTIONS --trace-ascii ${WRK_DIR}/${CHECKSUM}${AWQL_HTTP_RESPONSE_EXT}"
     fi
     if [ "${GOOGLE_REQUEST[CONNECT_TIME_OUT]}" -gt 0 ]; then
         OPTIONS="$OPTIONS --connect-timeout ${GOOGLE_REQUEST[CONNECT_TIME_OUT]}"
@@ -437,7 +435,7 @@ function download ()
     if [ "${RESPONSE_INFO[HTTP_CODE]}" -eq 0 ] || [ "${RESPONSE_INFO[HTTP_CODE]}" -gt 400 ]; then
         ERR_MSG="ConnexionError.NOT_FOUND with API ${GOOGLE_REQUEST[API_VERSION]}"
         if [ "$VERBOSE" -eq 1 ]; then
-            ERR_MSG+=" @source ${WRK_DIR}${CHECKSUM}${AWQL_HTTP_RESPONSE_EXT}"
+            ERR_MSG+=" @source ${WRK_DIR}/${CHECKSUM}${AWQL_HTTP_RESPONSE_EXT}"
         fi
         return 1
     elif [ "${RESPONSE_INFO[HTTP_CODE]}" -gt 300 ]; then
@@ -529,7 +527,7 @@ function print ()
             fi
 
             # Format CVS to print it in shell terminal
-            $(vendor/shcsv/csv.sh -f "$WRK_FILE" -t "$WRK_PRINTABLE_FILE" -q)
+            $(${ROOT_DIR}/vendor/shcsv/csv.sh -f "$WRK_FILE" -t "$WRK_PRINTABLE_FILE" -q)
             cat "$WRK_PRINTABLE_FILE"
         fi
     fi
@@ -543,7 +541,7 @@ function print ()
 # @return string REQUEST with formated string for array bash from Yaml file
 function request ()
 {
-    yamlToArray "${SCRIPT_ROOT}${REQUEST_FILE_NAME}"
+    yamlToArray "${ROOT_DIR}/${REQUEST_FILE_NAME}"
     if [ $? -ne 0 ]; then
         ERR_MSG="QueryError.INVALID_CONF_REQUEST"
         return 1
@@ -561,8 +559,6 @@ function request ()
 # @return string OUTPUT_FILE Raw CSV filepath
 function show ()
 {
-    declare -A -r GOOGLE_REQUEST="$2"
-
     # Removes mandatory or optionnal SQL terms
     declare -a QUERY="($(echo "$1" | sed -e "s/${AWQL_QUERY_SHOW}${AWQL_QUERY_SHOW_FULL}//g" -e "s/${AWQL_QUERY_SHOW}//g" -e "s/;//g"))"
 
@@ -582,21 +578,20 @@ function show ()
 ##
 # Allow access to table listing with method LIKE
 # @param string $1 Table name or if empty it is means all tables
-# @param array $2 Google request properties
+# @param array $2 Google Adwords API version
 # @param array $3 Query checksum
 # @param array $4 Verbose mode
 # @return string ERR_MSG in case of return code greater than 0
 # @return string OUTPUT_FILE Raw CSV filepath
 function showLike ()
 {
-    declare -A -r GOOGLE_REQUEST="$2"
-
     local QUERY="$1"
+    local API_VERSION="$2"
     local CHECKSUM="$3"
-    local OUTPUT_FILE="${WRK_DIR}${CHECKSUM}${AWQL_FILE_EXT}"
+    local OUTPUT_FILE="${WRK_DIR}/${CHECKSUM}${AWQL_FILE_EXT}"
     local VERBOSE="$4"
 
-    awqlTables "${GOOGLE_REQUEST[API_VERSION]}"
+    awqlTables "${API_VERSION}"
     exitOnError $? "$ERR_MSG" "$VERBOSE"
     declare -A -r AWQL_TABLES="$AWQL_TABLES"
 
@@ -620,7 +615,7 @@ function showLike ()
         if [ -n "$QUERY" ]; then
             QUERY=" (${QUERY})"
         fi
-        echo -e "${AWQL_TABLES_IN}${GOOGLE_REQUEST[API_VERSION]}${QUERY}" > "$OUTPUT_FILE"
+        echo -e "${AWQL_TABLES_IN}${API_VERSION}${QUERY}" > "$OUTPUT_FILE"
         echo -e "${SHOW_TABLES}" | sort -t, -k+1 -d >> "$OUTPUT_FILE"
     fi
 }
@@ -628,26 +623,25 @@ function showLike ()
 ##
 # Allow access to table listing with method WITH column_name
 # @param string $1 Awql query
-# @param array $2 Google request properties
+# @param array $2 Google Adwords API version
 # @param array $3 Query checksum
 # @param array $4 Verbose mode
 # @return string ERR_MSG in case of return code greater than 0
 # @return string OUTPUT_FILE Raw CSV filepath
 function showWith ()
 {
-    if [ -z "$1" ]; then
-        ERR_MSG="QueryError.INVALID_SHOW_TABLES_WITH"
+    local COLUMN="$1"
+    if [ -z "$COLUMN" ]; then
+        ERR_MSG="QueryError.MISSING_COLUMN_NAME"
         return 1
     fi
 
-    declare -A -r GOOGLE_REQUEST="$2"
-
-    local COLUMN="$1"
+    local API_VERSION="$2"
     local CHECKSUM="$3"
-    local OUTPUT_FILE="${WRK_DIR}${CHECKSUM}${AWQL_FILE_EXT}"
+    local OUTPUT_FILE="${WRK_DIR}/${CHECKSUM}${AWQL_FILE_EXT}"
     local VERBOSE="$4"
 
-    awqlTables "${GOOGLE_REQUEST[API_VERSION]}"
+    awqlTables "${API_VERSION}"
     exitOnError $? "$ERR_MSG" "$VERBOSE"
     declare -A -r AWQL_TABLES="$AWQL_TABLES"
 
@@ -665,7 +659,7 @@ function showWith ()
     done
 
     if [ -n "$SHOW_TABLES" ]; then
-        echo -e "${AWQL_TABLES_IN}${GOOGLE_REQUEST[API_VERSION]}${COLUMN}" > "$OUTPUT_FILE"
+        echo -e "${AWQL_TABLES_IN}${API_VERSION}${AWQL_TABLES_WITH}${COLUMN}" > "$OUTPUT_FILE"
         echo -e "${SHOW_TABLES}" | sort -t, -k+1 -d >> "$OUTPUT_FILE"
     fi
 }
@@ -685,7 +679,6 @@ function queryOrder ()
     declare -a COLUMNS="($(echo "$2" | sed -e "s/${AWQL_QUERY_SELECT}//g" -e "s/${AWQL_QUERY_FROM}.*//g" -e "s/,/ /g"))"
     for COLUMN in "${COLUMNS[@]}"; do
         ORDER_COLUMN=$((ORDER_COLUMN+1))
-
         if [ "$COLUMN" = "$ORDER" ]; then
             echo "$ORDER_COLUMN"
             return
@@ -729,13 +722,13 @@ fi
 
 # Read the options
 # Use getopts vs getopt for MacOs portability
-while getopts "i::a::f::e:lv" FLAG; do
+while getopts "i::a::f::e:cv" FLAG; do
     case "${FLAG}" in
         i) ADWORDS_ID="$OPTARG" ;;
-        a) if [ "${OPTARG:0:1}" = "/" ]; then AUTH_FILE="$OPTARG"; else AUTH_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
-        f) if [ "${OPTARG:0:1}" = "/" ]; then AWQL_FILE="$OPTARG"; else AWQL_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
+        a) if [ "${OPTARG:0:1}" = "/" ]; then AUTH_FILE="$OPTARG"; else AUTH_FILE="${ROOT_DIR}/${OPTARG}"; fi ;;
+        f) if [ "${OPTARG:0:1}" = "/" ]; then AWQL_FILE="$OPTARG"; else AWQL_FILE="${ROOT_DIR}/${OPTARG}"; fi ;;
         e) QUERY="$OPTARG" ;;
-        l) CACHING=0 ;;
+        c) CACHING=1 ;;
         v) VERBOSE=1 ;;
         *) usage; exit 1 ;;
         ?) exit  ;;
