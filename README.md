@@ -166,7 +166,7 @@ TOKEN_TYPE      : Bearer
 
 ### Make your first call
 
-Usage: ${SCRIPT} -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]
+Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]
 * -i for Adwords account ID
 * -a for Yaml authorization file path with access and developper tokens
 * -f for the filepath to save raw AWQL response
