@@ -7,6 +7,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Save results in CSV files.
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC` and `SHOW TABLES [LIKE|WITH]`.
+* Add management of \G modifier to display each column on a line
 
 SQL methods adding to AWQL grammar in detail:
 
@@ -151,6 +152,20 @@ SQL methods adding to AWQL grammar in detail:
 23 rows in set (0.01 sec)
 ````
 
+### SELECT ... \G
+
+```bash
+~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 1\g" -c
+*************************** 1. row ***************************
+         Campaign: @0 #sp
+           Clicks: 12
+      Impressions: 1289
+             Cost: 9760000
+           Budget: 33000000
+Tracking template:
+1 row in set (0.01 sec)
+````
+
 ## Quick start
 
 ### Set up credentials
@@ -163,7 +178,6 @@ ACCESS_TOKEN    : ya29.SaMple
 DEVELOPER_TOKEN : dEve1op3er7okeN
 TOKEN_TYPE      : Bearer
 ````
-
 ### Make your first call
 
 Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]

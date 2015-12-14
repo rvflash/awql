@@ -9,12 +9,15 @@ declare -r TMP_DIR="/tmp/shcsv/${CURDATE}/"
 declare -r CSV_PRINT_SEP_COLUMN="|"
 declare -r CSV_PRINT_COLUMN_BOUNCE="+"
 declare -r CSV_PRINT_COLUMN_BREAK_LINE="-"
+declare -r CSV_VERTICAL_START_SEP="***************************"
+declare -r CSV_VERTICAL_END_SEP=". row ***************************"
 
 function usage ()
 {
     echo "Usage: ${SCRIPT} -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-q]"
     echo "-f for CSV source file"
     echo "-t for save result"
+    echo "-g for enable vertical mode"
     echo "-s to define column separator, by default comma"
     echo "-q for do not print result"
 }
@@ -68,6 +71,7 @@ CSV_SEP_COLUMN=","
 CSV_FILE=""
 CSV_PRINT_FILE=""
 CLEAN_WRK=0
+VERTICAL_MODE=0
 SILENT=0
 
 # Script usage & check if mysqldump is availabled
@@ -78,11 +82,12 @@ fi
 
 # Read the options
 # Use getopts vs getopt for MacOs portability
-while getopts "f::t::s:q" FLAG; do
+while getopts "f::t::s:gq" FLAG; do
     case "${FLAG}" in
         f) if [ "${OPTARG:0:1}" = "/" ]; then CSV_FILE="$OPTARG"; else CSV_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
         t) if [ "${OPTARG:0:1}" = "/" ]; then CSV_PRINT_FILE="$OPTARG"; else CSV_PRINT_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
         s) if [ "$OPTARG" != "" ]; then CSV_SEP_COLUMN="$OPTARG"; fi ;;
+        g) VERTICAL_MODE=1 ;;
         q) SILENT=1 ;;
         *) usage; exit 1 ;;
         ?) exit 2 ;;
@@ -106,27 +111,50 @@ if [ -z "$CSV_PRINT_FILE" ]; then
     CLEAN_WRK=1
 fi
 
-# Add a empty column, manage empty columns and others and ignore empty lines
-sed -e "s/$/${CSV_SEP_COLUMN}/g" \
-    -e "s/${CSV_SEP_COLUMN}${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN} ${CSV_SEP_COLUMN}/g" \
-    -e "s/^/${CSV_PRINT_SEP_COLUMN} /g"  \
-    -e "s/${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "$CSV_FILE" | column -s, -t > "$CSV_PRINT_FILE"
+if [ "$VERTICAL_MODE" -eq 0 ]; then
+    # Add a empty column, manage empty columns and others and ignore empty lines
+    sed -e "s/$/${CSV_SEP_COLUMN}/g" \
+        -e "s/${CSV_SEP_COLUMN}${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN} ${CSV_SEP_COLUMN}/g" \
+        -e "s/^/${CSV_PRINT_SEP_COLUMN} /g"  \
+        -e "s/${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "$CSV_FILE" | column -s, -t > "$CSV_PRINT_FILE"
 
-# Build with the head line as model  +-----+--+-----+
-BREAK_LINE=$(head -n 1 "$CSV_PRINT_FILE" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
-BREAK_LINE=$(printCsvBreakLine "$BREAK_LINE")
+    # Build with the head line as model  +-----+--+-----+
+    BREAK_LINE=$(head -n 1 "$CSV_PRINT_FILE" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
+    BREAK_LINE=$(printCsvBreakLine "$BREAK_LINE")
 
-# Add breakline at first, third and last line
-sed -e "1i\\
-    ${BREAK_LINE}
-    " \
-    -e "2i\\
-    ${BREAK_LINE}
-    " \
-    -e "\$a\\
-    ${BREAK_LINE}
-    " \
-    -i "" "$CSV_PRINT_FILE"
+    # Add breakline at first, third and last line
+    sed -e "1i\\
+        ${BREAK_LINE}
+        " \
+        -e "2i\\
+        ${BREAK_LINE}
+        " \
+        -e "\$a\\
+        ${BREAK_LINE}
+        " \
+        -i "" "$CSV_PRINT_FILE"
+else
+    HEADER_LINE=$(head -n 1 "$CSV_FILE")
+    declare -a HEADER=($(echo "$HEADER_LINE" | sed -e "s/ /_/g" -e "s/${CSV_SEP_COLUMN}/ /g"))
+    HEADER_NB=${#HEADER[@]}
+    COLUMN_MAX_SIZE=0
+    for COLUMN in ${HEADER[@]}; do
+        if [ ${#COLUMN} -gt ${COLUMN_MAX_SIZE} ]; then
+            COLUMN_MAX_SIZE=${#COLUMN}
+        fi
+    done
+
+    sed 1d "$CSV_FILE" | \
+    awk -v vs="${CSV_VERTICAL_START_SEP}" \
+        -v ve="${CSV_VERTICAL_END_SEP}" \
+        -v vh="$HEADER_LINE" \
+        -v vhs="$HEADER_NB" \
+        -v vcs="$COLUMN_MAX_SIZE" \
+        '
+        {printf("%s %d%s\n", vs, NR, ve, $0)}
+        { split(vh, k, ","); split($0, v, ","); for(i=1; i<=vhs; i++) printf("%*s: %s\n", vcs, k[i], v[i]); }
+        ' > "$CSV_PRINT_FILE"
+fi
 
 if [ "$SILENT" -eq 0 ]; then
     cat "$CSV_PRINT_FILE"

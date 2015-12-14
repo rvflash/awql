@@ -95,7 +95,7 @@ function awql ()
             exitOnError $? "FileError.UNABLE_TO_SAVE" "$VERBOSE"
         fi
         # Print response
-        print "$OUTPUT_FILE" "$OUTPUT_CACHED" "$TIME_DURATION" "$LIMIT_QUERY" "$ORDER_QUERY" "$VERBOSE"
+        print "$OUTPUT_FILE" "$OUTPUT_CACHED" "$TIME_DURATION" "$LIMIT_QUERY" "$ORDER_QUERY" "$VERTICAL_MODE" "$VERBOSE"
     fi
 }
 
@@ -233,17 +233,27 @@ function call ()
 # @return string ERR_MSG in case of return code greater than 0
 # @return string QUERY
 # @return stringableArray LIMIT_QUERY
-# @return int ORDER_QUERY
+# @return stringableArray ORDER_QUERY
+# @return int VERTICAL_MODE
 function checkQuery ()
 {
     QUERY="$1"
     LIMIT_QUERY="()"
     ORDER_QUERY="()"
+    VERTICAL_MODE=0
 
     local QUERY_ORIGIN="$QUERY"
     local QUERY_METHOD=$(echo "$QUERY" | awk '{ print tolower($1) }')
 
-    if [ -z "$QUERY" ]; then
+    # Manage vertical mode, also named G modifier
+    if [ "${QUERY:${#QUERY}-2}" = "\g" ] || [ "${QUERY:${#QUERY}-2}" = "\G" ]; then
+        VERTICAL_MODE=1
+        QUERY="${QUERY::-2}"
+        QUERY_ORIGIN="$QUERY"
+    fi
+
+    # Management by query method
+    if [ -z "$QUERY_ORIGIN" ]; then
         ERR_MSG="QueryError.MISSING"
         return 1
     elif [ "$QUERY_METHOD" = "select" ]; then
@@ -461,19 +471,20 @@ function download ()
 
 ## Show response & info about it
 # @param string $1 Raw CSV file path
-# @param bool $2 Cached data
+# @param bool $2 Is cached data ?
 # @param float $3 Time duration to fetch response
 # @param stringableArray $4 Limit to apply on response
-# @param int $5 Order (ColumnName ColumnPosition SortOrder)
+# @param stringableArray $5 Sort order (ColumnName ColumnPosition SortOrder)
+# @param string $6 Vertical display mode
 # @param string $7 Verbose mode
-#
 function print ()
 {
-    local WRK_FILE="$1"
     local FILE_SIZE=0
-    local TIME_DURATION="$3"
+    local WRK_FILE="$1"
     local CACHED="$2"
-    local VERBOSE="$6"
+    local TIME_DURATION="$3"
+    local VERTICAL_MODE="$6"
+    local VERBOSE="$7"
 
     if [ -n "$WRK_FILE" ] && [ -f "$WRK_FILE" ]; then
         declare -a LIMIT_QUERY="$4"
@@ -527,7 +538,11 @@ function print ()
             fi
 
             # Format CVS to print it in shell terminal
-            $(${ROOT_DIR}/vendor/shcsv/csv.sh -f "$WRK_FILE" -t "$WRK_PRINTABLE_FILE" -q)
+            local CVS_OPTIONS=" -q"
+            if [ "$VERTICAL_MODE" -eq 1 ]; then
+                CVS_OPTIONS+=" -g"
+            fi
+            $(${ROOT_DIR}/vendor/shcsv/csv.sh -f "$WRK_FILE" -t "$WRK_PRINTABLE_FILE" ${CVS_OPTIONS})
             cat "$WRK_PRINTABLE_FILE"
         fi
     fi
