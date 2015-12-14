@@ -1,2 +1,3 @@
-ACCESS_TOKEN    : ya29.SaMple
-DEVELOPER_TOKEN : dEve1op3er7okeN
+ACCESS_TOKEN      : ya29.SaMple
+DEVELOPER_TOKEN   : dEve1op3er7okeN
+TOKEN_TYPE        : Bearer
