@@ -155,7 +155,7 @@ SQL methods adding to AWQL grammar in detail:
 ### SELECT ... \G
 
 ```bash
-~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 1\g" -c
+~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 1\G" -c
 *************************** 1. row ***************************
          Campaign: @0 #sp
            Clicks: 12
