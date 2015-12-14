@@ -11,7 +11,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 
 SQL methods adding to AWQL grammar in detail:
 
-### DESC TABLE_NAME [COLUMN_NAME]
+#### DESC TABLE_NAME [COLUMN_NAME]
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "DESC CREATIVE_CONVERSION_REPORT;"
@@ -50,7 +50,7 @@ SQL methods adding to AWQL grammar in detail:
 28 rows in set (0.01 sec)
 ````
 
-### SHOW [FULL] TABLES [LIKE 'pattern']
+#### SHOW [FULL] TABLES [LIKE 'pattern']
 
 ```bash
 ~ $ awql -i "123-456-7890" -e 'SHOW TABLES LIKE "CAMPAIGN%";'
@@ -69,7 +69,7 @@ SQL methods adding to AWQL grammar in detail:
 8 rows in set (0.01 sec)
 ````
 
-### SHOW TABLES [WITH 'pattern']
+#### SHOW TABLES [WITH 'pattern']
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "SHOW TABLES WITH 'ViewThroughConversions';"
@@ -104,7 +104,7 @@ SQL methods adding to AWQL grammar in detail:
 24 rows in set (0.01 sec)
 ````
 
-### SELECT ... LIMIT [offset,] row_count
+#### SELECT ... LIMIT [offset,] row_count
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 3"
@@ -118,7 +118,7 @@ SQL methods adding to AWQL grammar in detail:
 3 rows in set (0.01 sec)
 ````
 
-### SELECT ... ORDER BY col_name [ASC | DESC]
+#### SELECT ... ORDER BY col_name [ASC | DESC]
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions FROM CAMPAIGN_PERFORMANCE_REPORT ORDER BY Impressions DESC"
@@ -152,7 +152,7 @@ SQL methods adding to AWQL grammar in detail:
 23 rows in set (0.01 sec)
 ````
 
-### SELECT ... \G
+#### SELECT ... \G
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 1\G" -c
@@ -178,7 +178,7 @@ ACCESS_TOKEN    : ya29.SaMple
 DEVELOPER_TOKEN : dEve1op3er7okeN
 TOKEN_TYPE      : Bearer
 ````
-### Make your first call
+### And, make your first call
 
 Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]
 * -i for Adwords account ID
@@ -201,3 +201,5 @@ Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v
 +--------------+---------+--------------+------------+-----------+--------------------+
 5 rows in set (1,449 sec)
 ````
+
+Enjoy!
