@@ -10,10 +10,10 @@ ROOT_DIR=$(dirname $SCRIPT_PATH)
 
 # Requires
 source "${ROOT_DIR}/conf/awql.sh"
-source "${ROOT_DIR}/inc.common.sh"
+source "${ROOT_DIR}/conf/common.sh"
 
 # Default values
-AUTH_FILE="${ROOT_DIR}/${AUTH_FILE_NAME}"
+AUTH_FILE="${ROOT_DIR}/auth/${AUTH_FILE_NAME}"
 AWQL_FILE=""
 QUERY=""
 VERBOSE=0
@@ -246,9 +246,14 @@ function checkQuery ()
     local QUERY_METHOD=$(echo "$QUERY" | awk '{ print tolower($1) }')
 
     # Manage vertical mode, also named G modifier
-    if [ "${QUERY:${#QUERY}-2}" = "\g" ] || [ "${QUERY:${#QUERY}-2}" = "\G" ]; then
+    if [ "${QUERY:${#QUERY}-1}" = "g" ] || [ "${QUERY:${#QUERY}-1}" = "G" ]; then
+        if [ "${QUERY:${#QUERY}-2:1}" = "\\" ]; then
+            QUERY="${QUERY::-2}"
+        else
+            # Prompt mode
+            QUERY="${QUERY::-1}"
+        fi
         VERTICAL_MODE=1
-        QUERY="${QUERY::-2}"
         QUERY_ORIGIN="$QUERY"
     fi
 
@@ -283,7 +288,7 @@ function checkQuery ()
 
                 ORDER_QUERY=$(queryOrder "${ORDER[0]}" "$QUERY")
                 if [ $? -ne 0 ]; then
-                    ERR_MSG="QueryError.ORDER_COLUMN_UNDEFINED"
+                    ERR_MSG="QueryError.ORDER_COLUMN_UNKNOWN_IN_QUERY_FIELDS"
                     return 1
                 fi
                 ORDER_QUERY="($(querySortOrderType "${AWQL_FIELDS[${ORDER[0]}]}") ${ORDER_QUERY} $(querySortOrder "${ORDER[1]}"))"
@@ -556,7 +561,7 @@ function print ()
 # @return string REQUEST with formated string for array bash from Yaml file
 function request ()
 {
-    yamlToArray "${ROOT_DIR}/${REQUEST_FILE_NAME}"
+    yamlToArray "${ROOT_DIR}/conf/${REQUEST_FILE_NAME}"
     if [ $? -ne 0 ]; then
         ERR_MSG="QueryError.INVALID_CONF_REQUEST"
         return 1
