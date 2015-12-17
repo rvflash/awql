@@ -12,16 +12,6 @@ declare -r CSV_PRINT_COLUMN_BREAK_LINE="-"
 declare -r CSV_VERTICAL_START_SEP="***************************"
 declare -r CSV_VERTICAL_END_SEP=". row ***************************"
 
-function usage ()
-{
-    echo "Usage: ${SCRIPT} -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-q]"
-    echo "-f for CSV source file"
-    echo "-t for save result"
-    echo "-g for enable vertical mode"
-    echo "-s to define column separator, by default comma"
-    echo "-q for do not print result"
-}
-
 ##
 # Resolve $1 or current path until the file is no longer a symlink
 # @param string $1 path
@@ -73,6 +63,17 @@ CSV_PRINT_FILE=""
 CLEAN_WRK=0
 VERTICAL_MODE=0
 SILENT=0
+
+# Help
+function usage ()
+{
+    echo "Usage: ${SCRIPT} -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-g] [-q]"
+    echo "-f for CSV source file"
+    echo "-t for save result"
+    echo "-s to define column separator, by default comma"
+    echo "-g for enable vertical mode"
+    echo "-q for do not print result"
+}
 
 # Script usage & check if mysqldump is availabled
 if [ $# -lt 1 ] ; then
@@ -151,7 +152,7 @@ else
         -v vhs="$HEADER_NB" \
         -v vcs="$COLUMN_MAX_SIZE" \
         '
-        {printf("%s %d%s\n", vs, NR, ve, $0)}
+        { printf("%s %d%s\n", vs, NR, ve, $0) }
         { split(vh, k, ","); split($0, v, ","); for(i=1; i<=vhs; i++) printf("%*s: %s\n", vcs, k[i], v[i]); }
         ' > "$CSV_PRINT_FILE"
 fi
