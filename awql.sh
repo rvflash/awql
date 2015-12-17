@@ -30,7 +30,9 @@ function usage ()
     echo "-c used to enable cache"
     echo "-v used to print more informations"
 
-    if [ "$1" != "" ]; then
+    if [ "$1" = "CURL" ]; then
+        echo "> CURL in command line is required"
+    elif [ "$1" != "" ]; then
         echo "> Mandatory field: $1"
     fi
 }
@@ -71,7 +73,7 @@ function awql ()
     auth "$AUTH_PATH"
     exitOnError $? "$ERR_MSG" "$VERBOSE"
 
-    # Get Google request prperties
+    # Get Google request properties
     request
     exitOnError $? "$ERR_MSG" "$VERBOSE"
 
@@ -738,6 +740,9 @@ function querySortOrderType ()
 if [ $# -lt 1 ] ; then
     usage
     exit 1
+elif ! CURL_PATH="$(type -p curl)" || [ -z "$CURL_PATH" ]; then
+    usage CURL
+    exit 2
 fi
 
 # Read the options
