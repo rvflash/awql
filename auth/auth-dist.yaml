@@ -1,4 +1,14 @@
+AUTH_TYPE         : __AUTH_TYPE__
 TOKEN_TYPE        : Bearer
 DEVELOPER_TOKEN   : __DEVELOPER_TOKEN__
-ACCESS_TOKEN      : __ACCESS_TOKEN__
-EXPIRE_AT         : __EXPIRE_AT__
+
+# Google account
+CLIENT_ID         : __CLIENT_ID__
+CLIENT_SECRET     : __CLIENT_SECRET__
+REFRESH_TOKEN     : __REFRESH_TOKEN__
+
+# Custom web service
+PROTOCOL          : __PROTOCOL__
+HOSTNAME          : __HOSTNAME__
+PATH              : __PATH__
+PORT              : __PORT__
