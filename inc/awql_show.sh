@@ -8,24 +8,29 @@ function awqlShow ()
 {
     # Removes mandatory or optionnal SQL terms
     declare -a QUERY="($(echo "$1" | sed -e "s/${AWQL_QUERY_SHOW} ${AWQL_QUERY_SHOW_FULL} //g" -e "s/${AWQL_QUERY_SHOW} //g"))"
+    local SHOW_TABLES=""
     local FILE="$2"
 
     local AWQL_TABLES="$(awqlTables)"
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_TABLES"
         return 1
-    elif [[ "$QUERY[0]" != ${AWQL_QUERY_TABLES} ]]; then
+    elif [[ "${QUERY[0]}" != ${AWQL_QUERY_TABLES} ]]; then
         echo "QueryError.INVALID_SHOW_TABLES"
         return 1
-    elif ([[ "$QUERY[1]" != ${AWQL_QUERY_LIKE} ]] && [[ "$QUERY[1]" != ${AWQL_QUERY_WITH} ]]); then
+    elif ([[ "${QUERY[1]}" != ${AWQL_QUERY_LIKE} && "${QUERY[1]}" != ${AWQL_QUERY_WITH} && -n "${QUERY[1]}" ]]); then
         echo "QueryError.INVALID_SHOW_TABLES_METHOD"
         return 1
     fi
     declare -A -r AWQL_TABLES="$AWQL_TABLES"
 
-    local SHOW_TABLES=""
-    local QUERY_STRING="$QUERY[2]"
-    if [[ "$QUERY[1]" != ${AWQL_QUERY_LIKE} ]]; then
+    # Manage SHOW TABLES without anything or with LIKE / WITH behaviors
+    local QUERY_STRING="${QUERY[1]}"
+    if [[ -n "${QUERY[2]}" ]]; then
+        QUERY_STRING="${QUERY[2]}"
+    fi
+
+    if [[ -z "${QUERY[1]}" || "${QUERY[1]}" == ${AWQL_QUERY_LIKE} ]]; then
         # List tables that match the search terms
         for TABLE in "${!AWQL_TABLES[@]}"; do
             # Also manage Like with %
@@ -50,8 +55,9 @@ function awqlShow ()
             echo "QueryError.MISSING_COLUMN_NAME"
             return 1
         fi
+
         for TABLE in "${!AWQL_TABLES[@]}"; do
-            if inArray "$COLUMN" "${AWQL_TABLES[$TABLE]}"; then
+            if inArray "$QUERY_STRING" "${AWQL_TABLES[$TABLE]}"; then
                 if [[ -n "$SHOW_TABLES" ]]; then
                     SHOW_TABLES+="\n"
                 fi
