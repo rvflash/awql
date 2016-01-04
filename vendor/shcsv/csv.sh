@@ -6,6 +6,9 @@
 # Constants
 declare -r CURDATE=$(date +%Y%m%d)
 declare -r TMP_DIR="/tmp/shcsv/${CURDATE}/"
+declare -r CVS_EXT=".csv"
+declare -r CVS_PRINTABLE_EXT=".pcsv"
+declare -r CVS_PRINTABLE_WRK_EXT=".tpcsv"
 declare -r CSV_PRINT_SEP_COLUMN="|"
 declare -r CSV_PRINT_COLUMN_BOUNCE="+"
 declare -r CSV_PRINT_COLUMN_BREAK_LINE="-"
@@ -108,7 +111,8 @@ fi
 # Save process in file
 if [ -z "$CSV_PRINT_FILE" ]; then
     mkdir -p "$TMP_DIR"
-    CSV_PRINT_FILE="$TMP_DIR$(basename $CSV_FILE .csv).pcsv"
+    CSV_PRINT_FILE="$TMP_DIR$(basename ${CSV_FILE} ${CVS_EXT})${CVS_PRINTABLE_EXT}"
+    CSV_PRINT_WRK_FILE="$TMP_DIR$(basename ${CSV_FILE} ${CVS_EXT})${CVS_PRINTABLE_WRK_EXT}"
     CLEAN_WRK=1
 fi
 
@@ -117,23 +121,23 @@ if [ "$VERTICAL_MODE" -eq 0 ]; then
     sed -e "s/$/${CSV_SEP_COLUMN}/g" \
         -e "s/${CSV_SEP_COLUMN}${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN} ${CSV_SEP_COLUMN}/g" \
         -e "s/^/${CSV_PRINT_SEP_COLUMN} /g"  \
-        -e "s/${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "$CSV_FILE" | column -s, -t > "$CSV_PRINT_FILE"
+        -e "s/${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "$CSV_FILE" | column -s, -t > "$CSV_PRINT_WRK_FILE"
 
     # Build with the head line as model  +-----+--+-----+
-    BREAK_LINE=$(head -n 1 "$CSV_PRINT_FILE" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
+    BREAK_LINE=$(head -n 1 "$CSV_PRINT_WRK_FILE" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
     BREAK_LINE=$(printCsvBreakLine "$BREAK_LINE")
 
     # Add breakline at first, third and last line
     sed -e "1i\\
-        ${BREAK_LINE}
-        " \
+${BREAK_LINE}" \
         -e "2i\\
-        ${BREAK_LINE}
-        " \
+${BREAK_LINE}" \
         -e "\$a\\
-        ${BREAK_LINE}
-        " \
-        -i "" "$CSV_PRINT_FILE"
+${BREAK_LINE}" \
+        "$CSV_PRINT_WRK_FILE" > "$CSV_PRINT_FILE"
+    if [ $? -eq 0 ]; then
+        rm -f "$CSV_PRINT_WRK_FILE"
+    fi
 else
     HEADER_LINE=$(head -n 1 "$CSV_FILE")
     declare -a HEADER=($(echo "$HEADER_LINE" | sed -e "s/ /_/g" -e "s/${CSV_SEP_COLUMN}/ /g"))
