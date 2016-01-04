@@ -51,7 +51,7 @@ function auth ()
             if [[ $? -eq 0 ]]; then
                 local CURRENT_TIMESTAMP="$(getCurrentTimestamp)"
                 if [[ $? -eq 0 ]] && [[ "$TIMESTAMP" -gt "$CURRENT_TIMESTAMP" ]]; then
-                    echo -n "($(declare -p TOKEN | cut -d "(" -f2 | cut -d ")" -f1))"
+                    echo -n $(stringableArray "$(declare -p TOKEN)")
                     return
                 fi
             fi

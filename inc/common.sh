@@ -228,6 +228,26 @@ function trim ()
 }
 
 ##
+# Get printed array string with declare method and convert it in stringableArray
+#
+# @example input declare -A rv='([k]="v")'
+# @example code
+#   declare -A rv
+#   rv[k]="v"
+#   stringableArray "$(declare -p rv)"
+# @example return ([k]=v)
+#
+# @param string $1 STRINGABLE_ARRAY
+# @return string
+function stringableArray ()
+{
+    local STRINGABLE_ARRAY="$1"
+    STRINGABLE_ARRAY="${STRINGABLE_ARRAY#*(}"
+    STRINGABLE_ARRAY="${STRINGABLE_ARRAY%)*}"
+    echo -n "(${STRINGABLE_ARRAY})"
+}
+
+##
 # Convert a Yaml file into readable string for array convertion
 # @example '([K1]="V1" [K2]="V2")'
 # @param string $1 Yaml file path to parse

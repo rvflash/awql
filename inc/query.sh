@@ -132,7 +132,7 @@ function query ()
     fi
 
     # And save query
-    REQUEST[QUERY]="${QUERY/(/\(}"
+    REQUEST[QUERY]="$QUERY"
 
-    echo -n "($(declare -p REQUEST | cut -d "(" -f2 | cut -d ")" -f1))"
+    echo -n $(stringableArray "$(declare -p REQUEST)")
 }

@@ -50,5 +50,5 @@ function auth ()
 
     ACCESS[DEVELOPER_TOKEN]="${AUTH[DEVELOPER_TOKEN]}"
 
-    echo -n "($(declare -p ACCESS | cut -d "(" -f2 | cut -d ")" -f1))"
+    echo -n $(stringableArray "$(declare -p ACCESS)")
 }
