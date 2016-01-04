@@ -7,7 +7,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Save results in CSV files.
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC` and `SHOW TABLES [LIKE|WITH]`.
-* Add management of \G modifier to display each column on a line
+* Add management of \G modifier to display result vertically (each column on a line)
 
 SQL methods adding to AWQL grammar in detail:
 
@@ -180,16 +180,18 @@ TOKEN_TYPE      : Bearer
 ````
 ### And, make your first call
 
-Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]
-* -i for Adwords account ID
-* -a for Yaml authorization file path with access and developper tokens
-* -f for the filepath to save raw AWQL response
+Usage: awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilename] [-c] [-v]
+* -i for Google Adwords account ID
+* -a for Google Adwords access token
+* -d for Google developer token
 * -e for AWQL query, if not set here, a prompt will be launch
+* -s to append a copy of output to the given file
 * -c used to enable cache
 * -v used to print more informations
 
+
 ```bash
-./awql.sh -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5"
+~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5"
 +--------------+---------+--------------+------------+-----------+--------------------+
 | Campaign     | Clicks  | Impressions  | Cost       | Budget    | Tracking template  |
 +--------------+---------+--------------+------------+-----------+--------------------+
