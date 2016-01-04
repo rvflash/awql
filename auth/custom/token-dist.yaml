@@ -1,9 +1,0 @@
-TOKEN_TYPE        : Url
-DEVELOPER_TOKEN   : __DEVELOPER_TOKEN__
-
-PROTOCOL          : __PROTOCOL__
-HOSTNAME          : __HOSTNAME__
-PATH              : __PATH__
-PORT              : __PORT__
-
-DATE_FORMAT
