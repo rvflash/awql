@@ -92,8 +92,8 @@ if [[ -z "$QUERY" ]]; then
     welcome
     while true; do
         read -e -p "$AWQL_PROMPT" QUERY
-        awql "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$QUERY" "$SAVE_FILE" "$CACHING" "$VERBOSE"
+        awql "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$QUERY" "$SAVE_FILE" "$VERBOSE" "$CACHING"
     done
 else
-    awql "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$QUERY" "$SAVE_FILE" "$CACHING" "$VERBOSE"
+    awql "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$QUERY" "$SAVE_FILE" "$VERBOSE" "$CACHING"
 fi
