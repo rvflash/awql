@@ -69,7 +69,7 @@ function getFromCache ()
         return 1
     fi
 
-    echo -n "([FILE]=\"${FILE}\" [CACHED]=${CACHING})"
+    echo -n "([FILE]=\"${FILE}\" [CACHED]=1)"
 }
 
 ##
@@ -91,20 +91,25 @@ function get ()
     declare -A REQUEST="$2"
     local FILE="${AWQL_WRK_DIR}/${REQUEST[CHECKSUM]}${AWQL_FILE_EXT}"
 
+    # Overload caching mode for local database methods
+    if [[ "${REQUEST[METHOD]}" != ${AWQL_QUERY_SELECT} ]]; then
+        CACHING=1
+    fi
+
     local RESPONSE=$(getFromCache "$FILE" "$CACHING")
     if [[ $? -ne 0 ]]; then
-        case $(echo "${REQUEST[QUERY]}" | awk '{ print tolower($1) }') in
+        case "${REQUEST[METHOD]}" in
             ${AWQL_QUERY_SELECT})
                 source "${AWQL_INC_DIR}/awql_select.sh"
-                echo -n $(awqlSelect "$ADWORDS_ID" "$AUTH" "$SERVER" "${REQUEST[QUERY]}" "$FILE" "$VERBOSE")
+                echo $(awqlSelect "$ADWORDS_ID" "$AUTH" "$SERVER" "${REQUEST[QUERY]}" "$FILE" "$VERBOSE")
                 ;;
             ${AWQL_QUERY_DESC})
                 source "${AWQL_INC_DIR}/awql_desc.sh"
-                echo -n $(awqlDesc "${REQUEST[QUERY]}" "$FILE")
+                echo $(awqlDesc "${REQUEST[QUERY]}" "$FILE")
                 ;;
             ${AWQL_QUERY_SHOW})
                 source "${AWQL_INC_DIR}/awql_show.sh"
-                echo -n $(awqlShow "${REQUEST[QUERY]}" "$FILE")
+                echo $(awqlShow "${REQUEST[QUERY]}" "$FILE")
                 ;;
             *)
                 echo "QueryError.UNKNOWN_AWQL_METHOD"
@@ -117,29 +122,46 @@ function get ()
             rm -f "$FILE"
             return "$ERR_TYPE"
         fi
+    else
+        echo "$RESPONSE"
     fi
 }
 
 
 ##
 # Build a call to Google Adwords and retrieve report for the AWQL query
-# @param string $1 QUERY
+# @param string $1 ADWORDS_ID
+# @param string $2 ACCESS_TOKEN
+# @param string $3 DEVELOPER_TOKEN
+# @param string $4 QUERY
+# @param string $5 SAVE_FILE
+# @param int $6 CACHING
+# @param int $7 VERBOSE
 function awql ()
 {
-    # Retrieve Google tokens
-    local AUTH=$(auth "$ACCESS_TOKEN" "$DEVELOPER_TOKEN")
-    exitOnError $? "$AUTH" "$VERBOSE"
+    local ADWORDS_ID="$1"
+    local ACCESS_TOKEN="$2"
+    local DEVELOPER_TOKEN="$3"
+    local QUERY="$4"
+    local SAVE_FILE="$5"
+    local VERBOSE="$6"
+    local CACHING="$7"
 
-query "$ADWORDS_ID" "$4"
-exit
     # Prepare and validate query, manage all extended behaviors to AWQL basics
-    local QUERY=$(query "$ADWORDS_ID" "$4")
+    QUERY=$(query "$ADWORDS_ID" "$QUERY")
     exitOnError $? "$QUERY" "$VERBOSE"
+
+    # Retrieve Google tokens (only if HTTP call is needed)
+    local AUTH=""
+    if [[ "$QUERY" == *"\"select\""* ]]; then
+        AUTH=$(auth "$ACCESS_TOKEN" "$DEVELOPER_TOKEN")
+        exitOnError $? "$AUTH" "$VERBOSE"
+    fi
 
     # Send request to Adwords or local cache to get report
     local RESPONSE=$(get "$ADWORDS_ID" "$QUERY" "$AUTH" "$REQUEST" "$VERBOSE" "$CACHING")
     exitOnError $? "$RESPONSE" "$VERBOSE"
 
     # Print response
-    print "$REQUEST" "$RESPONSE" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+    print "$QUERY" "$RESPONSE" "$SAVE_FILE" "$VERBOSE"
 }
