@@ -58,11 +58,10 @@ function query ()
 {
     local ADWORDS_ID="$1"
     local QUERY="$(trim "$2")"
-
-    declare -A REQUEST="([VERTICAL_MODE]=0 [LIMIT_QUERY]=\"\" [ORDER_QUERY]=\"\")"
-
     local QUERY_ORIGIN="$QUERY"
-    local QUERY_METHOD=$(echo "$QUERY" | awk '{ print tolower($1) }')
+
+    declare -A REQUEST="([VERTICAL_MODE]=0 [LIMIT]=\"\" [ORDER]=\"\")"
+    REQUEST[METHOD]=$(echo "$QUERY" | awk '{ print tolower($1) }')
 
     # Manage vertical mode, also named G modifier
     if [[ "${QUERY:${#QUERY}-1}" == "g" ]] || [[ "${QUERY:${#QUERY}-1}" == "G" ]]; then
@@ -73,28 +72,27 @@ function query ()
             QUERY="${QUERY::-1}"
         fi
         REQUEST["VERTICAL_MODE"]=1
-        QUERY_ORIGIN="$QUERY"
     elif [[ "${QUERY:${#QUERY}-1}" == ";" ]]; then
         QUERY="${QUERY::-1}"
-        QUERY_ORIGIN="$QUERY"
     fi
+    QUERY_ORIGIN="$QUERY"
 
     # Management by query method
     if [[ -z "$QUERY_ORIGIN" ]]; then
         echo "QueryError.MISSING"
         return 1
-    elif ! inArray "$QUERY_METHOD" "$AWQL_QUERY_METHODS"; then
+    elif ! inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS"; then
         echo "QueryError.INVALID_QUERY_METHOD"
         return 1
     fi
 
     # Dedicated behavior for select method
-    if [[ "$QUERY_METHOD" == "select" ]]; then
+    if [[ "${REQUEST[METHOD]}" == "select" ]]; then
         # Manage Limit (remove it from query)
         QUERY=$(echo "$QUERY" | sed -e "s/ ${AWQL_QUERY_LIMIT} \([0-9;, ]*\)$//g")
         local LIMIT="${QUERY_ORIGIN:${#QUERY}}"
         if [[ "${#LIMIT}" -gt 0 ]]; then
-            REQUEST["LIMIT_QUERY"]="$(echo "$LIMIT" | sed 's/[^0-9,]*//g' | sed 's/,/ /g')"
+            REQUEST["LIMIT"]="$(echo "$LIMIT" | sed 's/[^0-9,]*//g' | sed 's/,/ /g')"
             QUERY_ORIGIN="$QUERY"
         fi
 
@@ -114,12 +112,13 @@ function query ()
                 declare -A -r AWQL_FIELDS="$AWQL_FIELDS"
                 declare -a ORDER="(${ORDER_BY:9})"
 
-                REQUEST["ORDER_QUERY"]=$(queryOrder "${ORDER[0]}" "$QUERY")
+                REQUEST["ORDER"]=$(queryOrder "${ORDER[0]}" "$QUERY")
                 if [[ $? -ne 0 ]]; then
                     echo "QueryError.ORDER_COLUMN_UNKNOWN_IN_QUERY_FIELDS"
                     return 1
                 fi
-                REQUEST["ORDER_QUERY"]="$(querySortOrderType "${AWQL_FIELDS[${ORDER[0]}]}") ${REQUEST["ORDER_QUERY"]} $(querySortOrder "${ORDER[1]}")"
+                REQUEST["ORDER"]="$(querySortOrderType "${AWQL_FIELDS[${ORDER[0]}]}") ${REQUEST["ORDER"]}"
+                REQUEST["ORDER"]="${REQUEST["ORDER"]} $(querySortOrder "${ORDER[1]}")"
             fi
         fi
     fi
@@ -131,8 +130,8 @@ function query ()
         return 1
     fi
 
-    # And save query
+    # And the last but not lhe least
     REQUEST[QUERY]="$QUERY"
 
-    echo -n $(stringableArray "$(declare -p REQUEST)")
+    echo -n "$(stringableArray "$(declare -p REQUEST)")"
 }
