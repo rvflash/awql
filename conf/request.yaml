@@ -3,8 +3,6 @@ PROTOCOL         : https
 HOSTNAME         : adwords.google.com
 PATH             : /api/adwords/reportdownload/
 
-API_VERSION      : v201509
-
 AWQL_QUERY       : __rdquery
 RESPONSE_FORMAT  : __fmt
 
