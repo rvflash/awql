@@ -75,6 +75,9 @@ function query ()
     elif [[ "${QUERY:${#QUERY}-1}" == ";" ]]; then
         QUERY="${QUERY::-1}"
     fi
+
+    # Protection against mal-formatted requests (space before (;) for example)
+    QUERY="$(trim "$QUERY")"
     QUERY_ORIGIN="$QUERY"
 
     # Management by query method
