@@ -4,17 +4,17 @@
 # Add informations about context of the query (time duration & number of lines)
 # @example 2 rows in set (0.93 sec)
 # @param string $1 AWQL filepath
-# @param int $2 Number of line
-# @param float $3 Time duration in milliseconds
+# @param int $2 Number of elements in file
+# @param float $3 Time duration in milliseconds to get the data
 # @param string $4 Verbose mode
-# @param bool $5 If 1, data source is CACHING
+# @param bool $5 If 1, data source is cached
 function printContext ()
 {
     local FILE_PATH="$1"
     local FILE_SIZE="$2"
     local TIME_DURATION="$3"
     local VERBOSE="$4"
-    local CACHING="$5"
+    local CACHED="$5"
 
     # Size
     local CONTEXT=""
@@ -37,7 +37,7 @@ function printContext ()
             # Source
             CONTEXT="$CONTEXT @source $FILE_PATH"
             # From cache ?
-            if [[ "$CACHING" -eq 1 ]]; then
+            if [[ "$CACHED" -eq 1 ]]; then
                 CONTEXT="$CONTEXT @cached"
             fi
         fi
@@ -52,27 +52,25 @@ function printContext ()
 # @param stringableArray $2 Response
 # @param string $3 If given, path to save AWQL response
 # @param string $4 Verbose mode
-# @param bool $5 Is CACHING data, 1 if true, 0 othersise
 function print ()
 {
     declare -A REQUEST="$1"
     declare -A RESPONSE="$2"
     local SAVE_FILE="$3"
     local VERBOSE="$4"
-    local CACHING="$5"
+
     local FILE_SIZE=0
     local FILE_PATH="${RESPONSE[FILE]}"
-
     if [[ -n "$FILE_PATH" ]] && [[ -f "$FILE_PATH" ]]; then
-        declare -a LIMIT_QUERY="${REQUEST[LIMIT]}"
-        declare -a ORDER_QUERY="${REQUEST[ORDER]}"
-        local LIMIT_QUERY_SIZE="${#LIMIT_QUERY[@]}"
+        declare -a LIMIT_QUERY=(${REQUEST[LIMIT]})
+        declare -a ORDER_QUERY=(${REQUEST[ORDER]})
+        local LIMIT_QUERY_SIZE=${#LIMIT_QUERY[@]}
 
         FILE_SIZE=$(wc -l < "$FILE_PATH")
         if [[ "$FILE_SIZE" -gt 1 ]]; then
 
             # Manage LIMIT queries
-            if [[ "$LIMIT_QUERY_SIZE" -eq 1 ]] || [[ "$LIMIT_QUERY_SIZE" -eq 2 ]]; then
+            if [[ "$LIMIT_QUERY_SIZE" -eq 1 || "$LIMIT_QUERY_SIZE" -eq 2 ]]; then
                 # Limit size of datas to display (@see limit Adwords on daily report)
                 local LIMITS="${LIMIT_QUERY[@]}"
                 local WRK_PARTIAL_FILE="${FILE_PATH/.awql/_${LIMITS/ /-}.awql}"
@@ -115,12 +113,12 @@ function print ()
             # Format CVS to print it in shell terminal
             local CVS_OPTIONS=""
             if [[ "${REQUEST[VERTICAL_MODE]}" -eq 1 ]]; then
-                CVS_OPTIONS+=" -g"
+                CVS_OPTIONS="-g"
             fi
-            $(${AWQL_CSV_TOOL_FILE} -f "$FILE_PATH" ${CVS_OPTIONS})
+            ${AWQL_CSV_TOOL_FILE} ${CVS_OPTIONS} -f "$FILE_PATH"
 
             # Save response in an dedicated file
-            if [[ "$SAVE_FILE" != "" ]]; then
+            if [[ -n "$SAVE_FILE" ]]; then
                 cat "$FILE_PATH" >> "$SAVE_FILE"
                 exitOnError $? "FileError.UNABLE_TO_SAVE_IN_FILE" "$VERBOSE"
             fi
@@ -128,5 +126,5 @@ function print ()
     fi
 
     # Add context (file size, time duration, etc.)
-    printContext "$FILE_PATH" "$FILE_SIZE" "${RESPONSE[TIME_DURATION]}" "$VERBOSE" "$CACHING"
+    printContext "$FILE_PATH" "$FILE_SIZE" "${RESPONSE[TIME_DURATION]}" "$VERBOSE" "${RESPONSE[CACHED]}"
 }

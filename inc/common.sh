@@ -242,8 +242,14 @@ function trim ()
 function stringableArray ()
 {
     local STRINGABLE_ARRAY="$1"
+
+    # Remove declare -OPTIONS ='(
     STRINGABLE_ARRAY="${STRINGABLE_ARRAY#*(}"
+    # Remove )'
     STRINGABLE_ARRAY="${STRINGABLE_ARRAY%)*}"
+    # Remove escaping of single quote (') by declare function
+    STRINGABLE_ARRAY="${STRINGABLE_ARRAY//\\\'\'/}"
+
     echo -n "(${STRINGABLE_ARRAY})"
 }
 
