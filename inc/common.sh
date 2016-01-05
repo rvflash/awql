@@ -100,7 +100,7 @@ function exitOnError ()
     local ERR_LOG="$3"
 
     if [[ "$ERR_CODE" -ne 0 ]]; then
-        if [[ -n "$ERR_LOG" ]] && [[ "$ERR_LOG" != "0" ]]; then
+        if [[ -n "$ERR_LOG" ]]; then
             echo "$ERR_MSG"
         fi
         if [[ "$ERR_CODE" -eq 1 ]]; then

@@ -6,8 +6,8 @@
 # @param string $2 Output filepath
 function awqlDesc ()
 {
-    local QUERY="$(echo "${1/\'/}" | sed -e "s/^${AWQL_QUERY_DESC}//g")"
-    declare -a QUERY="($(trim "$QUERY"))"
+    local QUERY="$(echo "${1//\'/}" | sed -e "s/^${AWQL_QUERY_DESC}//g")"
+    declare -a QUERY="($(trim "$QUERY"))" 2>>/dev/null
     local TABLE="${QUERY[0]}"
     local COLUMN="${QUERY[1]}"
     local FILE="$2"

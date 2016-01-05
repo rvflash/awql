@@ -68,8 +68,8 @@ function awqlSelect ()
         return 2
     else
         # Format CSV in order to improve re-using by removing first and last line
-        sed -i -e '$d; 1d' "$OUTPUT_FILE"
+        sed -i -e '$d; 1d' "$FILE"
     fi
 
     echo -n "$RESPONSE"
-}s
+}

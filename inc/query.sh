@@ -107,7 +107,7 @@ function query ()
                 return 2
             else
                 local AWQL_FIELDS
-                AWQL_FIELDS=$(awqlFields "${AWQL_API_VERSION}")
+                AWQL_FIELDS=$(awqlFields)
                 if [[ $? -ne 0 ]]; then
                     echo "QueryError.ORDER_COLUMN_UNDEFINED"
                     return 2

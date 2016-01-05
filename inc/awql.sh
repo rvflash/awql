@@ -138,6 +138,11 @@ function get ()
 
         # An error occured, remove cache file and return with error code
         if [[ "$ERR_TYPE" -ne 0 ]]; then
+            # @see command protected by /dev/null exit
+            if [[ -z "$RESPONSE" ]]; then
+                RESPONSE="QueryError.AWQL_SYNTAX_ERROR"
+                ERR_TYPE=2
+            fi
             rm -f "$FILE"
         fi
     fi
