@@ -11,11 +11,14 @@ function auth ()
     local ACCESS_TOKEN="$1"
     local DEVELOPER_TOKEN="$2"
 
+    # Inline mode
     if [[ -n "$ACCESS_TOKEN" ]] && [[ -n "$DEVELOPER_TOKEN" ]]; then
-        echo -n "([ACCESS_TOKEN]=\"${ACCESS_TOKEN}\" [DEVELOPER_TOKEN]=\"${DEVELOPER_TOKEN}\")"
+        echo -n "([TOKEN_TYPE]=\"Bearer\" [ACCESS_TOKEN]=\"${ACCESS_TOKEN}\" [DEVELOPER_TOKEN]=\"${DEVELOPER_TOKEN}\")"
         return
     fi
 
+    # Default configuration
+    local AUTH
     AUTH="$(yamlToArray "${AWQL_AUTH_FILE}")"
     if [ $? -ne 0 ]; then
         echo "AuthenticationError.FILE_INVALID"
@@ -26,7 +29,6 @@ function auth ()
     local AUTH_FILE="${AWQL_AUTH_DIR}/${AUTH[AUTH_TYPE]}/auth.sh"
     local INVALID=0
     local ACCESS=""
-
     case "${AUTH[AUTH_TYPE]}" in
         ${AUTH_GOOGLE_TYPE})
             ACCESS=$(${AUTH_FILE} -c "${AUTH[CLIENT_ID]}" -s "${AUTH[CLIENT_SECRET]}" -r "${AUTH[REFRESH_TOKEN]}")

@@ -5,11 +5,14 @@
 # @example ([AccountDescriptiveName]="The descriptive name...")
 function awqlExtra ()
 {
-    local AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
+    local AWQL
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
     if [[ $? -ne 0 ]]; then
         echo "InternalError.INVALID_AWQL_EXTRA_FIELDS"
         return 1
     fi
+
     echo -n "$AWQL"
 }
 
@@ -18,11 +21,14 @@ function awqlExtra ()
 # @example ([AccountDescriptiveName]="String")
 function awqlFields ()
 {
-    local AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
+    local AWQL
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
     if [[ $? -ne 0 ]]; then
         echo "InternalError.INVALID_AWQL_FIELDS"
         return 1
     fi
+
     echo -n "$AWQL"
 }
 
@@ -31,11 +37,14 @@ function awqlFields ()
 # @example ([PRODUCT_PARTITION_REPORT]="ClickType Date...")
 function awqlKeys ()
 {
-    local AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
+    local AWQL
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
     if [[ $? -ne 0 ]]; then
         echo "InternalError.INVALID_AWQL_KEYS"
         return 1
     fi
+
     echo -n "$AWQL"
 }
 
@@ -44,11 +53,14 @@ function awqlKeys ()
 # @example ([PRODUCT_PARTITION_REPORT]="AccountDescriptiveName AdGroupId...")
 function awqlTables ()
 {
-    local AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
+    local AWQL
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
     if [[ $? -ne 0 ]]; then
         echo "InternalError.INVALID_AWQL_TABLES"
         return 1
     fi
+
     echo -n "$AWQL"
 }
 
@@ -82,49 +94,57 @@ function getFromCache ()
 # @param array $6 Enable caching
 function get ()
 {
+    # In
     local ADWORDS_ID="$1"
+    declare -A REQUEST="$2"
     local AUTH="$3"
     local SERVER="$4"
     local VERBOSE="$5"
     local CACHING="$6"
 
-    declare -A REQUEST="$2"
+    # Out
     local FILE="${AWQL_WRK_DIR}/${REQUEST[CHECKSUM]}${AWQL_FILE_EXT}"
 
-    # Overload caching mode for local database methods
+    # Overload caching mode for local database AWQL methods
     if [[ "${REQUEST[METHOD]}" != ${AWQL_QUERY_SELECT} ]]; then
         CACHING=1
     fi
 
-    local RESPONSE=$(getFromCache "$FILE" "$CACHING")
-    if [[ $? -ne 0 ]]; then
+    local RESPONSE=""
+    RESPONSE=$(getFromCache "$FILE" "$CACHING")
+    local ERR_TYPE=$?
+    if [[ "$ERR_TYPE" -ne 0 ]]; then
         case "${REQUEST[METHOD]}" in
             ${AWQL_QUERY_SELECT})
                 source "${AWQL_INC_DIR}/awql_select.sh"
-                echo $(awqlSelect "$ADWORDS_ID" "$AUTH" "$SERVER" "${REQUEST[QUERY]}" "$FILE" "$VERBOSE")
+                RESPONSE=$(awqlSelect "$ADWORDS_ID" "$AUTH" "$SERVER" "${REQUEST[QUERY]}" "$FILE" "$VERBOSE")
+                ERR_TYPE=$?
                 ;;
             ${AWQL_QUERY_DESC})
                 source "${AWQL_INC_DIR}/awql_desc.sh"
-                echo $(awqlDesc "${REQUEST[QUERY]}" "$FILE")
+                RESPONSE=$(awqlDesc "${REQUEST[QUERY]}" "$FILE")
+                ERR_TYPE=$?
                 ;;
             ${AWQL_QUERY_SHOW})
                 source "${AWQL_INC_DIR}/awql_show.sh"
-                echo $(awqlShow "${REQUEST[QUERY]}" "$FILE")
+                RESPONSE=$(awqlShow "${REQUEST[QUERY]}" "$FILE")
+                ERR_TYPE=$?
                 ;;
             *)
-                echo "QueryError.UNKNOWN_AWQL_METHOD"
-                return 1
+                RESPONSE="QueryError.UNKNOWN_AWQL_METHOD"
+                ERR_TYPE=2
                 ;;
         esac
-        # An error occured, remove cache file
-        local ERR_TYPE=$?
+
+        # An error occured, remove cache file and return with error code
         if [[ "$ERR_TYPE" -ne 0 ]]; then
             rm -f "$FILE"
-            return "$ERR_TYPE"
         fi
-    else
-        echo "$RESPONSE"
     fi
+
+    echo "$RESPONSE"
+
+    return "$ERR_TYPE"
 }
 
 
@@ -149,18 +169,25 @@ function awql ()
 
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     QUERY=$(query "$ADWORDS_ID" "$QUERY")
-    exitOnError $? "$QUERY" "$VERBOSE"
+    if exitOnError "$?" "$QUERY" "$VERBOSE"; then
+        return
+    fi
 
     # Retrieve Google tokens (only if HTTP call is needed)
     local AUTH=""
     if [[ "$QUERY" == *"\"select\""* ]]; then
         AUTH=$(auth "$ACCESS_TOKEN" "$DEVELOPER_TOKEN")
-        exitOnError $? "$AUTH" "$VERBOSE"
+        if exitOnError "$?" "$AUTH" "$VERBOSE"; then
+            return
+        fi
     fi
 
     # Send request to Adwords or local cache to get report
-    local RESPONSE=$(get "$ADWORDS_ID" "$QUERY" "$AUTH" "$REQUEST" "$VERBOSE" "$CACHING")
-    exitOnError $? "$RESPONSE" "$VERBOSE"
+    local RESPONSE=""
+    RESPONSE=$(get "$ADWORDS_ID" "$QUERY" "$AUTH" "$REQUEST" "$VERBOSE" "$CACHING")
+    if exitOnError "$?" "$RESPONSE" "$VERBOSE"; then
+        return
+    fi
 
     # Print response
     print "$QUERY" "$RESPONSE" "$SAVE_FILE" "$VERBOSE"

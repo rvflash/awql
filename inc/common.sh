@@ -9,14 +9,14 @@ function checksum ()
     local CHECKSUM_FILE="${WRK_DIR}${RANDOM}.crc"
     echo -n "$1" > "$CHECKSUM_FILE"
 
-    local CHECKSUM=$(cksum "$CHECKSUM_FILE" | awk '{print $1}')
-    rm -f "$CHECKSUM_FILE"
-
-    if [ -n "$CHECKSUM" ]; then
-        echo -n "$CHECKSUM"
-    else
+    local CHECKSUM
+    CHECKSUM=$(cksum "$CHECKSUM_FILE" | awk '{print $1}')
+    if [[ $? -ne 0 || -z "$CHECKSUM" ]]; then
         return 1
     fi
+
+    rm -f "$CHECKSUM_FILE"
+    echo -n "$CHECKSUM"
 }
 
 ##
@@ -25,7 +25,8 @@ function checksum ()
 # @return 0 if yes, 1 otherwise
 function confirm ()
 {
-    local CONFIRM=""
+    local CONFIRM
+
     while read -e -p "$1 ${AWQL_CONFIRM}? " CONFIRM; do
         if [[ "$CONFIRM" == [Yy] ]] || [[ "$CONFIRM" == [Yy][Ee][Ss] ]]; then
             return 0
@@ -48,8 +49,8 @@ function dialog ()
     fi
 
     local COUNTER=0
-    local MANDATORY_FIELD=""
-    local RESPONSE=""
+    local MANDATORY_FIELD
+    local RESPONSE
     while [[ "$MANDATORY" -ne -1 ]]; do
         if [[ "$MANDATORY" -eq 1 ]] && [[ "$COUNTER" -gt 0 ]]; then
             MANDATORY_FIELD=" (required)"
@@ -91,6 +92,7 @@ function inArray ()
 # @param string $1 return code of previous step
 # @param string $2 message to log
 # @param string $3 verbose mode
+# @return int
 function exitOnError ()
 {
     local ERR_CODE="$1"
@@ -104,7 +106,10 @@ function exitOnError ()
         if [[ "$ERR_CODE" -eq 1 ]]; then
             exit 1
         fi
+        return 0
     fi
+
+    return 1
 }
 
 ##
@@ -114,13 +119,16 @@ function exitOnError ()
 # @param string $2 message to display
 function printAndExitOnError ()
 {
-    local PAD=$(printf '%0.1s' "-"{1..80})
-    local PAD_LENGTH=60
+    # In
     local STATUS="$AWQL_SUCCESS_STATUS"
     if [[ "$1" -ne 0 ]]; then
         STATUS="$AWQL_ERROR_STATUS"
     fi
     local MESSAGE="$2"
+
+    # Out
+    local PAD_LENGTH=60
+    local PAD=$(printf '%0.1s' "-"{1..80})
 
     printf '%s ' "$MESSAGE"
     printf '%*.*s' 0 $((PAD_LENGTH - ${#MESSAGE})) "$PAD"
@@ -262,19 +270,23 @@ function yamlToArray ()
 {
     if [[ -n "$1" ]] && [[ -f "$1" ]]; then
         # Remove comment lines, empty lines and format line to build associative array for bash (protect CSV output)
-        local YAML_TO_ARRAY=$(sed -e "/^#/d" \
-                                  -e "/^$/d" \
-                                  -e "s/\"/'/g" \
-                                  -e "s/,/;/g" \
-                                  -e "s/=//g" \
-                                  -e "s/\ :[^:\/\/]/=\"/g" \
-                                  -e "s/$/\"/g" \
-                                  -e "s/ *=/]=/g" \
-                                  -e "s/^/[/g" "$1")
-        echo -n "(${YAML_TO_ARRAY})"
-    else
-        return 1
+        local YAML_TO_ARRAY
+        YAML_TO_ARRAY=$(sed -e "/^#/d" \
+                            -e "/^$/d" \
+                            -e "s/\"/'/g" \
+                            -e "s/,/;/g" \
+                            -e "s/=//g" \
+                            -e "s/\ :[^:\/\/]/=\"/g" \
+                            -e "s/$/\"/g" \
+                            -e "s/ *=/]=/g" \
+                            -e "s/^/[/g" "$1")
+        if [[ $? -eq 0 ]]; then
+            echo -n "(${YAML_TO_ARRAY})"
+            return
+        fi
     fi
+
+    return 1
 }
 
 ##
@@ -301,8 +313,9 @@ function getTokenFromFile ()
     fi
 
     if [[ -f "$TOKEN_FILE" ]]; then
-        local TOKEN=$(cat "$TOKEN_FILE" | tr "\n" " " | tr -d " ")
-        if [[ "$TOKEN" != *"token_type"* ]] || [[ "$TOKEN" != *"access_token"* ]] || [[ "$TOKEN" != *"expire_at"* ]]; then
+        local TOKEN
+        TOKEN=$(cat "$TOKEN_FILE" | tr "\n" " " | tr -d " ")
+        if [[ $? -ne 0 || "$TOKEN" != *"token_type"* || "$TOKEN" != *"access_token"* || "$TOKEN" != *"expire_at"* ]]; then
             return 1
         fi
         local TOKEN_TYPE=$(echo "$TOKEN" | sed ${OPTIONS} "s/.*\"token_type\":\"([^\"]+)\".*/\1/")
@@ -321,7 +334,9 @@ function getTokenFromFile ()
 # @return int
 function getCurrentTimestamp ()
 {
-    local CURRENT_TIMESTAMP=$(date +"%s" 2>/dev/null)
+    local CURRENT_TIMESTAMP
+
+    CURRENT_TIMESTAMP=$(date +"%s" 2>/dev/null)
     if [[ $? -ne 0 ]]; then
         return 1
     fi
@@ -351,7 +366,8 @@ function getUtcDateTimeFromTimestamp ()
        OPTIONS="-r"
     fi
 
-    local UTC_DATETIME=$(date ${OPTIONS}${TIMESTAMP} "+${AWQL_UTC_DATE_FORMAT}" 2>/dev/null)
+    local UTC_DATETIME
+    UTC_DATETIME=$(date ${OPTIONS}${TIMESTAMP} "+${AWQL_UTC_DATE_FORMAT}" 2>/dev/null)
     if [[ $? -ne 0 ]]; then
         return 1
     fi

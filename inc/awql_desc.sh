@@ -6,26 +6,41 @@
 # @param string $2 Output filepath
 function awqlDesc ()
 {
-    declare -a QUERY="($(echo "$1" | sed -e "s/${AWQL_QUERY_DESC} //g"))"
+    local QUERY="$(echo "${1/\'/}" | sed -e "s/^${AWQL_QUERY_DESC}//g")"
+    declare -a QUERY="($(trim "$QUERY"))"
     local TABLE="${QUERY[0]}"
     local COLUMN="${QUERY[1]}"
     local FILE="$2"
 
-    local AWQL_TABLES=$(awqlTables)
+    if [[ -z "$TABLE" ]]; then
+        echo "QueryError.NO_TABLE"
+        return 2
+    fi
+
+    local AWQL_TABLES
+    AWQL_TABLES=$(awqlTables)
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_TABLES"
         return 1
     fi
     declare -A -r AWQL_TABLES="$AWQL_TABLES"
 
-    local AWQL_FIELDS=$(awqlFields)
+    local FIELDS="${AWQL_TABLES[$TABLE]}"
+    if [[ -z "$FIELDS" ]]; then
+        echo "QueryError.UNKNOWN_TABLE"
+        return 2
+    fi
+
+    local AWQL_FIELDS
+    AWQL_FIELDS=$(awqlFields)
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_FIELDS"
         return 1
     fi
     declare -A -r AWQL_FIELDS="$AWQL_FIELDS"
 
-    local AWQL_KEYS=$(awqlKeys)
+    local AWQL_KEYS
+    AWQL_KEYS=$(awqlKeys)
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_KEYS"
         return 1
@@ -37,7 +52,6 @@ function awqlDesc ()
 
     # Give properties for each fields of this table
     local FIELD_IS_KEY=""
-    local FIELDS="${AWQL_TABLES[$TABLE]}"
     for FIELD in ${FIELDS[@]}; do
         if [ -n "${AWQL_FIELDS[$FIELD]}" ] && ([ -z "$COLUMN" ] || [ "$COLUMN" = "$FIELD" ]); then
             inArray "$FIELD" "${AWQL_KEYS[$TABLE]}"

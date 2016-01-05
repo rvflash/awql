@@ -88,10 +88,11 @@ function refresh ()
     local FILE="$2"
 
     # Connexion to Google Account
-    local HTTP_STATUS_CODE=$(curl --silent --connect-timeout 1 --max-time 600 \
-                                  --request "GET" "$URL" \
-                                  --output "$FILE" \
-                                  --write-out "%{http_code}"
+    local HTTP_STATUS_CODE=$(curl \
+        --silent --connect-timeout 1 --max-time 600 \
+        --request "GET" "$URL" \
+        --output "$FILE" \
+        --write-out "%{http_code}"
     )
 
     if [[ "$HTTP_STATUS_CODE" -eq 0 ]] || [[ "$HTTP_STATUS_CODE" -gt 400 ]]; then

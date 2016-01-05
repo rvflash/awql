@@ -41,8 +41,7 @@ function querySortOrder ()
 # @param $1 Column data type
 function querySortOrderType ()
 {
-    inArray "$1" "$AWQL_SORT_NUMERICS"
-    if [[ $? -eq 0 ]]; then
+    if inArray "$1" "$AWQL_SORT_NUMERICS"; then
         echo -n "n"
     else
         echo -n "d"
@@ -57,7 +56,7 @@ function querySortOrderType ()
 function query ()
 {
     local ADWORDS_ID="$1"
-    local QUERY="$(trim "$2")"
+    local QUERY=$(trim "$2")
     local QUERY_ORIGIN="$QUERY"
 
     declare -A REQUEST="([VERTICAL_MODE]=0 [LIMIT]=\"\" [ORDER]=\"\")"
@@ -83,10 +82,10 @@ function query ()
     # Management by query method
     if [[ -z "$QUERY_ORIGIN" ]]; then
         echo "QueryError.MISSING"
-        return 1
+        return 2
     elif ! inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS"; then
         echo "QueryError.INVALID_QUERY_METHOD"
-        return 1
+        return 2
     fi
 
     # Dedicated behavior for select method
@@ -105,12 +104,13 @@ function query ()
         if [[ "${#ORDER_BY}" -gt 0 ]]; then
             if [[ "$ORDER_BY" == *","* ]]; then
                 echo "QueryError.MULTIPLE_ORDER_BY_NOT_AVAILABLE_YET"
-                return 1
+                return 2
             else
-                local AWQL_FIELDS=$(awqlFields "${AWQL_API_VERSION}")
+                local AWQL_FIELDS
+                AWQL_FIELDS=$(awqlFields "${AWQL_API_VERSION}")
                 if [[ $? -ne 0 ]]; then
                     echo "QueryError.ORDER_COLUMN_UNDEFINED"
-                    return 1
+                    return 2
                 fi
                 declare -A -r AWQL_FIELDS="$AWQL_FIELDS"
                 declare -a ORDER="(${ORDER_BY:9})"
@@ -118,7 +118,7 @@ function query ()
                 REQUEST["ORDER"]=$(queryOrder "${ORDER[0]}" "$QUERY")
                 if [[ $? -ne 0 ]]; then
                     echo "QueryError.ORDER_COLUMN_UNKNOWN_IN_QUERY_FIELDS"
-                    return 1
+                    return 2
                 fi
                 REQUEST["ORDER"]="$(querySortOrderType "${AWQL_FIELDS[${ORDER[0]}]}") ${REQUEST["ORDER"]}"
                 REQUEST["ORDER"]="${REQUEST["ORDER"]} $(querySortOrder "${ORDER[1]}")"
@@ -133,7 +133,7 @@ function query ()
         return 1
     fi
 
-    # And the last but not lhe least
+    # And the last but not the least
     REQUEST[QUERY]="$QUERY"
 
     echo -n "$(stringableArray "$(declare -p REQUEST)")"

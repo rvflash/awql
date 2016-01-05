@@ -107,10 +107,11 @@ fi
 # @param int $3 Verbose mode
 function initCustom ()
 {
-    local URL="$(parseUrl "$1")"
-    exitOnError "$?" "AuthenticationError.INVALID_URL" "$VERBOSE"
     local DEVELOPER_TOKEN="$2"
     local VERBOSE="$3"
+    local URL
+    URL="$(parseUrl "$1")"
+    exitOnError "$?" "AuthenticationError.INVALID_URL" "$VERBOSE"
 
     declare -A -r URL="$URL"
     local PROTOCOL="${URL[SCHEME]}"

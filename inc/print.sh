@@ -17,7 +17,7 @@ function printContext ()
     local CACHED="$5"
 
     # Size
-    local CONTEXT=""
+    local CONTEXT
     if [[ "$FILE_SIZE" -lt 2 ]]; then
         CONTEXT="Empty set"
     elif [[ "$FILE_SIZE" -eq 2 ]]; then
@@ -111,7 +111,7 @@ function print ()
             fi
 
             # Format CVS to print it in shell terminal
-            local CVS_OPTIONS=""
+            local CVS_OPTIONS
             if [[ "${REQUEST[VERTICAL_MODE]}" -eq 1 ]]; then
                 CVS_OPTIONS="-g"
             fi
