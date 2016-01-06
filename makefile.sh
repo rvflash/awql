@@ -41,11 +41,11 @@ if confirm "Use Google to get access tokens"; then
     CLIENT_ID="$(dialog "Your Google client ID")"
     CLIENT_SECRET="$(dialog "Your Google client secret")"
     REFRESH_TOKEN="$(dialog "Your Google refresh token")"
-    $(${AWQL_AUTH_INIT_FILE} -a "$AUTH_GOOGLE_TYPE" -c "$CLIENT_ID" -s "$CLIENT_SECRET" -r "$REFRESH_TOKEN" -d "$DEVELOPER_TOKEN")
+    ${AWQL_AUTH_INIT_FILE} -a "$AUTH_GOOGLE_TYPE" -c "$CLIENT_ID" -s "$CLIENT_SECRET" -r "$REFRESH_TOKEN" -d "$DEVELOPER_TOKEN"
     printAndExitOnError "$?" "Use Google as token provider"
 else
     URL="$(dialog "Url of the web service to use to retrieve a Google access token")"
-    $(${AWQL_AUTH_INIT_FILE} -a "$AUTH_CUSTOM_TYPE" -u "$URL" -d "$DEVELOPER_TOKEN")
+    ${AWQL_AUTH_INIT_FILE} -a "$AUTH_CUSTOM_TYPE" -u "$URL" -d "$DEVELOPER_TOKEN"
     printAndExitOnError "$?" "Use a custom web service as token provider"
 fi
 

@@ -85,7 +85,9 @@ if [[ -z "$ADWORDS_ID" ]]; then
     exit 2
 else
     REQUEST=$(yamlToArray "${AWQL_CONF_DIR}/${AWQL_REQUEST_FILE_NAME}")
-    exitOnError $? "InternalError.INVALID_CONF_REQUEST" "$VERBOSE"
+    if exitOnError $? "InternalError.INVALID_CONF_REQUEST" "$VERBOSE"; then
+        return 1
+    fi
 fi
 
 if [[ -z "$QUERY" ]]; then

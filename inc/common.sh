@@ -114,7 +114,7 @@ function exitOnError ()
 
 ##
 # Exit in case of error, if $1 is not equals to 0 and print formated message
-# @example Message ................................ OK
+# @example Message -------------------------------- OK
 # @param string $1 return code of previous step
 # @param string $2 message to display
 function printAndExitOnError ()

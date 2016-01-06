@@ -175,7 +175,7 @@ function awql ()
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     QUERY=$(query "$ADWORDS_ID" "$QUERY")
     if exitOnError "$?" "$QUERY" "$VERBOSE"; then
-        return
+        return 1
     fi
 
     # Retrieve Google tokens (only if HTTP call is needed)
@@ -183,7 +183,7 @@ function awql ()
     if [[ "$QUERY" == *"\"select\""* ]]; then
         AUTH=$(auth "$ACCESS_TOKEN" "$DEVELOPER_TOKEN")
         if exitOnError "$?" "$AUTH" "$VERBOSE"; then
-            return
+            return 1
         fi
     fi
 
@@ -191,7 +191,7 @@ function awql ()
     local RESPONSE=""
     RESPONSE=$(get "$ADWORDS_ID" "$QUERY" "$AUTH" "$REQUEST" "$VERBOSE" "$CACHING")
     if exitOnError "$?" "$RESPONSE" "$VERBOSE"; then
-        return
+        return 1
     fi
 
     # Print response

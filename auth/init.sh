@@ -109,9 +109,12 @@ function initCustom ()
 {
     local DEVELOPER_TOKEN="$2"
     local VERBOSE="$3"
+
     local URL
     URL="$(parseUrl "$1")"
-    exitOnError "$?" "AuthenticationError.INVALID_URL" "$VERBOSE"
+    if exitOnError "$?" "AuthenticationError.INVALID_URL" "$VERBOSE"; then
+        return 1
+    fi
 
     declare -A -r URL="$URL"
     local PROTOCOL="${URL[SCHEME]}"
@@ -127,7 +130,9 @@ function initCustom ()
         -e "s/__PORT__/${PORT}/g" \
         "${AWQL_AUTH_FILE/.yaml/-dist.yaml}" 1>"${AWQL_AUTH_FILE}" 2>/dev/null
 
-    exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"
+    if exitOnError exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"; then
+        return 1
+    fi
 }
 
 ##
@@ -152,7 +157,9 @@ function initGoogle ()
         -e "s/__REFRESH_TOKEN__/${REFRESH_TOKEN//\//\\/}/g" \
         "${AWQL_AUTH_FILE/.yaml/-dist.yaml}" 1>"${AWQL_AUTH_FILE}" 2>/dev/null
 
-    exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"
+    if exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"; then
+        return 1
+    fi
 }
 
 if [[ "$AUTH_TYPE" == "$AUTH_GOOGLE_TYPE" ]]; then

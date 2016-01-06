@@ -120,7 +120,9 @@ function print ()
             # Save response in an dedicated file
             if [[ -n "$SAVE_FILE" ]]; then
                 cat "$FILE_PATH" >> "$SAVE_FILE"
-                exitOnError $? "FileError.UNABLE_TO_SAVE_IN_FILE" "$VERBOSE"
+                if exitOnError $? "FileError.UNABLE_TO_SAVE_IN_FILE" "$VERBOSE"; then
+                    return 1
+                fi
             fi
         fi
     fi
