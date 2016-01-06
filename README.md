@@ -4,6 +4,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
  
 ## Features
 
+* Auto-refreshed the Google access token. 2 ways for this, the classic with the Google oauth2 services and the second, by calling a web service of your choice
 * Save results in CSV files.
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC` and `SHOW TABLES [LIKE|WITH]`.
@@ -168,27 +169,41 @@ Tracking template:
 
 ## Quick start
 
+Clone this repository in the folder of your choice.
+
 ### Set up credentials
 
-First, you need to set up your configuration file named `auth.yaml` properly.
-See `auth-sample.yaml` as example, this file will look like this:
+First, you need to set up the default configuration to use to connect to Google Adwords and create awql command.
+Run `./makefile.sh` in awql folder and follow the instruction.
 
-```yaml
-ACCESS_TOKEN    : ya29.SaMple
-DEVELOPER_TOKEN : dEve1op3er7okeN
-TOKEN_TYPE      : Bearer
+Example with Google as token provider:
+```bash
+./makefile.sh
+Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API.
+Add awql as bash alias -------------------------------------- OK
+Your Google developer token: dEve1op3er7okeN
+Use Google to get access tokens (Y/N)? Y
+Your Google client ID: 123456789-Aw91.apps.googleusercontent.com
+Your Google client secret: C13nt5e0r3t
+Your Google refresh token: 1/n-R3fr35h70k3n
+Use Google as token provider -------------------------------- OK
+Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
 ````
+
+### Usage
+
+```bash
+awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-c] [-v]
+-i for Google Adwords account ID
+-a for Google Adwords access token
+-d for Google developer token
+-e for AWQL query, if not set here, a prompt will be launch
+-s to append a copy of output to the given file
+-c used to enable cache
+-v used to print more informations
+````
+
 ### And, make your first call
-
-Usage: awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilename] [-c] [-v]
-* -i for Google Adwords account ID
-* -a for Google Adwords access token
-* -d for Google developer token
-* -e for AWQL query, if not set here, a prompt will be launch
-* -s to append a copy of output to the given file
-* -c used to enable cache
-* -v used to print more informations
-
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5"
@@ -204,4 +219,28 @@ Usage: awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s sav
 5 rows in set (1,449 sec)
 ````
 
-Enjoy!
+### Go further by using your own web service to get a valid access token
+
+This web service must return a JSON response with this format:
+
+```json
+{
+    "access_token": "ya29.ExaMple",
+    "token_type": "Bearer",
+    "expire_at": "2015-12-20T00:35:58+01:00"
+}
+````
+
+Run `./makefile.sh` in order to change default configuration and use this web service.
+
+```bash
+./makefile.sh
+Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API.
+Add awql as bash alias -------------------------------------- OK
+Your Google developer token: dEve1op3er7okeN
+Use Google to get access tokens (Y/N)? N
+Url of the web service to use to retrieve a Google access token: http://ws.local:8961/google-token
+Use a custom web service as token provider ------------------ OK
+Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
+````
+
