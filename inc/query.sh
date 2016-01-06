@@ -12,7 +12,7 @@ function queryOrder ()
         return 1
     fi
 
-    declare -a COLUMNS="($(echo "$2" | sed -e "s/${AWQL_QUERY_SELECT} //g" -e "s/${AWQL_QUERY_FROM} .*//g" -e "s/,/ /g"))"
+    declare -a COLUMNS="($(echo "$2" | sed -e "s/${AWQL_QUERY_SELECT}[[:space:]]*//g" -e "s/[[:space:]]*${AWQL_QUERY_FROM}[[:space:]]*.*//g" -e "s/,/ /g"))"
     for COLUMN in "${COLUMNS[@]}"; do
         ORDER_COLUMN=$((ORDER_COLUMN+1))
         if [[ "$COLUMN" = "$ORDER" ]]; then
@@ -90,8 +90,34 @@ function query ()
 
     # Dedicated behavior for select method
     if [[ "${REQUEST[METHOD]}" == "select" ]]; then
+        # Mange the shorthand * to select all columns
+        if [[ "$QUERY" == ${AWQL_QUERY_SELECT}[[:space:]]*"*"[[:space:]]*${AWQL_QUERY_FROM}* ]]; then
+            QUERY=$(echo "$QUERY" | sed -e "s/^${AWQL_QUERY_SELECT}[[:space:]]*\*[[:space:]]*${AWQL_QUERY_FROM}[[:space:]]*//g")
+
+            local AWQL_TABLES
+            AWQL_TABLES=$(awqlTables)
+            if [[ $? -ne 0 ]]; then
+                echo "$AWQL_TABLES"
+                return 1
+            fi
+            declare -A -r AWQL_TABLES="$AWQL_TABLES"
+
+            local TABLE="${QUERY%% *}"
+            if [[ -z "$TABLE" ]]; then
+                echo "QueryError.INVALID_SELECT_CLAUSE"
+                return 2
+            fi
+            local FIELDS="${AWQL_TABLES[$TABLE]}"
+            if [[ -z "$FIELDS" ]]; then
+                echo "QueryError.UNKNOWN_TABLE"
+                return 2
+            fi
+            QUERY="SELECT ${FIELDS// /, } FROM $QUERY"
+            QUERY_ORIGIN="$QUERY"
+        fi
+
         # Manage Limit (remove it from query)
-        QUERY=$(echo "$QUERY" | sed -e "s/ ${AWQL_QUERY_LIMIT} \([0-9;, ]*\)$//g")
+        QUERY=$(echo "$QUERY" | sed -e "s/[[:space:]]*${AWQL_QUERY_LIMIT}[[:space:]]*\([0-9;, ]*\)$//g")
         local LIMIT="${QUERY_ORIGIN:${#QUERY}}"
         if [[ "${#LIMIT}" -gt 0 ]]; then
             REQUEST["LIMIT"]="$(echo "$LIMIT" | sed 's/[^0-9,]*//g' | sed 's/,/ /g')"
@@ -99,7 +125,7 @@ function query ()
         fi
 
         # Manage Order by (remove it from query)
-        QUERY=$(echo "$QUERY" | sed -e "s/ ${AWQL_QUERY_ORDER_BY} .*//g")
+        QUERY=$(echo "$QUERY" | sed -e "s/[[:space:]]*${AWQL_QUERY_ORDER_BY}[[:space:]]*.*//g")
         local ORDER_BY="${QUERY_ORIGIN:${#QUERY}}"
         if [[ "${#ORDER_BY}" -gt 0 ]]; then
             if [[ "$ORDER_BY" == *","* ]]; then

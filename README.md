@@ -9,6 +9,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC` and `SHOW TABLES [LIKE|WITH]`.
 * Add management of \G modifier to display result vertically (each column on a line)
+* `*` can be used as shorthand to select all columns from all tables
 
 SQL methods adding to AWQL grammar in detail:
 
@@ -165,6 +166,42 @@ SQL methods adding to AWQL grammar in detail:
            Budget: 33000000
 Tracking template:
 1 row in set (0.01 sec)
+````
+
+#### SELECT * FROM ...
+
+```bash
+~ $ awql -c -v -i "123-456-7890" -e "SELECT * FROM CREATIVE_CONVERSION_REPORT DURING 20150101,20150106\G"
+*************************** 1. row ***************************
+                      Currency: Total
+                       Account:  --
+                     Time zone:  --
+                   Ad group ID:  --
+                      Ad group:  --
+                Ad group state:  --
+                       Network:  --
+Network (with search partners):  --
+                   Campaign ID:  --
+                      Campaign:  --
+                Campaign state:  --
+               Free click rate: 0.00%
+         Conversion Tracker Id:  --
+                   Free clicks: 0
+                         Ad ID:  --
+           Keyword / Placement:  --
+                    Match type:  --
+                    Keyword ID:  --
+                   Client name:  --
+                           Day:  --
+                   Day of week:  --
+                   Customer ID:  --
+                   Impressions: 0
+                         Month:  --
+                  Company name:  --
+                       Quarter:  --
+                          Week:  --
+                          Year:  --
+1 row in set (0,745 sec) @source /tmp/awql/20160106/2407054031.awql
 ````
 
 ## Quick start

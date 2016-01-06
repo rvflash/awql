@@ -7,7 +7,7 @@
 function awqlShow ()
 {
     # Removes mandatory or optionnal SQL terms
-    local QUERY="$(echo "${1//\'/}" | sed -e "s/${AWQL_QUERY_SHOW} ${AWQL_QUERY_SHOW_FULL}//g" -e "s/^${AWQL_QUERY_SHOW}//g")"
+    local QUERY="$(echo "${1//\'/}" | sed -e "s/${AWQL_QUERY_SHOW}[[:space:]]*${AWQL_QUERY_SHOW_FULL}//g" -e "s/^${AWQL_QUERY_SHOW}//g")"
     declare -a QUERY="($(trim "$QUERY"))" 2>>/dev/null
     local FILE="$2"
 
