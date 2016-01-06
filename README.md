@@ -178,7 +178,7 @@ Run `./makefile.sh` in awql folder and follow the instruction.
 
 Example with Google as token provider:
 ```bash
-./makefile.sh
+~ $ ./makefile.sh
 Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API.
 Add awql as bash alias -------------------------------------- OK
 Your Google developer token: dEve1op3er7okeN
@@ -193,7 +193,7 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 ### Usage
 
 ```bash
-awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-c] [-v]
+~ $ awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-c] [-v]
 -i for Google Adwords account ID
 -a for Google Adwords access token
 -d for Google developer token
@@ -234,7 +234,7 @@ This web service must return a JSON response with this format:
 Run `./makefile.sh` in order to change default configuration and use this web service.
 
 ```bash
-./makefile.sh
+~ $ ./makefile.sh
 Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API.
 Add awql as bash alias -------------------------------------- OK
 Your Google developer token: dEve1op3er7okeN
