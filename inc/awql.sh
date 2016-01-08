@@ -33,6 +33,39 @@ function awqlFields ()
 }
 
 ##
+# Get all table names with for each, the list of their blacklisted fields
+# @example ([PRODUCT_PARTITION_REPORT]="AccountDescriptiveName AdGroupId...")
+function awqlBlacklistedFields ()
+{
+    local AWQL
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
+    if [[ $? -ne 0 ]]; then
+        echo "InternalError.INVALID_AWQL_BLACKLISTED_FIELDS"
+        return 1
+    fi
+
+    echo -n "$AWQL"
+}
+
+##
+# Get all fields names with for each, the list of their incompatible fields
+# @example ([AccountDescriptiveName]="Hour")
+function awqlUncompatibleFields ()
+{
+    local AWQL
+    local TABLE="$1"
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
+    if [[ $? -ne 0 ]]; then
+        echo "InternalError.INVALID_AWQL_UNCOMPATIBLE_FIELDS"
+        return 1
+    fi
+
+    echo -n "$AWQL"
+}
+
+##
 # Get all table names with for each, their structuring keys
 # @example ([PRODUCT_PARTITION_REPORT]="ClickType Date...")
 function awqlKeys ()
@@ -58,6 +91,22 @@ function awqlTables ()
     AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
     if [[ $? -ne 0 ]]; then
         echo "InternalError.INVALID_AWQL_TABLES"
+        return 1
+    fi
+
+    echo -n "$AWQL"
+}
+
+##
+# Get all table names with for each, their type
+# @example ([PRODUCT_PARTITION_REPORT]="SHOPPING")
+function awqlTablesType ()
+{
+    local AWQL
+
+    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
+    if [[ $? -ne 0 ]]; then
+        echo "InternalError.INVALID_AWQL_TABLES_TYPE"
         return 1
     fi
 

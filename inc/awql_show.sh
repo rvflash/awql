@@ -7,10 +7,15 @@
 function awqlShow ()
 {
     # Removes mandatory or optionnal SQL terms
-    local QUERY="$(echo "${1//\'/}" | sed -e "s/${AWQL_QUERY_SHOW}[[:space:]]*${AWQL_QUERY_SHOW_FULL}//g" -e "s/^${AWQL_QUERY_SHOW}//g")"
+    local FULL=0
+    if [[ "$1" == ${AWQL_QUERY_SHOW}[[:space:]]*${AWQL_QUERY_FULL}* ]]; then
+        FULL=1
+    fi
+    local QUERY="$(echo "${1//\'/}" | sed -e "s/${AWQL_QUERY_SHOW}[[:space:]]*${AWQL_QUERY_FULL}//g" -e "s/^${AWQL_QUERY_SHOW}//g")"
     declare -a QUERY="($(trim "$QUERY"))" 2>>/dev/null
     local FILE="$2"
 
+    # Laod tables
     local AWQL_TABLES
     AWQL_TABLES="$(awqlTables)"
     if [[ $? -ne 0 ]]; then
@@ -31,6 +36,17 @@ function awqlShow ()
         QUERY_STRING="${QUERY[2]}"
     fi
 
+    # Full mode: display type of tables
+    if [[ "$FULL" -eq 1 ]]; then
+        local AWQL_TABLES_TYPE
+        AWQL_TABLES_TYPE=$(awqlTablesType)
+        if [[ $? -ne 0 ]]; then
+            echo "$AWQL_TABLES_TYPE"
+            return 1
+        fi
+        declare -A -r AWQL_TABLES_TYPE="$AWQL_TABLES_TYPE"
+    fi
+
     local SHOW_TABLES=""
     if [[ -z "${QUERY[1]}" || "${QUERY[1]}" == ${AWQL_QUERY_LIKE} ]]; then
         # List tables that match the search terms
@@ -45,6 +61,10 @@ function awqlShow ()
                     SHOW_TABLES+="\n"
                 fi
                 SHOW_TABLES+="$TABLE"
+
+                if [[ "$FULL" -eq 1 ]]; then
+                    SHOW_TABLES+=",${AWQL_TABLES_TYPE[$TABLE]}"
+                fi
             fi
         done
 
@@ -64,6 +84,10 @@ function awqlShow ()
                     SHOW_TABLES+="\n"
                 fi
                 SHOW_TABLES+="$TABLE"
+
+                if [[ "$FULL" -eq 1 ]]; then
+                    SHOW_TABLES+=",${AWQL_TABLES_TYPE[$TABLE]}"
+                fi
             fi
         done
 
@@ -71,8 +95,12 @@ function awqlShow ()
     fi
 
     if [[ -n "$SHOW_TABLES" ]]; then
-        echo -e "${AWQL_TABLES_IN}${AWQL_API_VERSION}${QUERY_STRING}" > "$FILE"
-        echo -e "${SHOW_TABLES}" | sort -t, -k+1 -d >> "$FILE"
+        local HEADER="${AWQL_TABLES_IN}${AWQL_API_VERSION}${QUERY_STRING}"
+        if [[ "$FULL" -eq 1 ]]; then
+            HEADER+=",${AWQL_TABLE_TYPE}"
+        fi
+        echo -e "$HEADER" > "$FILE"
+        echo -e "$SHOW_TABLES" | sort -t, -k+1 -d >> "$FILE"
     fi
 
     echo -n "([FILE]=\"${FILE}\" [CACHED]=0)"

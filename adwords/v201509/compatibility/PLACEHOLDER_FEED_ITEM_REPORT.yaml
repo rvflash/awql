@@ -1,0 +1,28 @@
+ConversionTrackerId        : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate Interactions VideoViewRate VideoViews
+ConversionTypeName         : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate Interactions VideoViewRate VideoViews
+ConversionCategoryName     : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate Interactions VideoViewRate VideoViews
+ClickType                  : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions Engagements IsSelfAction ValuePerAllConversion
+Slot                       : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Engagements                : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionRate            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AveragePosition            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpv                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Interactions               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Clicks                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Cost                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Ctr                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViewRate              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViews                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpm                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+EngagementRate             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Impressions                : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpe                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCost                : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpc                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ValuePerAllConversion      : ClickType Slot
+CrossDeviceConversions     : ClickType Slot
+CostPerAllConversion       : ClickType Slot
+AllConversionRate          : ClickType Slot
+AllConversionValue         : ClickType Slot
+AllConversions             : ClickType Slot
+IsSelfAction               : ClickType

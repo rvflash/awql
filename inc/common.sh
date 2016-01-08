@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
 
 ##
+# Computes the difference of arrays
+# @param stringableArray $1
+# @param stringableArray $2
+function arrayDiff ()
+{
+    if [[ -z "$1" ]]; then
+        echo "()"
+        return
+    elif [[ -z "$2" ]]; then
+        echo "($1)"
+        return
+    fi
+
+    local DIFFERENCE=()
+    for I in ${1[@]}; do
+        local SKIP
+        for J in ${2[@]}; do
+            [[ "$I" == "$J" ]] && { SKIP=1; break; }
+        done
+        [[ -n "$SKIP" ]] || DIFFERENCE+=("$I")
+    done
+
+    stringableArray "$(declare -p DIFFERENCE)"
+}
+
+##
 # Calculate and return a checksum for one string
 # @param string $1
 # @return string

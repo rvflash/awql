@@ -7,13 +7,13 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Auto-refreshed the Google access token. 2 ways for this, the classic with the Google oauth2 services and the second, by calling a web service of your choice
 * Save results in CSV files.
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
-* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC` and `SHOW TABLES [LIKE|WITH]`.
+* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]` and `SHOW [FULL] TABLES [LIKE|WITH]`.
 * Add management of \G modifier to display result vertically (each column on a line)
 * `*` can be used as shorthand to select all columns from all tables
 
 SQL methods adding to AWQL grammar in detail:
 
-#### DESC TABLE_NAME [COLUMN_NAME]
+#### DESC [FULL] TABLE_NAME [COLUMN_NAME]
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "DESC CREATIVE_CONVERSION_REPORT;"
@@ -52,6 +52,18 @@ SQL methods adding to AWQL grammar in detail:
 28 rows in set (0.01 sec)
 ````
 
+The FULL modifier is supported such that DESC FULL displays a fourth output column with uncompatibles fields list.
+
+```bash
+awql -i "123-345-1234" -e 'DESC FULL SEARCH_QUERY_PERFORMANCE_REPORT VideoViews;'
++-------------+-------+------+----------------------------------------------------------------+
+| Field       | Type  | Key  | Not_compatibles                                                |
++-------------+-------+------+----------------------------------------------------------------+
+| VideoViews  | Long  |      | ConversionCategoryName ConversionTrackerId ConversionTypeName  |
++-------------+-------+------+----------------------------------------------------------------+
+1 row in set (0.01 sec)
+````
+
 #### SHOW [FULL] TABLES [LIKE 'pattern']
 
 ```bash
@@ -69,6 +81,34 @@ SQL methods adding to AWQL grammar in detail:
 | CAMPAIGN_SHARED_SET_REPORT                       |
 +--------------------------------------------------+
 8 rows in set (0.01 sec)
+````
+
+The FULL modifier is supported such that SHOW FULL TABLES displays a second output column with the type of table.
+Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUCTURE, EXTENSIONS, ANALYTICS or SHOPPING. 
+
+* SINGLE_ATTRIBUTION   : With single attribution, only one of the triggering criteria (e.g., keyword, placement, audience, etc.) will be recorded for a given impression. The Criteria and Keyword reports follow this model. Each impression is counted exactly once (under one criterion).
+* MULTIPLE_ATTRIBUTION : With multiple attribution, up to one criterion in each dimension that triggered the impression will have the impression recorded for it. For example, the Display Topic and Placements reports follow this model. As opposed to single attribution, multiple attribution reports should **NOT** be aggregated together, since this may double count impressions and clicks.
+* STRUCTURE            : Since these reports do not include performance statistics, you cannot include a `DURING` clause in your AWQL query or use a custom date range in your `ReportDefinition`.
+* EXTENSIONS           : Reports dedicated to ad extensions
+* ANALYTICS            : The reports below include Google Analytics metrics such as `AveragePageviews`, `BounceRate`, `AverageTimeOnSite`, and `PercentNewVisitors`.
+* SHOPPING             : Tables dedicated to shopping campaigns
+
+```bash
+~ $ awql -i "123-456-7890" -e 'SHOW FULL TABLES LIKE "CAMPAIGN%";'
++--------------------------------------------------+-----------------------+
+| Tables_in_v201509 (CAMPAIGN%)                    | Table_type            |
++--------------------------------------------------+-----------------------+
+| CAMPAIGN_AD_SCHEDULE_TARGET_REPORT               |                       |
+| CAMPAIGN_LOCATION_TARGET_REPORT                  | MULTIPLE_ATTRIBUTION  |
+| CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT    | STRUCTURE             |
+| CAMPAIGN_NEGATIVE_LOCATIONS_REPORT               | STRUCTURE             |
+| CAMPAIGN_NEGATIVE_PLACEMENTS_PERFORMANCE_REPORT  | STRUCTURE             |
+| CAMPAIGN_PERFORMANCE_REPORT                      | ANALYTICS             |
+| CAMPAIGN_PLATFORM_TARGET_REPORT                  | MULTIPLE_ATTRIBUTION  |
+| CAMPAIGN_SHARED_SET_REPORT                       |                       |
++--------------------------------------------------+-----------------------+
+8 rows in set (0.01 sec)
+
 ````
 
 #### SHOW TABLES [WITH 'pattern']
@@ -169,6 +209,9 @@ Tracking template:
 ````
 
 #### SELECT * FROM ...
+
+Note that with limits of Adwords tables, some fields will be exclude in this case.
+Indeed, some fields in the same table are uncompatibles, the most incompatible are thus excluded.
 
 ```bash
 ~ $ awql -c -v -i "123-456-7890" -e "SELECT * FROM CREATIVE_CONVERSION_REPORT DURING 20150101,20150106\G"
