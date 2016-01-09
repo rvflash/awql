@@ -21,7 +21,7 @@ function awqlSelect ()
     # Define curl default properties
     local OPTIONS="--silent"
     if [[ "$VERBOSE" -eq 1 ]]; then
-        OPTIONS="$OPTIONS --trace-ascii $FILE.debug"
+        OPTIONS="$OPTIONS --trace-ascii ${FILE}.debug"
     fi
     if [[ "${GOOGLE_REQUEST[CONNECT_TIME_OUT]}" -gt 0 ]]; then
         OPTIONS="$OPTIONS --connect-timeout ${GOOGLE_REQUEST[CONNECT_TIME_OUT]}"
