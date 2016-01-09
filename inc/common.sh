@@ -2,6 +2,10 @@
 
 ##
 # Computes the difference of arrays
+#
+# @example inputs "v1 v2 v3" "v1"
+# @example return "v2 v3"
+#
 # @param stringableArray $1
 # @param stringableArray $2
 # @return stringableArray
@@ -130,7 +134,7 @@ function exitOnError ()
     local ERR_LOG="$3"
 
     if [[ "$ERR_CODE" -ne 0 ]]; then
-        if [[ -n "$ERR_LOG" ]]; then
+        if [[ -n "$ERR_MSG" && -n "$ERR_LOG" ]]; then
             echo "$ERR_MSG"
         fi
         if [[ "$ERR_CODE" -eq 1 ]]; then

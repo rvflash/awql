@@ -8,7 +8,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Save results in CSV files.
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]` and `SHOW [FULL] TABLES [LIKE|WITH]`.
-* Add management of \G modifier to display result vertically (each column on a line)
+* Add management of `\G` modifier to display result vertically (each column on a line)
 * `*` can be used as shorthand to select all columns from all tables
 
 SQL methods adding to AWQL grammar in detail:
@@ -210,8 +210,7 @@ Tracking template:
 
 #### SELECT * FROM ...
 
-Note that with limits of Adwords tables, some fields will be exclude in this case.
-Indeed, some fields in the same table are uncompatibles, the most incompatible are thus excluded.
+Note that with limits of Adwords tables (uncompatible fields in the same table), some fields will be exclude.
 
 ```bash
 ~ $ awql -c -v -i "123-456-7890" -e "SELECT * FROM CREATIVE_CONVERSION_REPORT DURING 20150101,20150106\G"

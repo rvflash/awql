@@ -73,6 +73,9 @@ function query ()
         REQUEST["VERTICAL_MODE"]=1
     elif [[ "${QUERY:${#QUERY}-1}" == ";" ]]; then
         QUERY="${QUERY::-1}"
+    elif [[ -z "$QUERY" ]]; then
+        # Empty query
+        return 2
     fi
 
     # Protection against mal-formatted requests (space before (;) for example)

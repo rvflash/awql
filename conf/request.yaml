@@ -11,4 +11,4 @@ ADWORDS_ID       : clientCustomerId
 DEVELOPER_TOKEN  : developerToken
 
 CONNECT_TIME_OUT : 1
-TIME_OUT         : 600
+TIME_OUT         : 2000

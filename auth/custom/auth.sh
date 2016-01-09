@@ -89,7 +89,7 @@ function refresh ()
 
     # Connexion to Google Account
     local HTTP_STATUS_CODE=$(curl \
-        --silent --connect-timeout 1 --max-time 600 \
+        --silent --connect-timeout 1 --max-time 2000 \
         --request "GET" "$URL" \
         --output "$FILE" \
         --write-out "%{http_code}"
