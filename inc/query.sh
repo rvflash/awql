@@ -90,10 +90,11 @@ function query ()
 
     # Dedicated behavior for select method
     if [[ "${REQUEST[METHOD]}" == "select" ]]; then
-        # Mange the shorthand * to select all columns
+        # Mange the shorthand * to select all columns (without blacklisted fields)
         if [[ "$QUERY" == ${AWQL_QUERY_SELECT}[[:space:]]*"*"[[:space:]]*${AWQL_QUERY_FROM}* ]]; then
             QUERY=$(echo "$QUERY" | sed -e "s/^${AWQL_QUERY_SELECT}[[:space:]]*\*[[:space:]]*${AWQL_QUERY_FROM}[[:space:]]*//g")
 
+            # Load table inormations
             local AWQL_TABLES
             AWQL_TABLES=$(awqlTables)
             if [[ $? -ne 0 ]]; then
@@ -101,6 +102,15 @@ function query ()
                 return 1
             fi
             declare -A -r AWQL_TABLES="$AWQL_TABLES"
+
+            # Load list of blacklisted fields
+            local AWQL_BLACKLISTED_FIELDS
+            AWQL_BLACKLISTED_FIELDS=$(awqlBlacklistedFields)
+            if [[ $? -ne 0 ]]; then
+                echo "$AWQL_BLACKLISTED_FIELDS"
+                return 1
+            fi
+            declare -A -r AWQL_BLACKLISTED_FIELDS="$AWQL_BLACKLISTED_FIELDS"
 
             local TABLE="${QUERY%% *}"
             if [[ -z "$TABLE" ]]; then
@@ -112,6 +122,7 @@ function query ()
                 echo "QueryError.UNKNOWN_TABLE"
                 return 2
             fi
+            FIELDS=$(arrayDiff "$FIELDS" "${AWQL_BLACKLISTED_FIELDS[$TABLE]}")
             QUERY="SELECT ${FIELDS// /, } FROM $QUERY"
             QUERY_ORIGIN="$QUERY"
         fi

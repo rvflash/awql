@@ -4,26 +4,30 @@
 # Computes the difference of arrays
 # @param stringableArray $1
 # @param stringableArray $2
+# @return stringableArray
 function arrayDiff ()
 {
-    if [[ -z "$1" ]]; then
+    local ARRAY_1="$1"
+    local ARRAY_2="$2"
+    if [[ -z "$ARRAY_1" ]]; then
         echo "()"
         return
-    elif [[ -z "$2" ]]; then
-        echo "($1)"
+    elif [[ -z "$ARRAY_2" ]]; then
+        echo "($ARRAY_1)"
         return
     fi
 
+    local SKIP
     local DIFFERENCE=()
-    for I in ${1[@]}; do
-        local SKIP
-        for J in ${2[@]}; do
+    for I in ${ARRAY_1[@]}; do
+        SKIP=0
+        for J in ${ARRAY_2[@]}; do
             [[ "$I" == "$J" ]] && { SKIP=1; break; }
         done
-        [[ -n "$SKIP" ]] || DIFFERENCE+=("$I")
+        [[ "$SKIP" -eq 1 ]] || DIFFERENCE+=("$I")
     done
 
-    stringableArray "$(declare -p DIFFERENCE)"
+    echo "${DIFFERENCE[@]}"
 }
 
 ##
