@@ -322,4 +322,3 @@ Url of the web service to use to retrieve a Google access token: http://ws.local
 Use a custom web service as token provider ------------------ OK
 Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
 ````
-

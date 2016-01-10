@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 # Environment
-declare -r AWQL_OS=$(uname -s)
 declare -r AWQL_UTC_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z"
-declare -r AWQL_ERROR_STATUS="FAILED"
 declare -r AWQL_SUCCESS_STATUS="OK"
+declare -r AWQL_ERROR_STATUS="FAILED"
+declare -r AWQL_USER_NAME=$(logname)
+declare -r AWQL_USER_HOME=$(sudo -u ${AWQL_USER_NAME} -H sh -c 'echo "$HOME"')
+declare -r AWQL_OS=$(uname -s)
 
 # Worspace
 declare -r AWQL_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,6 +20,8 @@ declare -r AWQL_REQUEST_FILE_NAME="request.yaml"
 declare -r AWQL_FILE_EXT=".awql"
 declare -r AWQL_HTTP_RESPONSE_EXT=".rsp"
 declare -r AWQL_CSV_TOOL_FILE="${AWQL_ROOT_DIR}/vendor/shcsv/csv.sh"
+declare -r AWQL_HISTORY_FILE="${AWQL_USER_HOME}/.awql_history"
+declare -r -i AWQL_HISTORY_SIZE=250
 
 # Authentification
 declare -r AWQL_AUTH_FILE="${AWQL_AUTH_DIR}/auth.yaml"
@@ -57,6 +61,7 @@ declare -r AWQL_QUERY_LIMIT="[Ll][Ii][Mm][Ii][Tt]"
 
 # Prompt
 declare -r AWQL_PROMPT="awql> "
+declare -r AWQL_PROMPT_NEW_LINE="   -> "
 declare -r AWQL_TABLE_FIELD_NAME="Field"
 declare -r AWQL_TABLE_FIELD_TYPE="Type"
 declare -r AWQL_TABLE_FIELD_KEY="Key"

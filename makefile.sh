@@ -3,37 +3,46 @@
 ##
 # Install AWQL by creating a bash alias in BashRC
 # Also create a configuration file with default method to get a valid access token
-
 echo "Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API."
 
 # Workspace
 SCRIPT_ROOT=$(pwd)
-USER_NAME=$(logname)
-USER_HOME=$(sudo -u ${USER_NAME} -H sh -c 'echo "$HOME"')
-CURRENT_SHELL=$(if [ ! -z "$ZSH_NAME" ]; then echo "zsh"; else echo "bash"; fi)
-CURRENT_OS=$(uname -s)
+AWQL_SHELL=$(if [ ! -z "$ZSH_NAME" ]; then echo "zsh"; else echo "bash"; fi)
 
-# Bashrc file path (manage Linux & Unix)
-if [[ "$CURRENT_SHELL" == "bash" ]]; then
-    if [[ "$CURRENT_OS" == "Darwin" ]] || [[ "$CURRENT_OS" == "FreeBSD" ]]; then
-        BASH_RC="${USER_HOME}/.profile"
-    else
-        BASH_RC="${USER_HOME}/.${CURRENT_SHELL}rc"
-    fi
-else
-    BASH_RC="${USER_HOME}/.${CURRENT_SHELL}rc"
-fi
 source "${SCRIPT_ROOT}/conf/awql.sh"
 source "${AWQL_INC_DIR}/common.sh"
 
-# Add alias in bashrc
-if [[ -z "$(grep "alias awql" ${BASH_RC})" ]]; then
-    echo "" >> ${BASH_RC}
-    echo "# Added by AWQL makefile" >> ${BASH_RC}
-    echo "alias awql='${SCRIPT_ROOT}/awql.sh'" >> ${BASH_RC}
-    source ${BASH_RC}
+# Bashrc file path (manage Linux & Unix)
+if [[ "$AWQL_SHELL" == "bash" ]]; then
+    if [[ "$AWQL_OS" == "Darwin" ]] || [[ "$AWQL_OS" == "FreeBSD" ]]; then
+        BASHRC_FILE="${AWQL_USER_HOME}/.profile"
+    else
+        BASHRC_FILE="${AWQL_USER_HOME}/.${AWQL_SHELL}rc"
+    fi
+else
+    BASHRC_FILE="${AWQL_USER_HOME}/.${AWQL_SHELL}rc"
 fi
-printAndExitOnError "$STATUS" "Add awql as bash alias"
+
+# Add alias in bashrc
+if [[ -z "$(grep "alias awql" ${BASHRC_FILE})" ]]; then
+    echo >> "${BASHRC_FILE}"
+    echo "# Added by AWQL makefile" >> "${BASHRC_FILE}"
+    echo "alias awql='${SCRIPT_ROOT}/awql.sh'" >> "${BASHRC_FILE}"
+    source ${BASHRC_FILE}
+    STATUS=$?
+else
+    STATUS=0
+fi
+printAndExitOnError "$STATUS" "Add AWQL as bash alias"
+
+# Create a history file for command lines
+if [[ ! -f "${AWQL_HISTORY_FILE}" ]]; then
+    echo > "${AWQL_HISTORY_FILE}"
+    STATUS=$?
+else
+    STATUS=0
+fi
+printAndExitOnError "$STATUS" "Create history file for AWQL queries"
 
 # Use Google auth or custom webservice to refresh Token
 DEVELOPER_TOKEN="$(dialog "Your Google developer token")"

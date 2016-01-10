@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#set -o nounset -o errexit -o pipefail
 
 ##
 # Provide interface to request Google Adwords with AWQL queries
@@ -84,18 +85,26 @@ if [[ -z "$ADWORDS_ID" ]]; then
     usage ADWORDS_ID
     exit 2
 else
+    # Retrieve Google request configuration
     REQUEST=$(yamlToArray "${AWQL_CONF_DIR}/${AWQL_REQUEST_FILE_NAME}")
-    if exitOnError $? "InternalError.INVALID_CONF_REQUEST" "$VERBOSE"; then
+    if exitOnError "$?" "InternalError.INVALID_CONFIG_FOR_REQUEST" "$VERBOSE"; then
         return 1
+    fi
+
+    # Only keep the last N queries in history
+    if [[ -f "$AWQL_HISTORY_FILE" && "$(wc -l < "$AWQL_HISTORY_FILE")" -gt ${AWQL_HISTORY_SIZE} ]]; then
+        tail -n ${AWQL_HISTORY_SIZE} "$AWQL_HISTORY_FILE" > "${AWQL_HISTORY_FILE}-e"
+        if [[ $? -eq 0 ]]; then
+            mv "${AWQL_HISTORY_FILE}-e" "${AWQL_HISTORY_FILE}"
+        fi
     fi
 fi
 
 if [[ -z "$QUERY" ]]; then
     welcome
     while true; do
-        read -e -p "$AWQL_PROMPT" QUERY
-        awql "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$QUERY" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+        awqlRead "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
     done
 else
-    awql "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$QUERY" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+    awql "$QUERY" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
 fi

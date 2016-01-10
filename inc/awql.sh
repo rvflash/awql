@@ -136,7 +136,7 @@ function getFromCache ()
 ##
 # Fetch internal cache or send request to Adwords to get results
 # @param string $1 Adwords ID
-# @param stringableArray $2 Request
+# @param stringableArray $2 User request
 # @param array $3 Google authentification tokens
 # @param array $4 Google request properties
 # @param array $5 Verbose mode
@@ -201,25 +201,26 @@ function get ()
     return "$ERR_TYPE"
 }
 
-
 ##
 # Build a call to Google Adwords and retrieve report for the AWQL query
-# @param string $1 ADWORDS_ID
-# @param string $2 ACCESS_TOKEN
-# @param string $3 DEVELOPER_TOKEN
-# @param string $4 QUERY
-# @param string $5 SAVE_FILE
-# @param int $6 CACHING
-# @param int $7 VERBOSE
+# @param string $1 Query
+# @param string $2 Adwords ID
+# @param string $3 Google Access Token
+# @param string $4 Google Developer Token
+# @param stringableArray $5 Google request configuration
+# @param string $6 Save file path
+# @param int $7 Cachine mode
+# @param int $8 Verbose mode
 function awql ()
 {
-    local ADWORDS_ID="$1"
-    local ACCESS_TOKEN="$2"
-    local DEVELOPER_TOKEN="$3"
-    local QUERY="$4"
-    local SAVE_FILE="$5"
-    local VERBOSE="$6"
-    local CACHING="$7"
+    local QUERY="$1"
+    local ADWORDS_ID="$2"
+    local ACCESS_TOKEN="$3"
+    local DEVELOPER_TOKEN="$4"
+    local REQUEST="$5"
+    local SAVE_FILE="$6"
+    local VERBOSE="$7"
+    local CACHING="$8"
 
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     QUERY=$(query "$ADWORDS_ID" "$QUERY")
@@ -245,4 +246,127 @@ function awql ()
 
     # Print response
     print "$QUERY" "$RESPONSE" "$SAVE_FILE" "$VERBOSE"
+}
+
+##
+# Read user prompt to retrieve AWQL query.
+# Enable up and down arrow keys to navigate in history of queries.
+# @param string $1 Adwords ID
+# @param string $2 Google Access Token
+# @param string $3 Google Developer Token
+# @param stringableArray $4 Google request configuration
+# @param string $5 Save file path
+# @param int $6 Cachine mode
+# @param int $7 Verbose mode
+function awqlRead ()
+{
+    local ADWORDS_ID="$1"
+    local ACCESS_TOKEN="$2"
+    local DEVELOPER_TOKEN="$3"
+    local REQUEST="$4"
+    local SAVE_FILE="$5"
+    local VERBOSE="$6"
+    local CACHING="$7"
+
+    # Get AWQL history file in an array
+    local HISTORY=()
+    if [[ -f "$AWQL_HISTORY_FILE" ]]; then
+        mapfile -t HISTORY < "$AWQL_HISTORY_FILE"
+    fi
+    declare -i HISTORY_SIZE="${#HISTORY[@]}"
+    declare -i HISTORY_INDEX="$HISTORY_SIZE"
+
+    # Read one character at a time
+    local CHAR=""
+    local QUERY=""
+    declare -i INDEX
+    declare -i LENGTH
+    echo -n "$AWQL_PROMPT"
+    while IFS="" read -r -n 1 -s CHAR; do
+
+        # \x1b is the start of an escape sequence
+        if [[ "$CHAR" == $'\x1b' ]]; then
+            # Get the rest of the escape sequence (3 characters total)
+            while IFS= read -r -n 2 -s REST; do
+                CHAR+="$REST"
+                break
+            done
+        fi
+
+        if [[ "$CHAR" == $'\x1b[A' || "$CHAR" == $'\x1b[B' ]]; then
+            if [[ "$CHAR" == $'\x1b[A' && "$HISTORY_INDEX" -gt 0 ]];then
+                # Up
+                HISTORY_INDEX+=-1
+            elif [[ "$CHAR" == $'\x1b[B' && "$HISTORY_INDEX" -lt "$HISTORY_SIZE" ]]; then
+                # Down
+                HISTORY_INDEX+=1
+            fi
+            if [[ "$HISTORY_INDEX" -ne "$HISTORY_SIZE" ]]; then
+                # Remove current line and replace it by this from historic
+                QUERY="${HISTORY[$HISTORY_INDEX]}"
+                INDEX="${#QUERY}"
+                LENGTH="$INDEX"
+                echo -ne "\r\033[K${AWQL_PROMPT}${QUERY}"
+            fi
+        elif [[ "$CHAR" == $'\x1b[C' || "$CHAR" == $'\x1b[D' ]]; then
+            if [[ "$CHAR" == $'\x1b[C' && "$INDEX" -lt "$LENGTH" ]]; then
+                # Right
+                INDEX+=1
+            elif [[ "$CHAR" == $'\x1b[D' && "$INDEX" -gt 0 ]]; then
+                # Left
+                INDEX+=-1
+            fi
+            # Move the cursor
+            echo -ne "\r\033[$((${INDEX}+${#AWQL_PROMPT}))C"
+        elif [[ "$CHAR" == $'\177' ]]; then
+            # Backspace
+            if [[ "$INDEX" -gt 0 ]]; then
+                if [[ "$INDEX" -eq "$LENGTH" ]]; then
+                    QUERY="${QUERY%?}"
+                else
+                    QUERY="${QUERY::$(($INDEX-1))}${QUERY:$INDEX}"
+                fi
+                INDEX+=-1
+                LENGTH+=-1
+                # Remove the char as requested
+                echo -ne "\r\033[K${AWQL_PROMPT}${QUERY}"
+                # Move the cursor
+                echo -ne "\r\033[$((${INDEX}+${#AWQL_PROMPT}))C"
+            fi
+        elif [[ -z "$CHAR" ]]; then
+            # Enter
+            QUERY=$(trim "$QUERY")
+            if [[ "$QUERY" == *";" || "$QUERY" == *"\\"[gG] ]]; then
+                # Query ending
+                if [[ "$HISTORY_INDEX" -lt "$HISTORY_SIZE" ]]; then
+                    # Remove the old position in historic in order to put this query as the last query played
+                    sed -i -e $((${HISTORY_INDEX} + 1))d "$AWQL_HISTORY_FILE"
+                fi
+                # Add query in history
+                echo "$QUERY" >> "$AWQL_HISTORY_FILE"
+                break
+            elif [[ -z "$QUERY" ]]; then
+                # Empty line
+                break
+            else
+                # Newline
+                echo
+                echo -n "$AWQL_PROMPT_NEW_LINE"
+                QUERY="$(trim "$QUERY") "
+                INDEX=0
+                LENGTH="$INDEX"
+            fi
+        else
+            echo -n "$CHAR"
+            QUERY+="$CHAR"
+            INDEX+=1
+            LENGTH="$INDEX"
+        fi
+    done
+
+    # Go to the line to display response
+    echo
+
+    # Process query
+    awql "$QUERY" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
 }
