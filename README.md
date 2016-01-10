@@ -6,6 +6,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 
 * Auto-refreshed the Google access token. 2 ways for this, the classic with the Google oauth2 services and the second, by calling a web service of your choice
 * Save results in CSV files.
+* In prompt mode, add management of historic of queries with arrow keys
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]` and `SHOW [FULL] TABLES [LIKE|WITH]`.
 * Add management of `\G` modifier to display result vertically (each column on a line)
