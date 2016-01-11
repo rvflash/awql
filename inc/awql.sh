@@ -276,14 +276,18 @@ function awqlRead ()
     declare -i HISTORY_SIZE="${#HISTORY[@]}"
     declare -i HISTORY_INDEX="$HISTORY_SIZE"
 
-    # Read one character at a time
-    local CHAR=""
-    local QUERY=""
-    declare -i INDEX
-    declare -i LENGTH
-    echo -n "$AWQL_PROMPT"
-    while IFS="" read -r -n 1 -s CHAR; do
+    # Launch prompt by sending introducion message
+    local PROMPT="$AWQL_PROMPT"
+    echo -n "$PROMPT"
 
+    # Read one character at a time
+    local QUERY_STRING
+    declare -a QUERY
+    declare -i QUERY_LENGTH
+    declare -i QUERY_INDEX
+    declare -i CHAR_INDEX
+    local CHAR=""
+    while IFS="" read -r -n 1 -s CHAR; do
         # \x1b is the start of an escape sequence
         if [[ "$CHAR" == $'\x1b' ]]; then
             # Get the rest of the escape sequence (3 characters total)
@@ -294,6 +298,7 @@ function awqlRead ()
         fi
 
         if [[ "$CHAR" == $'\x1b[A' || "$CHAR" == $'\x1b[B' ]]; then
+            # Navigate in history with up and dowan arrow keys
             if [[ "$CHAR" == $'\x1b[A' && "$HISTORY_INDEX" -gt 0 ]];then
                 # Up
                 HISTORY_INDEX+=-1
@@ -301,72 +306,85 @@ function awqlRead ()
                 # Down
                 HISTORY_INDEX+=1
             fi
-            if [[ "$HISTORY_INDEX" -ne "$HISTORY_SIZE" ]]; then
+            if [[ "$HISTORY_INDEX" -ne "$HISTORY_SIZE" && "$QUERY_INDEX" -eq 0 ]]; then
                 # Remove current line and replace it by this from historic
-                QUERY="${HISTORY[$HISTORY_INDEX]}"
-                INDEX="${#QUERY}"
-                LENGTH="$INDEX"
-                echo -ne "\r\033[K${AWQL_PROMPT}${QUERY}"
+                QUERY[$QUERY_INDEX]="${HISTORY[$HISTORY_INDEX]}"
+                QUERY_LENGTH="${#QUERY[$QUERY_INDEX]}"
+                CHAR_INDEX="$QUERY_LENGTH"
+                echo -ne "\r\033[K${PROMPT}${QUERY[$QUERY_INDEX]}"
             fi
         elif [[ "$CHAR" == $'\x1b[C' || "$CHAR" == $'\x1b[D' ]]; then
-            if [[ "$CHAR" == $'\x1b[C' && "$INDEX" -lt "$LENGTH" ]]; then
+            # Move in current query with left and right arrow keys
+            if [[ "$CHAR" == $'\x1b[C' && "$CHAR_INDEX" -lt "$QUERY_LENGTH" ]]; then
                 # Right
-                INDEX+=1
-            elif [[ "$CHAR" == $'\x1b[D' && "$INDEX" -gt 0 ]]; then
+                CHAR_INDEX+=1
+            elif [[ "$CHAR" == $'\x1b[D' && "$CHAR_INDEX" -gt 0 ]]; then
                 # Left
-                INDEX+=-1
+                CHAR_INDEX+=-1
             fi
             # Move the cursor
-            echo -ne "\r\033[$((${INDEX}+${#AWQL_PROMPT}))C"
+            echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
         elif [[ "$CHAR" == $'\177' ]]; then
             # Backspace
-            if [[ "$INDEX" -gt 0 ]]; then
-                if [[ "$INDEX" -eq "$LENGTH" ]]; then
-                    QUERY="${QUERY%?}"
+            if [[ "$CHAR_INDEX" -gt 0 ]]; then
+                if [[ "$CHAR_INDEX" -eq "$QUERY_LENGTH" ]]; then
+                    QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]%?}"
                 else
-                    QUERY="${QUERY::$(($INDEX-1))}${QUERY:$INDEX}"
+                    QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]::$(($CHAR_INDEX-1))}${QUERY[$QUERY_INDEX]:$CHAR_INDEX}"
                 fi
-                INDEX+=-1
-                LENGTH+=-1
+                QUERY_LENGTH+=-1
+                CHAR_INDEX+=-1
+
                 # Remove the char as requested
-                echo -ne "\r\033[K${AWQL_PROMPT}${QUERY}"
+                echo -ne "\r\033[K${PROMPT}${QUERY[$QUERY_INDEX]}"
                 # Move the cursor
-                echo -ne "\r\033[$((${INDEX}+${#AWQL_PROMPT}))C"
+                echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
             fi
         elif [[ -z "$CHAR" ]]; then
             # Enter
-            QUERY=$(trim "$QUERY")
-            if [[ "$QUERY" == *";" || "$QUERY" == *"\\"[gG] ]]; then
+            QUERY_STRING="${QUERY[@]}"
+            QUERY_STRING="$(trim "$QUERY_STRING")"
+            if [[ "$QUERY_STRING" == *";" || "$QUERY_STRING" == *"\\"[gG] ]]; then
                 # Query ending
                 if [[ "$HISTORY_INDEX" -lt "$HISTORY_SIZE" ]]; then
                     # Remove the old position in historic in order to put this query as the last query played
                     sed -i -e $((${HISTORY_INDEX} + 1))d "$AWQL_HISTORY_FILE"
                 fi
                 # Add query in history
-                echo "$QUERY" >> "$AWQL_HISTORY_FILE"
+                echo "$QUERY_STRING" >> "$AWQL_HISTORY_FILE"
                 break
-            elif [[ -z "$QUERY" ]]; then
-                # Empty line
+            elif [[ -z "$QUERY_STRING" ]]; then
+                # Empty lines
                 break
             else
                 # Newline
+                PROMPT="$AWQL_PROMPT_NEW_LINE"
+                QUERY_INDEX+=1
+                QUERY_LENGTH=0
+                CHAR_INDEX=0
                 echo
-                echo -n "$AWQL_PROMPT_NEW_LINE"
-                QUERY="$(trim "$QUERY") "
-                INDEX=0
-                LENGTH="$INDEX"
+                echo -n "$PROMPT"
             fi
         else
-            echo -n "$CHAR"
-            QUERY+="$CHAR"
-            INDEX+=1
-            LENGTH="$INDEX"
+            # Writting
+            if [[ "$CHAR_INDEX" -eq "$QUERY_LENGTH" ]]; then
+                QUERY[$QUERY_INDEX]+="$CHAR"
+            else
+                QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]::$CHAR_INDEX}${CHAR}${QUERY[$QUERY_INDEX]:$CHAR_INDEX}"
+            fi
+            QUERY_LENGTH+=1
+            CHAR_INDEX+=1
+
+            # Remove the char as requested
+            echo -ne "\r\033[K${PROMPT}${QUERY[$QUERY_INDEX]}"
+            # Move the cursor
+            echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
         fi
     done
 
-    # Go to the line to display response
+    # Go to new line to display response
     echo
 
     # Process query
-    awql "$QUERY" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+    awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
 }
