@@ -106,7 +106,7 @@ function query ()
         return 2
     elif [[ "$QUERY_ORIGIN" == ${AWQL_QUERY_EXIT} ||  "$QUERY_ORIGIN" == ${AWQL_QUERY_QUIT} ]]; then
         # Awql command: Exit
-        echo "Bye"
+        echo "${AWQL_PROMPT_EXIT}"
         return 1
     elif [[ "$QUERY_ORIGIN" == ${AWQL_QUERY_HELP} ]]; then
         # Awql command: Help

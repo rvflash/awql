@@ -66,6 +66,7 @@ declare -r AWQL_QUERY_CLEAR="[Cc][Ll][Ee][Aa][Rr]"
 # Prompt
 declare -r AWQL_PROMPT="awql> "
 declare -r AWQL_PROMPT_NEW_LINE="   -> "
+declare -r AWQL_PROMPT_EXIT="Bye"
 declare -r AWQL_TABLE_FIELD_NAME="Field"
 declare -r AWQL_TABLE_FIELD_TYPE="Type"
 declare -r AWQL_TABLE_FIELD_KEY="Key"

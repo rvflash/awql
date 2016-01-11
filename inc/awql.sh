@@ -399,5 +399,5 @@ function awqlRead ()
     done
 
     # Process query
-    awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+    awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
 }
