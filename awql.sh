@@ -52,6 +52,11 @@ function welcome ()
 {
     echo "Welcome to the AWQL monitor. Commands end with ; or \g."
     echo "Your AWQL version: ${AWQL_API_VERSION}"
+    #echo
+    #echo "Reading table information for completion of table and column names."
+    #echo "You can turn off this feature to get a quicker startup with -A"
+    echo
+    echo "Type 'help;' or '\h' for help. Type '\c' to clear the current input statement."
 }
 
 # Script usage & check if mysqldump is availabled

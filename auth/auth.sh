@@ -39,7 +39,7 @@ function auth ()
             INVALID=$?
             ;;
         *)
-            ACCESS="QueryError.UNKNOWN_AWQL_METHOD"
+            ACCESS="QueryError.UNKNOWN_AWQL_ACCESS_METHOD"
             INVALID=1
             ;;
     esac

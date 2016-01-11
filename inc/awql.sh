@@ -311,7 +311,8 @@ function awqlRead ()
                 QUERY[$QUERY_INDEX]="${HISTORY[$HISTORY_INDEX]}"
                 QUERY_LENGTH="${#QUERY[$QUERY_INDEX]}"
                 CHAR_INDEX="$QUERY_LENGTH"
-                echo -ne "\r\033[K${PROMPT}${QUERY[$QUERY_INDEX]}"
+                echo -ne "\r\033[K${PROMPT}"
+                echo -n "${QUERY[$QUERY_INDEX]}"
             fi
         elif [[ "$CHAR" == $'\x1b[C' || "$CHAR" == $'\x1b[D' ]]; then
             # Move in current query with left and right arrow keys
@@ -336,7 +337,8 @@ function awqlRead ()
                 CHAR_INDEX+=-1
 
                 # Remove the char as requested
-                echo -ne "\r\033[K${PROMPT}${QUERY[$QUERY_INDEX]}"
+                echo -ne "\r\033[K${PROMPT}"
+                echo -n "${QUERY[$QUERY_INDEX]}"
                 # Move the cursor
                 echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
             fi
@@ -344,7 +346,11 @@ function awqlRead ()
             # Enter
             QUERY_STRING="${QUERY[@]}"
             QUERY_STRING="$(trim "$QUERY_STRING")"
-            if [[ "$QUERY_STRING" == *";" || "$QUERY_STRING" == *"\\"[gG] ]]; then
+            if [[ -z "$QUERY_STRING" ]]; then
+                # Empty lines
+                echo
+                break
+            elif [[ "$QUERY_STRING" == *";" || "$QUERY_STRING" == *"\\"[gG] ]]; then
                 # Query ending
                 if [[ "$HISTORY_INDEX" -lt "$HISTORY_SIZE" ]]; then
                     # Remove the old position in historic in order to put this query as the last query played
@@ -352,9 +358,18 @@ function awqlRead ()
                 fi
                 # Add query in history
                 echo "$QUERY_STRING" >> "$AWQL_HISTORY_FILE"
+                # Go to new line to display response
+                echo
                 break
-            elif [[ -z "$QUERY_STRING" ]]; then
-                # Empty lines
+            elif [[  "$QUERY_STRING" == *"\\"[${AWQL_COMMAND_CLEAR}${AWQL_COMMAND_HELP}${AWQL_COMMAND_EXIT}] ]]; then
+                # Awql commands shortcut
+                case "${QUERY_STRING: -1}" in
+                    ${AWQL_COMMAND_CLEAR}) QUERY_STRING="" ;;
+                    ${AWQL_COMMAND_HELP}) QUERY_STRING="${AWQL_TEXT_COMMAND_HELP}" ;;
+                    ${AWQL_COMMAND_EXIT}) QUERY_STRING="${AWQL_TEXT_COMMAND_EXIT}" ;;
+                esac
+                # Go to new line to display response
+                echo
                 break
             else
                 # Newline
@@ -375,15 +390,13 @@ function awqlRead ()
             QUERY_LENGTH+=1
             CHAR_INDEX+=1
 
-            # Remove the char as requested
-            echo -ne "\r\033[K${PROMPT}${QUERY[$QUERY_INDEX]}"
+            # Reset prompt and display query with new char
+            echo -ne "\r\033[K${PROMPT}"
+            echo -n "${QUERY[$QUERY_INDEX]}"
             # Move the cursor
             echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
         fi
     done
-
-    # Go to new line to display response
-    echo
 
     # Process query
     awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"

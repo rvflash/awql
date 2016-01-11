@@ -58,6 +58,10 @@ declare -r AWQL_QUERY_FROM="[Ff][Rr][Oo][Mm]"
 #declare -r AWQL_QUERY_DURING="[Dd][Uu][Rr][Ii][Nn][Gg]"
 declare -r AWQL_QUERY_ORDER_BY="[Oo][Rr][Dd][Ee][Rr] [Bb][Yy]"
 declare -r AWQL_QUERY_LIMIT="[Ll][Ii][Mm][Ii][Tt]"
+declare -r AWQL_QUERY_HELP="[Hh][Ee][Ll][Pp]"
+declare -r AWQL_QUERY_EXIT="[Ee][Xx][Ii][Tt]"
+declare -r AWQL_QUERY_QUIT="[Qq][Uu][Ii][Tt]"
+declare -r AWQL_QUERY_CLEAR="[Cc][Ll][Ee][Aa][Rr]"
 
 # Prompt
 declare -r AWQL_PROMPT="awql> "
@@ -72,6 +76,13 @@ declare -r AWQL_FIELD_IS_KEY="MUL"
 declare -r AWQL_TABLES_IN="Tables_in_"
 declare -r AWQL_TABLES_WITH="_with_"
 declare -r AWQL_CONFIRM="(Y/N)"
+declare -r AWQL_COMMAND_CLEAR="c"
+declare -r AWQL_TEXT_COMMAND_CLEAR="clear"
+declare -r AWQL_COMMAND_EXIT="q"
+declare -r AWQL_TEXT_COMMAND_EXIT="exit"
+declare -r AWQL_TEXT_COMMAND_QUIT="quit"
+declare -r AWQL_COMMAND_HELP="h"
+declare -r AWQL_TEXT_COMMAND_HELP="help"
 
 # Workspace
 if [ -n "$AWQL_WRK_DIR" ]; then

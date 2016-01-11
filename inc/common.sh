@@ -266,7 +266,7 @@ function parseUrl ()
 # @return string
 function trim ()
 {
-    echo -e "$1" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"
+    echo "$1" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"
 }
 
 ##

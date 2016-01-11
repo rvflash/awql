@@ -49,6 +49,24 @@ function querySortOrderType ()
 }
 
 ##
+# Display information about available AWQL commmands
+function help ()
+{
+    echo "The AWQL command line tool is developed by Hervé GOUCHET."
+    echo "For developer information, visit:"
+    echo "    https://github.com/rvflash/awql/"
+    echo "For information about AWQL language, visit:"
+    echo "    https://developers.google.com/adwords/api/docs/guides/awql"
+    echo
+    echo "List of all AWQL commands:"
+    echo "Note that all text commands must be first on line and end with ';'"
+    echo "${AWQL_TEXT_COMMAND_CLEAR}     (\\${AWQL_COMMAND_CLEAR}) Clear the current input statement."
+    echo "${AWQL_TEXT_COMMAND_EXIT}      (\\${AWQL_COMMAND_EXIT}) Exit awql. Same as quit."
+    echo "${AWQL_TEXT_COMMAND_HELP}      (\\${AWQL_COMMAND_HELP}) Display this help."
+    echo "${AWQL_TEXT_COMMAND_QUIT}      (\\${AWQL_COMMAND_EXIT}) Quit awql command line tool."
+}
+
+##
 # Check query to verify structure & limits
 # @param string $1 Adwords ID
 # @param string $2 Awql query
@@ -85,6 +103,14 @@ function query ()
     # Management by query method
     if [[ -z "$QUERY_ORIGIN" ]]; then
         echo "QueryError.MISSING"
+        return 2
+    elif [[ "$QUERY_ORIGIN" == ${AWQL_QUERY_EXIT} ||  "$QUERY_ORIGIN" == ${AWQL_QUERY_QUIT} ]]; then
+        # Awql command: Exit
+        echo "Bye"
+        return 1
+    elif [[ "$QUERY_ORIGIN" == ${AWQL_QUERY_HELP} ]]; then
+        # Awql command: Help
+        help
         return 2
     elif ! inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS"; then
         echo "QueryError.INVALID_QUERY_METHOD"
