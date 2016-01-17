@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -o nounset -o errexit -o pipefail
+#set -o nounset -o errexit -o pipefail -o errtrace
 
 ##
 # Provide interface to request Google Adwords with AWQL queries
@@ -15,6 +15,7 @@ SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 source "${SCRIPT_ROOT}/conf/awql.sh"
 source "${AWQL_INC_DIR}/common.sh"
 source "${AWQL_INC_DIR}/awql.sh"
+source "${AWQL_INC_DIR}/completion.sh"
 source "${AWQL_INC_DIR}/query.sh"
 source "${AWQL_INC_DIR}/print.sh"
 source "${AWQL_AUTH_DIR}/auth.sh"
@@ -27,6 +28,7 @@ QUERY=""
 SAVE_FILE=""
 CACHING=0
 VERBOSE=0
+AUTO_REHASH=1
 
 # Help
 function usage ()
@@ -39,6 +41,7 @@ function usage ()
     echo "-s to append a copy of output to the given file"
     echo "-c used to enable cache"
     echo "-v used to print more informations"
+    echo "-A Disable automatic rehashing. This option is on by default, which enables table and column name completion"
 
     if [[ "$1" == "CURL" ]]; then
         echo "> CURL in command line is required"
@@ -52,9 +55,9 @@ function welcome ()
 {
     echo "Welcome to the AWQL monitor. Commands end with ; or \g."
     echo "Your AWQL version: ${AWQL_API_VERSION}"
-    #echo
-    #echo "Reading table information for completion of table and column names."
-    #echo "You can turn off this feature to get a quicker startup with -A"
+    echo
+    echo "Reading table information for completion of table and column names."
+    echo "You can turn off this feature to get a quicker startup with -A"
     echo
     echo "Type 'help;' or '\h' for help. Type '\c' to clear the current input statement."
 }
@@ -70,7 +73,7 @@ fi
 
 # Read the options
 # Use getopts vs getopt for MacOs portability
-while getopts "i::a::d::s:e:cv" FLAG; do
+while getopts "i::a::d::s:e:cvA" FLAG; do
     case "${FLAG}" in
         i) ADWORDS_ID="$OPTARG" ;;
         a) ACCESS_TOKEN="$OPTARG" ;;
@@ -79,6 +82,7 @@ while getopts "i::a::d::s:e:cv" FLAG; do
         s) if [[ "${OPTARG:0:1}" = "/" ]]; then SAVE_FILE="$OPTARG"; else SAVE_FILE="${SCRIPT_ROOT}${OPTARG}"; fi ;;
         c) CACHING=1 ;;
         v) VERBOSE=1 ;;
+        A) AUTO_REHASH=0 ;;
         *) usage; exit 1 ;;
         ?) exit  ;;
     esac
@@ -108,7 +112,7 @@ fi
 if [[ -z "$QUERY" ]]; then
     welcome
     while true; do
-        awqlRead "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+        awqlRead "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING" "$AUTO_REHASH"
     done
 else
     awql "$QUERY" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"

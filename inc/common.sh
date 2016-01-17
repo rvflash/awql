@@ -35,6 +35,35 @@ function arrayDiff ()
 }
 
 ##
+# Searches the array for a given value and returns the corresponding key if successful
+#
+# @example inputs "v2" "v1 v2 v3"
+# @example return "1"
+#
+# @param string $1
+# @param stringableArray $2
+# return int
+function arraySearch ()
+{
+    local NEEDLE="$1"
+    IFS=' ' read -a HAYSTACK <<< "$2"
+    declare -i HAYSTACK_LENGTH="${#HAYSTACK[@]}"
+    if [[ -z "$NEEDLE" ]] || [[ "$HAYSTACK_LENGTH" -eq 0 ]]; then
+        return 1
+    fi
+
+    declare -i I
+    for (( I=0; I < "$HAYSTACK_LENGTH"; I++ )); do
+        if [[ ${HAYSTACK[$I]} == ${NEEDLE} ]]; then
+            echo -n "$I"
+            return
+        fi
+    done
+
+    return 1
+}
+
+##
 # Calculate and return a checksum for one string
 # @param string $1
 # @return string
@@ -147,33 +176,6 @@ function exitOnError ()
 }
 
 ##
-# Exit in case of error, if $1 is not equals to 0 and print formated message
-# @example Message -------------------------------- OK
-# @param string $1 return code of previous step
-# @param string $2 message to display
-function printAndExitOnError ()
-{
-    # In
-    local STATUS="$AWQL_SUCCESS_STATUS"
-    if [[ "$1" -ne 0 ]]; then
-        STATUS="$AWQL_ERROR_STATUS"
-    fi
-    local MESSAGE="$2"
-
-    # Out
-    local PAD_LENGTH=60
-    local PAD=$(printf '%0.1s' "-"{1..80})
-
-    printf '%s ' "$MESSAGE"
-    printf '%*.*s' 0 $((PAD_LENGTH - ${#MESSAGE})) "$PAD"
-    printf ' %s\n' "$STATUS"
-
-    if [[ "$1" -ne 0 ]]; then
-        exit 1
-    fi
-}
-
-##
 # Parse a URL and return its components
 # @example http://login:password@example.com/dir/file.ext?a=sth&b=std
 # @return stringable (SCHEME:"http" USER:"login" PASS:"password" HOST:"example.com" PORT:80 PATH:"/dir/file.ext" QUERY:"a=sth&b=std")
@@ -258,6 +260,56 @@ function parseUrl ()
         "[QUERY]=\"${QUERY}\"" \
         "[FRAGMENT]=\"${FRAGMENT}\"" \
     ")"
+}
+
+
+##
+# Format message with left padding
+# @example Message --------------------------------
+# @param string $1 message to display
+# @param int $2 padding length
+# @param string $3 padding char
+function printLeftPad ()
+{
+    local MESSAGE="$1"
+    declare -i MESSAGE_LENGTH="${#MESSAGE}"
+    declare -i PAD_LENGTH="$2"
+    if [[ "$PAD_LENGTH" -eq 0 ]]; then
+        PAD_LENGTH=100
+    fi
+    local PAD="$3"
+    if [[ -z "$PAD" ]]; then
+        PAD=" "
+    fi
+
+    echo -n "${MESSAGE} "
+    if [[ "$PAD_LENGTH" -gt "$MESSAGE_LENGTH" ]]; then
+        PAD=$(printf '%0.1s' "${PAD}"{1..500})
+        printf '%*.*s' 0 $((PAD_LENGTH - $MESSAGE_LENGTH)) "$PAD"
+    fi
+}
+
+##
+# Exit in case of error, if $1 is not equals to 0 and print formated message
+# @example Message -------------------------------- OK
+# @param string $1 return code of previous step
+# @param string $2 message to display
+function printAndExitOnError ()
+{
+    # In
+    local STATUS="$AWQL_SUCCESS_STATUS"
+    if [[ "$1" -ne 0 ]]; then
+        STATUS="$AWQL_ERROR_STATUS"
+    fi
+    local MESSAGE="$2"
+
+    # Out
+    printLeftPad "$MESSAGE" 60 "-"
+    printf ' %s\n' "$STATUS"
+
+    if [[ "$1" -ne 0 ]]; then
+        exit 1
+    fi
 }
 
 ##
@@ -439,4 +491,24 @@ function getTimestampFromUtcDateTime ()
     fi
 
     echo -n "$TIMESTAMP"
+}
+
+##
+# Get width or height or both of a terminal window
+#
+# @example return width
+# @example return width height
+#
+# @param string [$1] optional, accepted values: width or height
+# @return stringable
+function getWindowSize ()
+{
+    local TYPE="$1"
+    declare -a SIZE="($(echo -n $(echo -ne "cols\nlines" | tput -S)))"
+
+    case "$TYPE" in
+        "width" ) echo -n "${SIZE[0]}" ;;
+        "height") echo -n "${SIZE[1]}" ;;
+        *       ) echo -n "${SIZE[@]}" ;;
+    esac
 }

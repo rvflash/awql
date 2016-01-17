@@ -1,116 +1,119 @@
 #!/usr/bin/env bash
 
+declare AWQL_EXTRA AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS AWQL_KEYS AWQL_TABLES AWQL_TABLES_TYPE
+
 ##
 # Get all field names with for each, their description
 # @example ([AccountDescriptiveName]="The descriptive name...")
+# @use AWQL_EXTRA
 function awqlExtra ()
 {
-    local AWQL
-
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_EXTRA_FIELDS"
-        return 1
+    if [[ -z "$AWQL_EXTRA" ]]; then
+        AWQL_EXTRA=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_EXTRA_FIELDS"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_EXTRA"
 }
 
 ##
 # Get all fields names with for each, the type of data
 # @example ([AccountDescriptiveName]="String")
+# @use AWQL_FIELDS
 function awqlFields ()
 {
-    local AWQL
-
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_FIELDS"
-        return 1
+    if [[ -z "$AWQL_FIELDS" ]]; then
+        AWQL_FIELDS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_FIELDS"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_FIELDS"
 }
 
 ##
 # Get all table names with for each, the list of their blacklisted fields
 # @example ([PRODUCT_PARTITION_REPORT]="AccountDescriptiveName AdGroupId...")
+# @use AWQL_BLACKLISTED_FIELDS
 function awqlBlacklistedFields ()
 {
-    local AWQL
-
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_BLACKLISTED_FIELDS"
-        return 1
+    if [[ -z "$AWQL_BLACKLISTED_FIELDS" ]]; then
+        AWQL_BLACKLISTED_FIELDS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_BLACKLISTED_FIELDS"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_BLACKLISTED_FIELDS"
 }
 
 ##
 # Get all fields names with for each, the list of their incompatible fields
 # @example ([AccountDescriptiveName]="Hour")
+# @use AWQL_UNCOMPATIBLE_FIELDS
 function awqlUncompatibleFields ()
 {
-    local AWQL
     local TABLE="$1"
 
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_UNCOMPATIBLE_FIELDS"
-        return 1
+    if [[ -z "$AWQL_UNCOMPATIBLE_FIELDS" ]]; then
+        AWQL_UNCOMPATIBLE_FIELDS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_UNCOMPATIBLE_FIELDS"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_UNCOMPATIBLE_FIELDS"
 }
 
 ##
 # Get all table names with for each, their structuring keys
 # @example ([PRODUCT_PARTITION_REPORT]="ClickType Date...")
+# @use AWQL_KEYS
 function awqlKeys ()
 {
-    local AWQL
-
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_KEYS"
-        return 1
+    if [[ -z "$AWQL_KEYS" ]]; then
+        AWQL_KEYS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_KEYS"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_KEYS"
 }
 
 ##
 # Get all table names with for each, the list of their fields
 # @example ([PRODUCT_PARTITION_REPORT]="AccountDescriptiveName AdGroupId...")
+# @use AWQL_TABLES
 function awqlTables ()
 {
-    local AWQL
-
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_TABLES"
-        return 1
+    if [[ -z "$AWQL_TABLES" ]]; then
+        AWQL_TABLES=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_TABLES"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_TABLES"
 }
 
 ##
 # Get all table names with for each, their type
 # @example ([PRODUCT_PARTITION_REPORT]="SHOPPING")
+# @use AWQL_TABLES_TYPE
 function awqlTablesType ()
 {
-    local AWQL
-
-    AWQL=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
-    if [[ $? -ne 0 ]]; then
-        echo "InternalError.INVALID_AWQL_TABLES_TYPE"
-        return 1
+    if [[ -z "$AWQL_TABLES_TYPE" ]]; then
+        AWQL_TABLES_TYPE=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.INVALID_AWQL_TABLES_TYPE"
+            return 1
+        fi
     fi
-
-    echo -n "$AWQL"
+    echo -n "$AWQL_TABLES_TYPE"
 }
 
 ##
@@ -258,6 +261,7 @@ function awql ()
 # @param string $5 Save file path
 # @param int $6 Cachine mode
 # @param int $7 Verbose mode
+# @param int $8 Auto rehash for completion
 function awqlRead ()
 {
     local ADWORDS_ID="$1"
@@ -267,6 +271,10 @@ function awqlRead ()
     local SAVE_FILE="$5"
     local VERBOSE="$6"
     local CACHING="$7"
+
+    # Auto completion
+    local AUTO_REHASH="$8"
+    local COMPREPLY
 
     # Get AWQL history file in an array
     local HISTORY=()
@@ -297,7 +305,18 @@ function awqlRead ()
             done
         fi
 
-        if [[ "$CHAR" == $'\x1b[A' || "$CHAR" == $'\x1b[B' ]]; then
+        if [[ "$CHAR" == $'\033[F' || "$CHAR" == $'\033[H' ]]; then
+            # Start or end of line navigation with Fn or ctrl + arrows
+            if [[ "$CHAR" == $'\033[F' ]]; then
+                # Forward to end
+                CHAR_INDEX="$QUERY_LENGTH"
+            else
+                # Backward to start
+                CHAR_INDEX=0
+            fi
+            # Move the cursor
+            echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
+        elif [[ "$CHAR" == $'\x1b[A' || "$CHAR" == $'\x1b[B' ]]; then
             # Navigate in history with up and dowan arrow keys
             if [[ "$CHAR" == $'\x1b[A' && "$HISTORY_INDEX" -gt 0 ]];then
                 # Up
@@ -326,7 +345,7 @@ function awqlRead ()
             # Move the cursor
             echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
         elif [[ "$CHAR" == $'\177' ]]; then
-            # Backspace
+            # Backspace (@see $'\010' to delete char ?)
             if [[ "$CHAR_INDEX" -gt 0 ]]; then
                 if [[ "$CHAR_INDEX" -eq "$QUERY_LENGTH" ]]; then
                     QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]%?}"
@@ -341,6 +360,48 @@ function awqlRead ()
                 echo -n "${QUERY[$QUERY_INDEX]}"
                 # Move the cursor
                 echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
+            fi
+        elif [[ "$CHAR" == $'\x09' ]]; then
+            # Tabulation
+            if [[ "$AUTO_REHASH" -eq 1 ]]; then
+                QUERY_STRING="${QUERY[@]}"
+                QUERY_STRING="${QUERY_STRING:0:$CHAR_INDEX}"
+
+                COMPREPLY=$(completion "${QUERY_STRING}")
+                if [[ $? -eq 0 ]]; then
+                    IFS=' ' read -a COMPREPLY <<< "${COMPREPLY}"
+                    declare -i COMPREPLY_LENGTH="${#COMPREPLY[@]}"
+                    if [[ "${COMPREPLY_LENGTH}" -eq 1 ]]; then
+                        # A completed word was found
+                        QUERY[$QUERY_INDEX]+="${COMPREPLY[0]}"
+                        QUERY_LENGTH+=${#COMPREPLY[0]}
+                        CHAR_INDEX+=${#COMPREPLY[0]}
+                    else
+                        # Various completed words were found
+                        # Go to new line to display propositions
+                        echo
+                        local DISPLAY_ALL_COMPLETIONS="$(printf "${AWQL_COMPLETION_CONFIRM}" "${COMPREPLY_LENGTH}")"
+                        if confirm "$DISPLAY_ALL_COMPLETIONS"; then
+                            # Display in 3 columns
+                            declare -i WINDOW_WIDTH=$(getWindowSize "width")
+                            declare -i COLUMN_SIZE=50
+                            declare -i COLUMN_NB="$(($WINDOW_WIDTH/$COLUMN_SIZE))"
+
+                            declare -i I
+                            for ((I=0; I < ${COMPREPLY_LENGTH}; I++)); do
+                                if [[ $(( $I%$COLUMN_NB )) == 0 && "$I" -gt 0 ]]; then
+                                    echo
+                                fi
+                                printLeftPad "${COMPREPLY[$I]}" "$COLUMN_SIZE"
+                            done
+                        fi
+                    fi
+                    # Reset prompt and display query with new char
+                    echo -ne "\r\033[K${PROMPT}"
+                    echo -n "${QUERY[$QUERY_INDEX]}"
+                    # Move the cursor
+                    echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
+                fi
             fi
         elif [[ -z "$CHAR" ]]; then
             # Enter

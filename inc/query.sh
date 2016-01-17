@@ -60,10 +60,14 @@ function help ()
     echo
     echo "List of all AWQL commands:"
     echo "Note that all text commands must be first on line and end with ';'"
-    echo "${AWQL_TEXT_COMMAND_CLEAR}     (\\${AWQL_COMMAND_CLEAR}) Clear the current input statement."
-    echo "${AWQL_TEXT_COMMAND_EXIT}      (\\${AWQL_COMMAND_EXIT}) Exit awql. Same as quit."
-    echo "${AWQL_TEXT_COMMAND_HELP}      (\\${AWQL_COMMAND_HELP}) Display this help."
-    echo "${AWQL_TEXT_COMMAND_QUIT}      (\\${AWQL_COMMAND_EXIT}) Quit awql command line tool."
+    printLeftPad "${AWQL_TEXT_COMMAND_CLEAR}" 10 " "
+    echo "(\\${AWQL_COMMAND_CLEAR}) Clear the current input statement."
+    printLeftPad "${AWQL_TEXT_COMMAND_EXIT}" 10 " "
+    echo "(\\${AWQL_COMMAND_EXIT}) Exit awql. Same as quit."
+    printLeftPad "${AWQL_TEXT_COMMAND_HELP}" 10 " "
+    echo "(\\${AWQL_COMMAND_HELP}) Display this help."
+    printLeftPad "${AWQL_TEXT_COMMAND_QUIT}" 10 " "
+    echo "(\\${AWQL_COMMAND_EXIT}) Quit awql command line tool."
 }
 
 ##
