@@ -305,9 +305,11 @@ function awqlRead ()
             done
         fi
 
-        if [[ "$CHAR" == $'\033[F' || "$CHAR" == $'\033[H' ]]; then
-            # Start or end of line navigation with Fn or ctrl + arrows
-            if [[ "$CHAR" == $'\033[F' ]]; then
+        # @todo Manage moving word by word (alt + left and right arrow keys) // Forward-word and Backward-word
+
+        if [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[H' ]]; then
+            # Go to start (home) or end of the line (Fn or ctrl + left and right arrow keys)
+            if [[ "$CHAR" == $'\x1b[F' ]]; then
                 # Forward to end
                 CHAR_INDEX="$QUERY_LENGTH"
             else
@@ -317,7 +319,7 @@ function awqlRead ()
             # Move the cursor
             echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
         elif [[ "$CHAR" == $'\x1b[A' || "$CHAR" == $'\x1b[B' ]]; then
-            # Navigate in history with up and dowan arrow keys
+            # Navigate in history with up and down arrow keys
             if [[ "$CHAR" == $'\x1b[A' && "$HISTORY_INDEX" -gt 0 ]];then
                 # Up
                 HISTORY_INDEX+=-1
@@ -334,7 +336,7 @@ function awqlRead ()
                 echo -n "${QUERY[$QUERY_INDEX]}"
             fi
         elif [[ "$CHAR" == $'\x1b[C' || "$CHAR" == $'\x1b[D' ]]; then
-            # Move in current query with left and right arrow keys
+            # Moving by char in current query with left and right arrow keys
             if [[ "$CHAR" == $'\x1b[C' && "$CHAR_INDEX" -lt "$QUERY_LENGTH" ]]; then
                 # Right
                 CHAR_INDEX+=1
