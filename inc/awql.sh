@@ -9,7 +9,7 @@ declare AWQL_EXTRA AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS 
 function awqlExtra ()
 {
     if [[ -z "$AWQL_EXTRA" ]]; then
-        AWQL_EXTRA=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
+        AWQL_EXTRA=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_EXTRA_FIELDS"
             return 1
@@ -25,7 +25,7 @@ function awqlExtra ()
 function awqlFields ()
 {
     if [[ -z "$AWQL_FIELDS" ]]; then
-        AWQL_FIELDS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
+        AWQL_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_FIELDS"
             return 1
@@ -41,7 +41,7 @@ function awqlFields ()
 function awqlBlacklistedFields ()
 {
     if [[ -z "$AWQL_BLACKLISTED_FIELDS" ]]; then
-        AWQL_BLACKLISTED_FIELDS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
+        AWQL_BLACKLISTED_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_BLACKLISTED_FIELDS"
             return 1
@@ -59,7 +59,7 @@ function awqlUncompatibleFields ()
     local TABLE="$1"
 
     if [[ -z "$AWQL_UNCOMPATIBLE_FIELDS" ]]; then
-        AWQL_UNCOMPATIBLE_FIELDS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
+        AWQL_UNCOMPATIBLE_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_UNCOMPATIBLE_FIELDS"
             return 1
@@ -75,7 +75,7 @@ function awqlUncompatibleFields ()
 function awqlKeys ()
 {
     if [[ -z "$AWQL_KEYS" ]]; then
-        AWQL_KEYS=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
+        AWQL_KEYS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_KEYS"
             return 1
@@ -91,7 +91,7 @@ function awqlKeys ()
 function awqlTables ()
 {
     if [[ -z "$AWQL_TABLES" ]]; then
-        AWQL_TABLES=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
+        AWQL_TABLES=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_TABLES"
             return 1
@@ -107,7 +107,7 @@ function awqlTables ()
 function awqlTablesType ()
 {
     if [[ -z "$AWQL_TABLES_TYPE" ]]; then
-        AWQL_TABLES_TYPE=$(yamlToArray "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
+        AWQL_TABLES_TYPE=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_TABLES_TYPE"
             return 1
@@ -139,7 +139,7 @@ function getFromCache ()
 ##
 # Fetch internal cache or send request to Adwords to get results
 # @param string $1 Adwords ID
-# @param stringableArray $2 User request
+# @param arrayToString $2 User request
 # @param array $3 Google authentification tokens
 # @param array $4 Google request properties
 # @param array $5 Verbose mode
@@ -210,7 +210,7 @@ function get ()
 # @param string $2 Adwords ID
 # @param string $3 Google Access Token
 # @param string $4 Google Developer Token
-# @param stringableArray $5 Google request configuration
+# @param arrayToString $5 Google request configuration
 # @param string $6 Save file path
 # @param int $7 Cachine mode
 # @param int $8 Verbose mode
@@ -232,7 +232,7 @@ function awql ()
     fi
 
     # Retrieve Google tokens (only if HTTP call is needed)
-    local AUTH=""
+    local AUTH
     if [[ "$QUERY" == *"\"select\""* ]]; then
         AUTH=$(auth "$ACCESS_TOKEN" "$DEVELOPER_TOKEN")
         if exitOnError "$?" "$AUTH" "$VERBOSE"; then
@@ -241,7 +241,7 @@ function awql ()
     fi
 
     # Send request to Adwords or local cache to get report
-    local RESPONSE=""
+    local RESPONSE
     RESPONSE=$(get "$ADWORDS_ID" "$QUERY" "$AUTH" "$REQUEST" "$VERBOSE" "$CACHING")
     if exitOnError "$?" "$RESPONSE" "$VERBOSE"; then
         return 1
@@ -257,7 +257,7 @@ function awql ()
 # @param string $1 Adwords ID
 # @param string $2 Google Access Token
 # @param string $3 Google Developer Token
-# @param stringableArray $4 Google request configuration
+# @param arrayToString $4 Google request configuration
 # @param string $5 Save file path
 # @param int $6 Cachine mode
 # @param int $7 Verbose mode
@@ -295,11 +295,11 @@ function awqlRead ()
     declare -i QUERY_INDEX
     declare -i CHAR_INDEX
     local CHAR=""
-    while IFS="" read -r -n 1 -s CHAR; do
-        # \x1b is the start of an escape sequence
+    while IFS="" read -rsn1 CHAR; do
+        # \x1b is the start of an escape sequence == \033
         if [[ "$CHAR" == $'\x1b' ]]; then
             # Get the rest of the escape sequence (3 characters total)
-            while IFS= read -r -n 2 -s REST; do
+            while IFS= read -rsn2 REST; do
                 CHAR+="$REST"
                 break
             done
@@ -383,15 +383,15 @@ function awqlRead ()
                         # Go to new line to display propositions
                         echo
                         local DISPLAY_ALL_COMPLETIONS="$(printf "${AWQL_COMPLETION_CONFIRM}" "${COMPREPLY_LENGTH}")"
-                        if confirm "$DISPLAY_ALL_COMPLETIONS"; then
+                        if confirm "$DISPLAY_ALL_COMPLETIONS" "$AWQL_CONFIRM"; then
                             # Display in 3 columns
-                            declare -i WINDOW_WIDTH=$(getWindowSize "width")
+                            declare -i WINDOW_WIDTH=$(windowSize "width")
                             declare -i COLUMN_SIZE=50
                             declare -i COLUMN_NB="$(($WINDOW_WIDTH/$COLUMN_SIZE))"
 
                             declare -i I
                             for ((I=0; I < ${COMPREPLY_LENGTH}; I++)); do
-                                if [[ $(( $I%$COLUMN_NB )) == 0 && "$I" -gt 0 ]]; then
+                                if [[ $(( $I%$COLUMN_NB )) == 0 ]]; then
                                     echo
                                 fi
                                 printLeftPad "${COMPREPLY[$I]}" "$COLUMN_SIZE"
