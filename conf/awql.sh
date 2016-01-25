@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 # Environment
-declare -r AWQL_UTC_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z"
 declare -r AWQL_SUCCESS_STATUS="OK"
 declare -r AWQL_ERROR_STATUS="FAILED"
-declare -r AWQL_USER_NAME=$(logname)
+declare -r AWQL_USER_NAME="$(logname)"
 declare -r AWQL_USER_HOME=$(sudo -u ${AWQL_USER_NAME} -H sh -c 'echo "$HOME"')
-declare -r AWQL_OS=$(uname -s)
+declare -r AWQL_OS="$(uname -s)"
 
 # Worspace
 declare -r AWQL_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 declare -r AWQL_WRK_DIR="/tmp/awql/$(date +%Y%m%d)"
+declare -r AWQL_BASH_PACKAGES_DIR="${AWQL_ROOT_DIR}/vendor/bash-packages"
 declare -r AWQL_ADWORDS_DIR="${AWQL_ROOT_DIR}/adwords"
 declare -r AWQL_INC_DIR="${AWQL_ROOT_DIR}/inc"
 declare -r AWQL_CONF_DIR="${AWQL_ROOT_DIR}/conf"
@@ -67,6 +67,7 @@ declare -r AWQL_QUERY_CLEAR="[Cc][Ll][Ee][Aa][Rr]"
 declare -r AWQL_PROMPT="awql> "
 declare -r AWQL_PROMPT_NEW_LINE="   -> "
 declare -r AWQL_PROMPT_EXIT="Bye"
+declare -r AWQL_PROMPT_REQUIRED="(required)"
 declare -r AWQL_TABLE_FIELD_NAME="Field"
 declare -r AWQL_TABLE_FIELD_TYPE="Type"
 declare -r AWQL_TABLE_FIELD_KEY="Key"
