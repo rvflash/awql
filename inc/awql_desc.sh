@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# @includeBy /inc/awql.sh
+
 ##
 # Allow access to table structure
 # @param string $1 Awql query
@@ -78,8 +80,7 @@ function awqlDesc ()
     local FIELD_IS_KEY=""
     for FIELD in ${FIELDS[@]}; do
         if [ -n "${AWQL_FIELDS[$FIELD]}" ] && ([ -z "$COLUMN" ] || [ "$COLUMN" = "$FIELD" ]); then
-            inArray "$FIELD" "${AWQL_KEYS[$TABLE]}"
-            if [ $? -eq 0 ]; then
+            if [[ 1 -eq $(inArray "$FIELD" "${AWQL_KEYS[$TABLE]}") ]]; then
                 FIELD_IS_KEY="${AWQL_FIELD_IS_KEY}"
             else
                 FIELD_IS_KEY=""
