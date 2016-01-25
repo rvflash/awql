@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# @includeBy /inc/awql.sh
+
 ##
 # Allow access to table listing and informations
 # @param string $1 Awql query
@@ -52,10 +54,10 @@ function awqlShow ()
         # List tables that match the search terms
         for TABLE in "${!AWQL_TABLES[@]}"; do
             # Also manage Like with %
-            if [[ -z "${QUERY_STRING#%}" ]] || [[ "${QUERY_STRING#%}" = "$TABLE" ]] ||
-               ([[ "$QUERY_STRING" == "%"*"%" ]] && [[ "$TABLE" == *"${QUERY_STRING:1:-1}"* ]]) ||
-               ([[ "$QUERY_STRING" == "%"* ]] && [[ "$TABLE" == *"${QUERY_STRING:1}" ]]) ||
-               ([[ "$QUERY_STRING" == *"%" ]] && [[ "$TABLE" == "${QUERY_STRING::-1}"* ]]); then
+            if [[ -z "${QUERY_STRING#%}" || "${QUERY_STRING#%}" = "$TABLE" ]] ||
+               ([[ "$QUERY_STRING" == "%"*"%" && "$TABLE" == *"${QUERY_STRING:1:-1}"* ]]) ||
+               ([[ "$QUERY_STRING" == "%"* && "$TABLE" == *"${QUERY_STRING:1}" ]]) ||
+               ([[ "$QUERY_STRING" == *"%" && "$TABLE" == "${QUERY_STRING::-1}"* ]]); then
 
                 if [ -n "$SHOW_TABLES" ]; then
                     SHOW_TABLES+="\n"
@@ -79,7 +81,7 @@ function awqlShow ()
         fi
 
         for TABLE in "${!AWQL_TABLES[@]}"; do
-            if inArray "$QUERY_STRING" "${AWQL_TABLES[$TABLE]}"; then
+            if [[ 1 -eq $(inArray "$QUERY_STRING" "${AWQL_TABLES[$TABLE]}") ]]; then
                 if [[ -n "$SHOW_TABLES" ]]; then
                     SHOW_TABLES+="\n"
                 fi
