@@ -20,13 +20,14 @@
 # PORT              : __PORT__
 
 # Envionnement
-SCRIPT=$(basename ${BASH_SOURCE[0]})
+SCRIPT=$(basename "${BASH_SOURCE[0]}")
 SCRIPT_PATH="$0"; while [[ -h "$SCRIPT_PATH" ]]; do SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"; done
 SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 
 # Requires
 source "${SCRIPT_ROOT}/../conf/awql.sh"
 source "${AWQL_INC_DIR}/common.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/net.sh"
 
 # Workspace
 AUTH_TYPE=""
@@ -130,7 +131,7 @@ function initCustom ()
         -e "s/__PORT__/${PORT}/g" \
         "${AWQL_AUTH_FILE/.yaml/-dist.yaml}" 1>"${AWQL_AUTH_FILE}" 2>/dev/null
 
-    if exitOnError exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"; then
+    if exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"; then
         return 1
     fi
 }
