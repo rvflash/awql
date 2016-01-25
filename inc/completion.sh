@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# @includedBy /awql.sh
+
 declare -i -r COMPLETION_DISABLED=0
 declare -i -r COMPLETION_MODE_TABLES=1
 declare -i -r COMPLETION_MODE_FIELDS=2
@@ -13,13 +15,13 @@ declare -i -r COMPLETION_MODE_DURING=3
 function completeOptions ()
 {
     local MODE="$1"
-    if [[ "$MODE" -eq $COMPLETION_DISABLED ]]; then
+    if [[ "$MODE" -eq ${COMPLETION_DISABLED} ]]; then
         return
     fi
     local FILTER="$2"
 
     local AWQL_TABLES
-    if [[ "$MODE" -eq "$COMPLETION_MODE_TABLES" ]]; then
+    if [[ "$MODE" -eq ${COMPLETION_MODE_TABLES} ]]; then
         # Load tables
         AWQL_TABLES=$(awqlTables)
         if [[ $? -ne 0 ]]; then
@@ -29,7 +31,7 @@ function completeOptions ()
     fi
 
     local AWQL_FIELDS
-    if [[ "$MODE" -eq "COMPLETION_MODE_FIELDS" ]]; then
+    if [[ "$MODE" -eq ${COMPLETION_MODE_FIELDS} ]]; then
         # Load fields
         local AWQL_FIELDS
         AWQL_FIELDS=$(awqlFields)
@@ -39,12 +41,12 @@ function completeOptions ()
         declare -A -r AWQL_FIELDS="$AWQL_FIELDS"
     fi
 
-    if [[ "$MODE" -eq "$COMPLETION_MODE_TABLES" ]]; then
+    if [[ "$MODE" -eq ${COMPLETION_MODE_TABLES} ]]; then
         if [[ -z "$FILTER" ]]; then
             # List all available table names
             echo -n "${!AWQL_TABLES[@]}"
         else
-            # List all fields of this table
+            # List all table's fields
             echo -n "${AWQL_TABLES[$FILTER]}"
         fi
     else
@@ -119,8 +121,7 @@ function completion ()
 
     # All available words to use as completion
     declare -i MODE
-    local FILTER
-    local OPTIONS
+    local FILTER OPTIONS
     if [[ "$COMP" == *";" || "$COMP" == *"\\"[gG] ]]; then
         return 1
     elif [[ "$COMP" == ${AWQL_QUERY_SELECT}[[:space:]]**${AWQL_QUERY_LIMIT}[[:space:]]* ]]; then
