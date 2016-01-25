@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# @includeBy /inc/awql.sh
+
 ##
 # Return position of column to used as sort order
 # @param string $1 Column order's name
@@ -41,7 +43,7 @@ function querySortOrder ()
 # @param $1 Column data type
 function querySortOrderType ()
 {
-    if inArray "$1" "$AWQL_SORT_NUMERICS"; then
+    if [[ 1 -eq $(inArray "$1" "$AWQL_SORT_NUMERICS") ]]; then
         echo -n "n"
     else
         echo -n "d"
@@ -74,7 +76,7 @@ function help ()
 # Check query to verify structure & limits
 # @param string $1 Adwords ID
 # @param string $2 Awql query
-# @return stringableArray REQUEST
+# @return arrayToString REQUEST
 function query ()
 {
     local ADWORDS_ID="$1"
@@ -116,7 +118,7 @@ function query ()
         # Awql command: Help
         help
         return 2
-    elif ! inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS"; then
+    elif [[ 0 -eq $(inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS") ]]; then
         echo "QueryError.INVALID_QUERY_METHOD"
         return 2
     fi
@@ -197,7 +199,7 @@ function query ()
     fi
 
     # Calculate a checksum for this query (usefull for unique identifier)
-    REQUEST[CHECKSUM]=$(checksum "$ADWORDS_ID $QUERY")
+    REQUEST[CHECKSUM]=$(checksum "$ADWORDS_ID $QUERY" "$AWQL_WRK_DIR")
     if [[ $? -ne 0 ]]; then
         echo "QueryError.MISSING_CHECKSUM"
         return 1
@@ -206,5 +208,5 @@ function query ()
     # And the last but not the least
     REQUEST[QUERY]="$QUERY"
 
-    echo -n "$(stringableArray "$(declare -p REQUEST)")"
+    echo -n "$(arrayToString "$(declare -p REQUEST)")"
 }
