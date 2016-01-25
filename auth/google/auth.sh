@@ -24,6 +24,9 @@ SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 # Requires
 source "${SCRIPT_ROOT}/../../conf/awql.sh"
 source "${AWQL_INC_DIR}/common.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/array.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/time.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/encoding/yaml.sh"
 
 # Workspace
 CLIENT_ID=""
@@ -79,7 +82,7 @@ fi
 # @param string $1 CLIENT_ID
 # @param string $2 CLIENT_SECRET
 # @param string $3 REFRESH_TOKEN
-# @return stringableArray
+# @return arrayToString
 function auth ()
 {
     local CLIENT_ID="$1"
@@ -90,14 +93,14 @@ function auth ()
 
     # Check availibility of existing token in cache
     if [[ -f "$FILE" ]]; then
-        local TOKEN="$(getTokenFromFile "$FILE")"
+        local TOKEN="$(tokenFromFile "$FILE")"
         if [[ $? -eq 0 ]]; then
             declare -A -r TOKEN="$TOKEN"
-            local TIMESTAMP="$(getTimestampFromUtcDateTime "${TOKEN[EXPIRE_AT]}")"
+            local TIMESTAMP="$(timestampFromUtcDateTime "${TOKEN[EXPIRE_AT]}")"
             if [[ $? -eq 0 ]]; then
                 local CURRENT_TIMESTAMP="$(getCurrentTimestamp)"
-                if [[ $? -eq 0 ]] && [[ "$TIMESTAMP" -gt "$CURRENT_TIMESTAMP" ]]; then
-                    echo -n "$(stringableArray "$(declare -p TOKEN)")"
+                if [[ $? -eq 0 && "$TIMESTAMP" -gt "$CURRENT_TIMESTAMP" ]]; then
+                    echo -n "$(arrayToString "$(declare -p TOKEN)")"
                     return
                 fi
             fi
@@ -109,7 +112,7 @@ function auth ()
     # Try to retrieve a fresh token
     refresh "$CLIENT_ID" "$CLIENT_SECRET" "$REFRESH_TOKEN" "$REQUEST_FILE" "$FILE"
     if [[ $? -eq 0 ]]; then
-        local AUTH="$(getTokenFromFile "$FILE")"
+        local AUTH="$(tokenFromFile "$FILE")"
         if [[ $? -eq 0 ]]; then
             echo -n "$AUTH"
             return
@@ -140,7 +143,7 @@ function refresh ()
     local FILE="$5"
 
     # Request configuration
-    local REQUEST="$(yamlToArray "$REQUEST_FILE")"
+    local REQUEST="$(yamlFileDecode "$REQUEST_FILE")"
     if [[ $? -ne 0 ]]; then
         echo "RefreshAuthError.INVALID_REQUEST_FILE"
         return 1
@@ -178,8 +181,8 @@ function refresh ()
         return 1
     else
         # Convert ExpiresIn to ExpireAt
-        local CURRENT_TIMESTAMP="$(getCurrentTimestamp)"
-        local UTC_DATETIME="$(getUtcDateTimeFromTimestamp $((${CURRENT_TIMESTAMP}+3600)))"
+        local CURRENT_TIMESTAMP="$(timestamp)"
+        local UTC_DATETIME="$(utcDateTimeFromTimestamp $((${CURRENT_TIMESTAMP}+3600)))"
         if [[ $? -eq 0 ]]; then
             sed -i -e "s/\"expires_in\":3600/\"expire_at\":\"${UTC_DATETIME}\"/g" "$FILE"
         fi
