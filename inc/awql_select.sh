@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
+# @includeBy /inc/awql.sh
+
 ##
 # Send a curl request to Adwords API to get response for AWQL query
 # @param string $1 Adwords ID
-# @param stringableArray $2 Google authentification tokens
-# @param stringableArray $3 Google request properties
+# @param arrayToString $2 Google authentification tokens
+# @param arrayToString $3 Google request properties
 # @param string $4 Awql query
 # @param array $5 Output filepath
 # @param array $6 verbose mode
