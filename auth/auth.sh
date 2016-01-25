@@ -5,7 +5,7 @@
 # @example ([ACCESS_TOKEN]="..." [DEVELOPER_TOKEN]="...")
 # @param string $1 Access token (inline mode)
 # @param string $2 Developer token (inline mode)
-# @return stringableArray
+# @return arrayToString
 function auth ()
 {
     local ACCESS_TOKEN="$1"
@@ -19,7 +19,7 @@ function auth ()
 
     # Default configuration
     local AUTH
-    AUTH="$(yamlToArray "${AWQL_AUTH_FILE}")"
+    AUTH="$(yamlFileDecode "${AWQL_AUTH_FILE}")"
     if [ $? -ne 0 ]; then
         echo "AuthenticationError.FILE_INVALID"
         return 1
@@ -52,5 +52,5 @@ function auth ()
 
     ACCESS[DEVELOPER_TOKEN]="${AUTH[DEVELOPER_TOKEN]}"
 
-    echo -n "$(stringableArray "$(declare -p ACCESS)")"
+    echo -n "$(arrayToString "$(declare -p ACCESS)")"
 }
