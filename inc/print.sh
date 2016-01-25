@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# @includeBy /inc/awql.sh
+
 ##
 # Add informations about context of the query (time duration & number of lines)
 # @example 2 rows in set (0.93 sec)
@@ -48,8 +50,8 @@ function printContext ()
 
 ##
 # Show response & info about it
-# @param stringableArray $1 Request
-# @param stringableArray $2 Response
+# @param arrayToString $1 Request
+# @param arrayToString $2 Response
 # @param string $3 If given, path to save AWQL response
 # @param string $4 Verbose mode
 function print ()
