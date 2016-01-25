@@ -13,11 +13,14 @@ SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 
 # Requires
 source "${SCRIPT_ROOT}/conf/awql.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/array.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/file.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/encoding/yaml.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/strings.sh"
 source "${AWQL_INC_DIR}/common.sh"
 source "${AWQL_INC_DIR}/awql.sh"
-source "${AWQL_INC_DIR}/completion.sh"
-source "${AWQL_INC_DIR}/query.sh"
 source "${AWQL_INC_DIR}/print.sh"
+source "${AWQL_INC_DIR}/query.sh"
 source "${AWQL_AUTH_DIR}/auth.sh"
 
 # Default values
@@ -95,7 +98,7 @@ if [[ -z "$ADWORDS_ID" ]]; then
     exit 2
 else
     # Retrieve Google request configuration
-    REQUEST=$(yamlToArray "${AWQL_CONF_DIR}/${AWQL_REQUEST_FILE_NAME}")
+    REQUEST=$(yamlFileDecode "${AWQL_CONF_DIR}/${AWQL_REQUEST_FILE_NAME}")
     if exitOnError "$?" "InternalError.INVALID_CONFIG_FOR_REQUEST" "$VERBOSE"; then
         return 1
     fi
@@ -110,6 +113,9 @@ else
 fi
 
 if [[ -z "$QUERY" ]]; then
+    if [[ ${AUTO_REHASH} -eq 1 ]]; then
+        source "${AWQL_INC_DIR}/completion.sh"
+    fi
     welcome
     while true; do
         awqlRead "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING" "$AUTO_REHASH"
