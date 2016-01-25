@@ -11,13 +11,15 @@
 # }
 
 # Envionnement
-SCRIPT=$(basename ${BASH_SOURCE[0]})
+SCRIPT=$(basename "${BASH_SOURCE[0]}")
 SCRIPT_PATH="$0"; while [[ -h "$SCRIPT_PATH" ]]; do SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"; done
 SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 
 # Requires
 source "${SCRIPT_ROOT}/../../conf/awql.sh"
 source "${AWQL_INC_DIR}/common.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/array.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/time.sh"
 
 # Help
 function usage ()
@@ -28,7 +30,7 @@ function usage ()
 # Mandatory options
 URL="$1"
 REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-if [[ -z "$URL" ]] || ! [[ "$URL" =~ ${REGEX} ]]; then
+if [[ -z "$URL" || ! "$URL" =~ ${REGEX} ]]; then
     usage
     exit 1
 fi
@@ -36,7 +38,7 @@ fi
 ##
 # Retrieve access token by calling a custom web service
 # @param string $1 URL
-# @return stringableArray
+# @return arrayToString
 function auth ()
 {
     local URL="$1"
@@ -44,14 +46,14 @@ function auth ()
 
     # Check availibility of existing token in cache
     if [[ -f "$FILE" ]]; then
-        local TOKEN="$(getTokenFromFile "$FILE")"
+        local TOKEN="$(tokenFromFile "$FILE")"
         if [[ $? -eq 0 ]]; then
             declare -A -r TOKEN="$TOKEN"
-            local TIMESTAMP="$(getTimestampFromUtcDateTime "${TOKEN[EXPIRE_AT]}")"
+            local TIMESTAMP="$(timestampFromUtcDateTime "${TOKEN[EXPIRE_AT]}")"
             if [[ $? -eq 0 ]]; then
-                local CURRENT_TIMESTAMP="$(getCurrentTimestamp)"
-                if [[ $? -eq 0 ]] && [[ "$TIMESTAMP" -gt "$CURRENT_TIMESTAMP" ]]; then
-                    echo -n "$(stringableArray "$(declare -p TOKEN)")"
+                local CURRENT_TIMESTAMP="$(timestamp)"
+                if [[ $? -eq 0 && "$TIMESTAMP" -gt "$CURRENT_TIMESTAMP" ]]; then
+                    echo -n "$(arrayToString "$(declare -p TOKEN)")"
                     return
                 fi
             fi
@@ -63,7 +65,7 @@ function auth ()
     # Try to retrieve a fresh token
     refresh "$URL" "$FILE"
     if [[ $? -eq 0 ]]; then
-        local AUTH="$(getTokenFromFile "$FILE")"
+        local AUTH="$(tokenFromFile "$FILE")"
         if [[ $? -eq 0 ]]; then
             echo -n "$AUTH"
             return
@@ -95,7 +97,7 @@ function refresh ()
         --write-out "%{http_code}"
     )
 
-    if [[ "$HTTP_STATUS_CODE" -eq 0 ]] || [[ "$HTTP_STATUS_CODE" -gt 400 ]]; then
+    if [[ "$HTTP_STATUS_CODE" -eq 0 || "$HTTP_STATUS_CODE" -gt 400 ]]; then
         echo "RefreshAuthError.CUSTOM_REQUEST_FAIL"
         rm -f "$FILE"
         return 1
