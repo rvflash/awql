@@ -35,7 +35,7 @@ function printContext ()
     CONTEXT="$CONTEXT ($TIME_DURATION sec)"
 
     if [[ "$VERBOSE" -eq 1 ]]; then
-        if [[ -n "$FILE_PATH" ]] && [[ -f "$FILE_PATH" ]]; then
+        if [[ -n "$FILE_PATH" && -f "$FILE_PATH" ]]; then
             # Source
             CONTEXT="$CONTEXT @source $FILE_PATH"
             # From cache ?
@@ -46,6 +46,7 @@ function printContext ()
     fi
 
     echo -en "$CONTEXT\n"
+    echo
 }
 
 ##
@@ -63,7 +64,7 @@ function print ()
 
     local FILE_SIZE=0
     local FILE_PATH="${RESPONSE[FILE]}"
-    if [[ -n "$FILE_PATH" ]] && [[ -f "$FILE_PATH" ]]; then
+    if [[ -n "$FILE_PATH" && -f "$FILE_PATH" ]]; then
         declare -a LIMIT_QUERY=(${REQUEST[LIMIT]})
         declare -a ORDER_QUERY=(${REQUEST[ORDER]})
         local LIMIT_QUERY_SIZE=${#LIMIT_QUERY[@]}
@@ -117,7 +118,7 @@ function print ()
             if [[ "${REQUEST[VERTICAL_MODE]}" -eq 1 ]]; then
                 CVS_OPTIONS="-g"
             fi
-            ${AWQL_CSV_TOOL_FILE} ${CVS_OPTIONS} -f "$FILE_PATH"
+            echo -e "$(${AWQL_CSV_TOOL_FILE} ${CVS_OPTIONS} -f "$FILE_PATH")"
 
             # Save response in an dedicated file
             if [[ -n "$SAVE_FILE" ]]; then
