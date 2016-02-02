@@ -106,7 +106,7 @@ function completion ()
     IFS=' ' read -a WORDS <<< "$COMP"
     declare -i LENGTH="${#WORDS[@]}"
     if [[ "$LENGTH" -eq 0 ]]; then
-          # Only spaces string
+        # Only spaces string
         return 1
     fi
 
@@ -129,7 +129,7 @@ function completion ()
         return 1
     elif [[ "$COMP" == ${AWQL_QUERY_SELECT}[[:space:]]**${AWQL_QUERY_ORDER_BY}[[:space:]]* ]]; then
         # SELECT ... ORDER BY ...
-        # Get only columns useed in query
+        # Get only columns used in query
         OPTIONS=$(echo "$COMP" | sed -e "s/${AWQL_QUERY_SELECT}\(.*\)${AWQL_QUERY_FROM}.*/\1/" -e "s/,/ /g" -e "s/[^a-zA-Z0-9 ]//g")
     elif [[ "$COMP" == ${AWQL_QUERY_SELECT}[[:space:]]**${AWQL_QUERY_DURING}[[:space:]]* ]]; then
         # SELECT ... DURING ...
@@ -177,10 +177,10 @@ function completion ()
     if [[ -n "$OPTIONS" ]]; then
         COMPREPLY=( $(compgen -W "$OPTIONS" -- "$CUR") )
     fi
-    if [[ "${#COMPREPLY[@]}" -eq 0 ]]; then
+    local REPLY="${COMPREPLY[@]}"
+    if [[ "${#COMPREPLY[@]}" -eq 0 || ("${#COMPREPLY[@]}" -eq 1 && "${REPLY}" == "$CUR") ]]; then
         return 1
     fi
-    local REPLY="${COMPREPLY[@]}"
 
     completeWord "${CUR}" "${REPLY}"
 }

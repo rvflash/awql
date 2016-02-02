@@ -11,10 +11,11 @@
 SCRIPT_PATH="$0"; while [[ -h "$SCRIPT_PATH" ]]; do SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"; done
 SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 
-# Requires
+# Import
 source "${SCRIPT_ROOT}/conf/awql.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/array.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/file.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/term.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/encoding/yaml.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/strings.sh"
 source "${AWQL_INC_DIR}/common.sh"
@@ -113,9 +114,12 @@ else
 fi
 
 if [[ -z "$QUERY" ]]; then
+    # Import complete and read packages
     if [[ ${AUTO_REHASH} -eq 1 ]]; then
         source "${AWQL_INC_DIR}/completion.sh"
     fi
+    source "${AWQL_INC_DIR}/reader.sh"
+
     welcome
     while true; do
         awqlRead "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING" "$AUTO_REHASH"

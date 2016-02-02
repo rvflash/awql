@@ -81,7 +81,7 @@ function awqlShow ()
         fi
 
         for TABLE in "${!AWQL_TABLES[@]}"; do
-            if [[ 1 -eq $(inArray "$QUERY_STRING" "${AWQL_TABLES[$TABLE]}") ]]; then
+            if inArray "$QUERY_STRING" "${AWQL_TABLES[$TABLE]}"; then
                 if [[ -n "$SHOW_TABLES" ]]; then
                     SHOW_TABLES+="\n"
                 fi
