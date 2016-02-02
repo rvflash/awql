@@ -12,7 +12,7 @@ function auth ()
     local DEVELOPER_TOKEN="$2"
 
     # Inline mode
-    if [[ -n "$ACCESS_TOKEN" ]] && [[ -n "$DEVELOPER_TOKEN" ]]; then
+    if [[ -n "$ACCESS_TOKEN" && -n "$DEVELOPER_TOKEN" ]]; then
         echo -n "([TOKEN_TYPE]=\"Bearer\" [ACCESS_TOKEN]=\"${ACCESS_TOKEN}\" [DEVELOPER_TOKEN]=\"${DEVELOPER_TOKEN}\")"
         return
     fi
@@ -20,7 +20,7 @@ function auth ()
     # Default configuration
     local AUTH
     AUTH="$(yamlFileDecode "${AWQL_AUTH_FILE}")"
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         echo "AuthenticationError.FILE_INVALID"
         return 1
     fi
