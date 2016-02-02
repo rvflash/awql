@@ -46,7 +46,7 @@ function awqlSelect ()
     )
     declare -A -r RESPONSE_INFO="$RESPONSE"
 
-    if [[ "${RESPONSE_INFO[HTTP_CODE]}" -eq 0 ]] || [[ "${RESPONSE_INFO[HTTP_CODE]}" -gt 400 ]]; then
+    if [[ "${RESPONSE_INFO[HTTP_CODE]}" -eq 0 || "${RESPONSE_INFO[HTTP_CODE]}" -gt 400 ]]; then
         # A connexion error occured
         local ERR_MSG="ConnexionError.NOT_FOUND with API ${AWQL_API_VERSION}"
         if [ "$VERBOSE" -eq 1 ]; then
