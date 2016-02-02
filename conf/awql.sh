@@ -4,7 +4,7 @@
 declare -r AWQL_SUCCESS_STATUS="OK"
 declare -r AWQL_ERROR_STATUS="FAILED"
 declare -r AWQL_USER_NAME="$(logname)"
-declare -r AWQL_USER_HOME=$(sudo -u ${AWQL_USER_NAME} -H sh -c 'echo "$HOME"')
+declare -r AWQL_USER_HOME="$(sudo -u ${AWQL_USER_NAME} -H sh -c 'echo "$HOME"')"
 declare -r AWQL_OS="$(uname -s)"
 
 # Worspace
