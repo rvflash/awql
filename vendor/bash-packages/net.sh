@@ -3,7 +3,9 @@
 ##
 # Parse a URL and return its components
 # @example http://login:password@example.com/dir/file.ext?a=sth&b=std
-# @return stringable (SCHEME:"http" USER:"login" PASS:"password" HOST:"example.com" PORT:80 PATH:"/dir/file.ext" QUERY:"a=sth&b=std")
+#     (SCHEME:"http" USER:"login" PASS:"password" HOST:"example.com" PORT:80 PATH:"/dir/file.ext" QUERY:"a=sth&b=std")
+# @return stringable
+# @returnStatus 1 If Url is empty or invalid
 function parseUrl ()
 {
     local URL="$1"

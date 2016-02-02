@@ -90,27 +90,27 @@ function test_isFloat ()
     # Check nothing
     TEST=$(isFloat)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check int type value
     TEST=$(isFloat ${TEST_NUMBER_TYPE_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check int value in string
     TEST=$(isFloat ${TEST_NUMBER_STR_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     #  Check if it is a float value
     TEST=$(isFloat ${TEST_NUMBER_STR_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check invalid number value
     TEST=$(isFloat ${TEST_NUMBER_STR_UNKNOWN})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 
@@ -123,27 +123,27 @@ function test_isInt ()
     # Check nothing
     TEST=$(isInt)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check int type value
     TEST=$(isInt ${TEST_NUMBER_TYPE_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check int value in string
     TEST=$(isInt ${TEST_NUMBER_STR_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     #  Check if it is a float value
     TEST=$(isInt ${TEST_NUMBER_STR_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check invalid number value
     TEST=$(isInt ${TEST_NUMBER_STR_UNKNOWN})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 
@@ -156,105 +156,105 @@ function test_isNumeric ()
     # Check nothing
     TEST=$(isNumeric)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check int type value
     TEST=$(isNumeric ${TEST_NUMBER_TYPE_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check int value in string
     TEST=$(isNumeric ${TEST_NUMBER_STR_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     #  Check if it is a float value
     TEST=$(isNumeric ${TEST_NUMBER_STR_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check invalid number value
     TEST=$(isNumeric ${TEST_NUMBER_STR_UNKNOWN})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 
 readonly TEST_FLOAT_GREATER_THAN="-11-11-11-01-01-11-11-11-01"
 
-function test_floatGreaterThan ()
+function test_isFloatGreaterThan ()
 {
     local TEST
 
     # Check nothing
-    TEST=$(floatGreaterThan)
+    TEST=$(isFloatGreaterThan)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare equal int values
-    TEST=$(floatGreaterThan ${TEST_NUMBER_TYPE_INT} ${TEST_NUMBER_TYPE_INT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_TYPE_INT} ${TEST_NUMBER_TYPE_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare equal float values
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_FLOAT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare int value with float value
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_BIG_INT} ${TEST_NUMBER_STR_FLOAT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_BIG_INT} ${TEST_NUMBER_STR_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare float value with int value
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_INT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare string value with int value
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_UNKNOWN} ${TEST_NUMBER_TYPE_INT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_UNKNOWN} ${TEST_NUMBER_TYPE_INT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare float value with string value
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_UNKNOWN})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_UNKNOWN})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare float value with an another float value with same decimal
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare float value with a smaller float
-    TEST=$(floatGreaterThan ${TEST_NUMBER_STR_BIGGER_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
+    TEST=$(isFloatGreaterThan ${TEST_NUMBER_STR_BIGGER_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 
 readonly TEST_FLOAT_LOWER_THAN="-11-01-11"
 
-function test_floatLowerThan ()
+function test_isFloatLowerThan ()
 {
     local TEST
 
     # Check nothing
-    TEST=$(floatLowerThan)
+    TEST=$(isFloatLowerThan)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare float value with an another float value with same decimal
-    TEST=$(floatLowerThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
+    TEST=$(isFloatLowerThan ${TEST_NUMBER_STR_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Compare float value with a smaller float
-    TEST=$(floatLowerThan ${TEST_NUMBER_STR_BIGGER_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
+    TEST=$(isFloatLowerThan ${TEST_NUMBER_STR_BIGGER_FLOAT} ${TEST_NUMBER_STR_BIG_FLOAT})
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
-    # Other checks was validated by opposite function floatgreaterThan
+    # Other checks was validated by opposite function isFloatgreaterThan
 }
 
 
@@ -286,7 +286,7 @@ function test_floor ()
 }
 
 
-readonly TEST_NUMERIC_TYPE="-11-01-01-01-11"
+readonly TEST_NUMERIC_TYPE="-01-01-01-01-01"
 
 function test_numericType ()
 {
@@ -343,8 +343,8 @@ bashUnit "int" "${TEST_INT}" "$(test_int)"
 bashUnit "isFloat" "${TEST_IS_FLOAT}" "$(test_isFloat)"
 bashUnit "isInt" "${TEST_IS_INT}" "$(test_isInt)"
 bashUnit "isNumeric" "${TEST_IS_NUMERIC}" "$(test_isNumeric)"
-bashUnit "floatGreaterThan" "${TEST_FLOAT_GREATER_THAN}" "$(test_floatGreaterThan)"
-bashUnit "floatLowerThan" "${TEST_FLOAT_LOWER_THAN}" "$(test_floatLowerThan)"
+bashUnit "isFloatGreaterThan" "${TEST_FLOAT_GREATER_THAN}" "$(test_isFloatGreaterThan)"
+bashUnit "isFloatLowerThan" "${TEST_FLOAT_LOWER_THAN}" "$(test_isFloatLowerThan)"
 bashUnit "floor" "${TEST_FLOAT_FLOOR}" "$(test_floor)"
 bashUnit "numericType" "${TEST_NUMERIC_TYPE}" "$(test_numericType)"
 bashUnit "rand" "${TEST_FLOAT_RAND}" "$(test_rand)"

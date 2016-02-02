@@ -33,11 +33,12 @@ declare -r BP_UNKNOWN_TYPE="unknown"
 ##
 # Only return the decimal part of a float in integer
 # @param string $1
-# @return int
+# @return int Var
+# @returnStatus 1 If first parameter named var is not a float
 function decimal ()
 {
     local VAR="$1"
-    if [[ 0 -eq $(isFloat "$VAR") ]]; then
+    if ! isFloat "$VAR"; then
         echo -n 0
         return 1
     fi
@@ -55,11 +56,12 @@ function decimal ()
 # Get the integer value of a variable
 # @param string $1 Var
 # @return int
+# @returnStatus 1 If first parameter named var is not a numeric
 function int ()
 {
     local VAR="$1"
 
-    if [[ 0 -eq $(isNumeric "$VAR") ]]; then
+    if ! isNumeric "$VAR"; then
         echo -n 0
         return 1
     fi
@@ -67,7 +69,7 @@ function int ()
     # Keep only the value left point
     VAR=$(floor "$VAR")
     if [[ $? -ne 0 ]]; then
-        echo -n 0
+        echo -n ${VAR}
         return 1
     fi
 
@@ -81,59 +83,43 @@ function int ()
 
 ##
 # Finds whether the type of a variable is float
-# @param string $1
-# @return int If is a float 1, 0 otherwise
+# @param string $1 Var
+# @returnStatus 1 If first parameter named var is not a float
 function isFloat ()
 {
-    declare -i RES=0
     if [[ -z "$1" ]]; then
         return 1
-    fi
-
-    if [[ "$1" =~ ^[-+]?[0-9]+\.[0-9]+$ ]]; then
-        RES=1
-    fi
-    echo -n ${RES}
-
-    if [[ ${RES} -eq 0 ]]; then
+    elif [[ "$1" =~ ^[-+]?[0-9]+\.[0-9]+$ ]]; then
+        return
+    else
         return 1
     fi
 }
 
 ##
 # Find whether the type of a variable is integer
-# @param string $1
-# @return int If is a float then 1, 0 otherwise
+# @param string $1 Var
+# @returnStatus 1 If first parameter named var is not an integer
 function isInt ()
 {
-    declare -i RES=0
     if [[ -z "$1" ]]; then
         return 1
-    fi
-
-    if [[ "$1" =~ ^[-+]?[0-9]+$ ]]; then
-        RES=1
-    fi
-    echo -n ${RES}
-
-    if [[ ${RES} -eq 0 ]]; then
+    elif [[ "$1" =~ ^[-+]?[0-9]+$ ]]; then
+        return
+    else
         return 1
     fi
 }
 
 ##
 # Finds whether a variable is a number or a numeric string
-# @param string $1
-# @return int If is a numeric then 1, 0 otherwise
+# @param string Var
+# @returnStatus 1 If first parameter named var is not numeric
 function isNumeric ()
 {
-    declare -i RES=0
-    if [[ 1 -eq $(isFloat "$1") || 1 -eq $(isInt "$1") ]]; then
-         RES=1
-    fi
-    echo -n ${RES}
-
-    if [[ ${RES} -eq 0 ]]; then
+    if isFloat "$1" || isInt "$1"; then
+         return
+    else
         return 1
     fi
 }
@@ -143,25 +129,24 @@ function isNumeric ()
 # @param float $1
 # @param float $2
 # @return int If $1 is greater than $2 then 1, 0 otherwise
-function floatGreaterThan ()
+function isFloatGreaterThan ()
 {
     local VAR_1="$1"
-    local RES_1
-    RES_1=$(numericType "$VAR_1")
-    if [[ $? -ne 0 ]]; then
+    local RES_1=$(numericType "$VAR_1")
+    if [[ "$RES_1" == "${BP_UNKNOWN_TYPE}" ]]; then
         return 1
     fi
 
     local VAR_2="$2"
-    local RES_2
-    RES_2=$(numericType "$VAR_2")
-    if [[ $? -ne 0 ]]; then
+    local RES_2=$(numericType "$VAR_2")
+    if [[ "$RES_2" == "${BP_UNKNOWN_TYPE}" ]]; then
         return 1
     fi
 
-    declare -i RES=0
     if [[ "$BP_BC" -eq 1 ]]; then
-        RES=$(echo "${VAR_1} > ${VAR_2}" | bc)
+        if [[ 1 -eq $(echo "${VAR_1} > ${VAR_2}" | bc) ]]; then
+            return
+        fi
     else
         if [[ "$RES_1" == "${BP_INT_TYPE}" ]]; then
             VAR_1="${VAR_1}.0"
@@ -170,48 +155,39 @@ function floatGreaterThan ()
             VAR_2="${VAR_2}.0"
         fi
         if (( $(floor "${VAR_1}") > $(floor "${VAR_2}") || ( $(floor "${VAR_1}") == $(floor "${VAR_2}") && $(decimal "${VAR_1}") > $(decimal "${VAR_2}") ) )) ; then
-            RES=1
+            return
         fi
     fi
-    echo -n ${RES}
 
-    if [[ ${RES} -eq 0 ]]; then
-        return 1
-    fi
+    return 1
 }
 
 ##
 # First float value is lower than the second ?
-# @param float $1
-# @param float $2
-# @return int If $1 is lower than $2 then 1, 0 otherwise
-function floatLowerThan ()
+# @param float Var1
+# @param float Var2
+# @returnStatus 1 If first parameter named var is not numeric
+function isFloatLowerThan ()
 {
-    declare -i RES
-
-    RES=$(floatGreaterThan "$2" "$1")
-    if [[ $? -ne 0 ]]; then
-        echo -n ${RES}
+    if isFloatGreaterThan "$2" "$1"; then
+        return
+    else
         return 1
     fi
-
-    echo -n ${RES}
 }
 
 ##
 # Round fractions down
 # @param float Value
-# @return int
+# @return int Var
+# @returnStatus 1 If first parameter named var is not numeric
 function floor ()
 {
-    local VAR="$1"
-    if [[ 1 -eq $(isFloat "$VAR") ]]; then
+    if isFloat "$1"; then
         # Keep only the value left point
-        VAR="${VAR%%.*}"
-    fi
-
-    if [[ 1 -eq $(isInt "$VAR") ]]; then
-        echo -n ${VAR}
+        echo -n "${1%%.*}"
+    elif isInt "$1"; then
+        echo -n $1
     else
         echo -n 0
         return 1
@@ -230,13 +206,12 @@ function floor ()
 # @return string
 function numericType ()
 {
-    if [[ 1 -eq $(isFloat "$1") ]]; then
+    if isFloat "$1"; then
         echo -n "${BP_FLOAT_TYPE}"
-    elif [[ 1 -eq $(isInt "$1") ]]; then
+    elif isInt "$1"; then
         echo -n "${BP_INT_TYPE}"
     else
         echo -n "${BP_UNKNOWN_TYPE}"
-        return 1
     fi
 }
 

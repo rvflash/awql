@@ -1,46 +1,57 @@
 # bash-packages
 
 ## Package array
-* arrayDiff
-* arraySearch
-* arrayToString
-* count
-* inArray
+* Function arrayDiff
+* Function arraySearch
+* Function arrayToString
+* Function count
+* Function inArray
 
-## Package encoding
-
-### yaml
-* yamlDecode
-* yamlFileDecode
+## Package encoding/yaml
+* Function yamlDecode
+* Function yamlFileDecode
 
 ## Package file
-* include
-* includeOnce
-* realpath
-* resolvePath
-* physicalDirname
-* userHome
+* Function include
+* Function includeOnce
+* Function realpath
+* Function resolvePath
+* Function physicalDirname
+* Function userHome
 
 ## Package math
-* isFloat
-* isInt
-* isNumeric
-* floatGreaterThan
-* floatLowerThan
-* numericType
+* Function decimal
+* Function int
+* Function isFloat
+* Function isInt
+* Function isNumeric
+* Function isFloatGreaterThan
+* Function isFloatLowerThan
+* Function floor
+* Function numericType
+* Function rand
 
 ## Package net
-* parseUrl
+* Function parseUrl
 
 ## Package strings
-* checksum
-* empty
-* trim
+* Function checksum
+* Function isEmpty
+* Function trim
+
+## Package term
+* Function confirm
+* Function dialog
+* Function windowSize
+
+## Package testing
+* Function bashUnit
+* Function launchAllTests
 
 ## Package time
-* timestamp
-* timeTodo
-* userTimeTodo
-* userTimeTodoExceeded
-* utcDateTimeFromTimestamp
-* timestampFromUtcDateTime
+* Function timestamp
+* Function timeTodo
+* Function userTimeTodo
+* Function isUserTimeTodoExceeded
+* Function utcDateTimeFromTimestamp
+* Function timestampFromUtcDateTime

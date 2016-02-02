@@ -86,7 +86,7 @@ function test_arraySearch ()
 }
 
 
-readonly TEST_ARRAY_ARRAY_TO_STRING="-11-01-01-01"
+readonly TEST_ARRAY_ARRAY_TO_STRING="-01-01-01-01"
 
 function test_arrayToString ()
 {
@@ -95,7 +95,7 @@ function test_arrayToString ()
     # Check nothing
     TEST=$(arrayToString)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ "$TEST" == "()" ]] && echo -n 1
 
     # Simple string
     TEST=$(arrayToString "${TEST_ARRAY_FROM_STRING}")
@@ -114,7 +114,7 @@ function test_arrayToString ()
 }
 
 
-readonly TEST_ARRAY_COUNT="-11-11-11-01-01-01-01"
+readonly TEST_ARRAY_COUNT="-01-01-01-01-01-01-01"
 
 function test_count ()
 {
@@ -166,27 +166,27 @@ function test_inArray ()
     # Check nothing
     TEST=$(inArray)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Search in basic array a unexisting value
     TEST=$(inArray "fifth" "${TEST_ARRAY_FROM_STRING}" )
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Search in basic array an existing value
     TEST=$(inArray "second" "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Search in indexed array an existing value
     TEST=$(inArray "second" "${TEST_ARRAY_NUMERIC_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Search in associative array an existing value
     TEST=$(inArray "second" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 

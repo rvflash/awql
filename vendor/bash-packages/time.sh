@@ -7,6 +7,7 @@ declare -r BP_UTC_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z"
 # Get current timestamp
 # @example 1450485413
 # @return int
+# @returnStatus 1 If date method fails
 function timestamp ()
 {
     local CURRENT_TIMESTAMP
@@ -24,6 +25,8 @@ function timestamp ()
 # @example (["real"]="0m0.011s" ["user"]="0m0.001s" ["sys"]="0m0.005s" )
 # @param string $1 Command
 # @return arrayToString
+# @returnStatus 1 If the first parameter named command is empty
+# @returnStatus 1 If the time method does not return expected time values
 function timeTodo ()
 {
     local COMMAND="$1"
@@ -34,7 +37,7 @@ function timeTodo ()
 
     if [[ "${TIMER[0]}" == "real" && "${TIMER[2]}" == "user" && "${TIMER[4]}" == "sys" ]]; then
         echo -n "([\"real\"]=\"${TIMER[1]}\" [\"user\"]=\"${TIMER[3]}\" [\"sys\"]=\"${TIMER[5]}\")"
-        return
+        return 0
     fi
 
     return 1
@@ -44,6 +47,8 @@ function timeTodo ()
 # Get in seconds the user time duration to run command given as parameter
 # @param string $1 Command
 # @return float
+# @returnStatus 1 If the first parameter named command is empty
+# @returnStatus 1 If the time method does not return the user timer
 function userTimeTodo ()
 {
     local COMMAND="$1"
@@ -60,7 +65,7 @@ function userTimeTodo ()
     declare -a TIMER="$USER_TIME"
     if [[ -n "${TIMER[user]}" ]]; then
         echo -n "${TIMER[user]}" |  awk -F '[^0-9.]*' '$0=$2'
-        return
+        return 0
     fi
 
     return 1
@@ -69,15 +74,23 @@ function userTimeTodo ()
 ##
 # Launch command in first parameter and check time duration.
 # If time exceeds the maximum float value given in second parameter return 1, 0 otherwise
-# @return int
-function userTimeTodoExceeded ()
+# @param string $1 Command
+# @param float $1 Maximum time in second
+# @returnStatus 1 If the first parameter named command is empty
+# @returnStatus 1 If the timer of the command's duration does not return float value as expected
+# @returnStatus 1 If the second parameter named maxTime is empty or an invalid number
+function isUserTimeTodoExceeded ()
 {
-    local VAR_2="$2"
-    if [[ -z "$1" || -z "$VAR_2" ]]; then
+    local VAR_2
+    if [[ -z "$1" || -z "$2" ]]; then
         return 1
-    elif [[ "$VAR_2" != *"."* ]]; then
+    elif [[ "$2" =~ ^[-+]?[0-9]+\.[0-9]+$ ]]; then
+        VAR_2="$2"
+    elif [[ "$2" =~ ^[-+]?[0-9]+$ ]]; then
         # Int to float
-        VAR_2="${VAR_2}.0"
+        VAR_2="${2}.0"
+    else
+        return 1
     fi
 
     local VAR_1
@@ -93,13 +106,10 @@ function userTimeTodoExceeded ()
     local DEC_VAR_1=$(( 10#${VAR_1##*.} ))
     local DEC_VAR_2=$(( 10#${VAR_2##*.} ))
     if (( ${VAR_1%%.*} > ${VAR_2%%.*} || ( ${VAR_1%%.*} == ${VAR_2%%.*} && $DEC_VAR_1 > $DEC_VAR_2 ) )) ; then
-        RES=1
+        return 0
     fi
-    echo -n ${RES}
 
-    if [[ ${RES} -eq 0 ]]; then
-        return 1
-    fi
+    return 1
 }
 
 ##
@@ -107,13 +117,14 @@ function userTimeTodoExceeded ()
 # @example 2015-12-19T01:28:58+01:00
 # @param int $1 TIMESTAMP
 # @return string
+# @returnStatus 1 If parameter named timestamp is invalid
+# @returnStatus 1 If UTC datetime is invalid
 function utcDateTimeFromTimestamp ()
 {
     local TIMESTAMP="$1"
 
     # Data check
-    local REGEX='^-?[0-9]+$'
-    if [[ -z "$TIMESTAMP" || ! "$TIMESTAMP" =~ ${REGEX} ]]; then
+    if [[ -z "$TIMESTAMP" || ! "$TIMESTAMP" =~ ^[-+]?[0-9]+$ ]]; then
         return 1
     fi
 
@@ -137,6 +148,8 @@ function utcDateTimeFromTimestamp ()
 # @example 1450485413 => 2015-12-19T01:28:58+01:00
 # @param string $1 UTC_DATETIME
 # @return int
+# @returnStatus 1 If parameter named utcDatetime is invalid
+# @returnStatus 1 If timestamp is invalid
 function timestampFromUtcDateTime ()
 {
     local UTC_DATETIME="$1"

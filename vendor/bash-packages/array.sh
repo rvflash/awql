@@ -66,7 +66,7 @@ function arrayDiff ()
     fi
     if [[ "${#ARRAY_1[@]}" -eq 0 ]]; then
         echo -n "()"
-        return
+        return 0
     fi
 
     local HAYSTACK_2="$2"
@@ -84,7 +84,7 @@ function arrayDiff ()
     fi
     if [[ "${#ARRAY_2[@]}" -eq 0 ]]; then
         arrayToString "$(declare -p ARRAY_1)"
-        return
+        return 0
     fi
 
     if [[ "${TYPE_1: -1}" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
@@ -115,9 +115,11 @@ function arrayDiff ()
 # @example inputs "v2" '(["k0"]="v1" ["k1"]="v2" ["k2"]="v3")"
 # @example return "k1"
 #
-# @param string $1
-# @param arrayToString $2
-# return int
+# @param string $1 Needle
+# @param arrayToString $2 Haystack
+# @return mixed
+# @returnStatus 1 If first parameter named needle is empty
+# @returnStatus 1 If needle does not exist in haystack
 function arraySearch ()
 {
     local NEEDLE="$1"
@@ -144,7 +146,7 @@ function arraySearch ()
     for KEY in "${!ARRAY[@]}"; do
         if [[ "${ARRAY[$KEY]}" == ${NEEDLE} ]]; then
             echo -n "$KEY"
-            return
+            return 0
         fi
     done
 
@@ -167,7 +169,8 @@ function arrayToString ()
 {
     local ARRAY_TO_STRING="$1"
     if [[ -z "$ARRAY_TO_STRING" ]]; then
-        return 1
+        echo -n "()"
+        return 0
     fi
 
     # Remove declare -OPTIONS NAME='(
@@ -182,6 +185,7 @@ function arrayToString ()
 
 ##
 # Count all elements in an array
+# @param string $1 Haystack
 # return int
 function count ()
 {
@@ -189,7 +193,7 @@ function count ()
     local HAYSTACK="$1"
     if [[ -z "${HAYSTACK}" || "${HAYSTACK}" =~ ^\(([[:space:]]*)?\)*$ ]]; then
         echo -n ${COUNT}
-        return 1
+        return 0
     fi
 
     local TYPE="$(__arrayType "${HAYSTACK}")"
@@ -207,21 +211,18 @@ function count ()
     COUNT=${#ARRAY[@]}
 
     echo -n ${COUNT}
-    if [[ ${COUNT} -eq 0 ]]; then
-        return 1
-    fi
 }
 
 ##
 # Check if a value is available in array
 # @param string $1 Needle
 # @param arrayToString $2 Haystack
-# @return int O if found, 1 otherwise
+# @returnStatus 1 If first parameter named needle is empty
+# @returnStatus 1 If needle does not exist in haystack
 function inArray ()
 {
     local NEEDLE="$1"
     if [[ -z "$NEEDLE" ]]; then
-        echo -n 0
         return 1
     fi
 
@@ -241,11 +242,9 @@ function inArray ()
 
     for VALUE in ${ARRAY[@]}; do
         if [[ "${VALUE}" == ${NEEDLE} ]]; then
-            echo -n 1
             return 0
         fi
     done
 
-    echo -n 0
     return 1
 }

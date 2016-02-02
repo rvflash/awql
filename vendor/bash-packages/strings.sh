@@ -4,8 +4,11 @@ declare -r BP_STRINGS_WRK_DIR="/tmp/"
 
 ##
 # Calculate and return a checksum for one string
-# @param string $1
+# @param string $1 String
+# @param string $2 PathToWorkspace with default value from constant named BP_STRINGS_WRK_DIR [optional]
 # @return string
+# @returnStatus If first parameter named string is empty
+# @returnStatus If checkum is empty or cksum methods returns in error
 function checksum ()
 {
     local STR="$1"
@@ -43,28 +46,27 @@ function checksum ()
 #     FALSE
 #     array() (an empty array)
 #
-# @return 1 if empty, 0 otherwise
-function empty ()
+# @returnStatus 1 If empty, 0 otherwise
+function isEmpty ()
 {
     local VAR="$1"
     if [[ -z "${VAR}" || "${VAR}" == 0 || "${VAR}" == "0.0" || "${VAR}" == false || "${VAR}" =~ ^\(([[:space:]]*)?\)*$ ]]; then
-        echo -n 1
-    else
-        echo -n 0
-        return 1
+        return 0
     fi
+
+    return 1
 }
 
 ##
 # This function returns a string with whitespace (or other characters) stripped from the beginning and end of str
-# @param string $1
-# @param string $2 optional, character to mask
+# @param string $1 String
+# @param string $2 Character to mask [optional]
 # @return string
 function trim ()
 {
     local STR="$1"
     if [[ -z "$STR" ]]; then
-        return 1
+        return 0
     fi
 
     local MASK="$2"

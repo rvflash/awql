@@ -46,48 +46,48 @@ function test_checksum ()
 
 readonly TEST_STRINGS_EMPTY="-01-01-01-01-01-01-11"
 
-function test_empty ()
+function test_isEmpty ()
 {
     local TEST
 
     # Check nothing
-    TEST=$(empty)
+    TEST=$(isEmpty)
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
-    # Check empty string
-    TEST=$(empty "")
+    # Check isEmpty string
+    TEST=$(isEmpty "")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
-    # Check empty array
-    TEST=$(empty "()")
+    # Check isEmpty array
+    TEST=$(isEmpty "()")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check zero as int
-    TEST=$(empty "0")
+    TEST=$(isEmpty "0")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check zero as float
-    TEST=$(empty "0.0")
+    TEST=$(isEmpty "0.0")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check boolean
-    TEST=$(empty false)
+    TEST=$(isEmpty false)
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check not nothing
-    TEST=$(empty true)
+    TEST=$(isEmpty true)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 
-readonly TEST_STRINGS_TRIM="-11-01-01-01-01-01"
+readonly TEST_STRINGS_TRIM="-01-01-01-01-01-01"
 
 function test_trim ()
 {
@@ -127,5 +127,5 @@ function test_trim ()
 
 # Launch all functional tests
 bashUnit "checksum" "${TEST_STRINGS_CHECKSUM}" "$(test_checksum)"
-bashUnit "empty" "${TEST_STRINGS_EMPTY}" "$(test_empty)"
+bashUnit "isEmpty" "${TEST_STRINGS_EMPTY}" "$(test_isEmpty)"
 bashUnit "trim" "${TEST_STRINGS_TRIM}" "$(test_trim)"

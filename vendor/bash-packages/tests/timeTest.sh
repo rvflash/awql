@@ -77,34 +77,34 @@ function test_userTimeTodo ()
 
 readonly TEST_TIME_USER_TIME_TODO_EXCEEDED="-11-11-11-11-01"
 
-function test_userTimeTodoExceeded ()
+function test_isUserTimeTodoExceeded ()
 {
     local TEST
 
     # Check nothing
-    TEST=$(userTimeTodoExceeded)
+    TEST=$(isUserTimeTodoExceeded)
     echo -n "-$?"
     [[ -z "$TEST" ]] && echo -n 1
 
     # Check with one argument missing
-    TEST=$(userTimeTodoExceeded "$TEST_TIME_COMMAND")
+    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND")
     echo -n "-$?"
     [[ -z "$TEST" ]] && echo -n 1
 
     # Check with duration exceeding the command's duration
-    TEST=$(userTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_HIGH_DURATION_COMMAND")
+    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_HIGH_DURATION_COMMAND")
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check with medium duration
-    TEST=$(userTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_MEDIUM_DURATION_COMMAND")
+    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_MEDIUM_DURATION_COMMAND")
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 
     # Check with low duration
-    TEST=$(userTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_LOW_DURATION_COMMAND")
+    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_LOW_DURATION_COMMAND")
     echo -n "-$?"
-    [[ "$TEST" -eq 1 ]] && echo -n 1
+    [[ -z "$TEST" ]] && echo -n 1
 }
 
 
@@ -162,6 +162,6 @@ function test_timestampFromUtcDateTime ()
 bashUnit "timestamp" "${TEST_TIME_TIMESTAMP}" "$(test_timestamp)"
 bashUnit "timeTodo" "${TEST_TIME_TIME_TODO}" "$(test_timeTodo)"
 bashUnit "userTimeTodo" "${TEST_TIME_USER_TIME_TODO}" "$(test_userTimeTodo)"
-bashUnit "userTimeTodoExceeded" "${TEST_TIME_USER_TIME_TODO_EXCEEDED}" "$(test_userTimeTodoExceeded)"
+bashUnit "isUserTimeTodoExceeded" "${TEST_TIME_USER_TIME_TODO_EXCEEDED}" "$(test_isUserTimeTodoExceeded)"
 bashUnit "utcDateTimeFromTimestamp" "${TEST_TIME_UTC_DATE_TIME_FROM_TIMESTAMP}" "$(test_utcDateTimeFromTimestamp)"
 bashUnit "timestampFromUtcDateTime" "${TEST_TIME_TIMESTAMP_FROM_UTC_DATE_TIME}" "$(test_timestampFromUtcDateTime)"
