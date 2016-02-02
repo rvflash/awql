@@ -7,7 +7,7 @@ echo "Welcome to the process to install Awql, a Bash command line tools to reque
 
 # Workspace
 SCRIPT_ROOT=$(pwd)
-AWQL_SHELL=$(if [ ! -z "$ZSH_NAME" ]; then echo "zsh"; else echo "bash"; fi)
+AWQL_SHELL=$(if [[ -n "$ZSH_NAME" ]]; then echo "zsh"; else echo "bash"; fi)
 
 source "${SCRIPT_ROOT}/conf/awql.sh"
 source "${AWQL_INC_DIR}/common.sh"
@@ -16,7 +16,7 @@ source "${AWQL_BASH_PACKAGES_DIR}/time.sh"
 
 # Bashrc file path (manage Linux & Unix)
 if [[ "$AWQL_SHELL" == "bash" ]]; then
-    if [[ "$AWQL_OS" == "Darwin" ]] || [[ "$AWQL_OS" == "FreeBSD" ]]; then
+    if [[ "$AWQL_OS" == "Darwin" || "$AWQL_OS" == "FreeBSD" ]]; then
         BASHRC_FILE="${AWQL_USER_HOME}/.profile"
     else
         BASHRC_FILE="${AWQL_USER_HOME}/.${AWQL_SHELL}rc"
@@ -29,7 +29,7 @@ fi
 if [[ -z "$(grep "alias awql" ${BASHRC_FILE})" ]]; then
     echo >> "${BASHRC_FILE}"
     echo "# Added by AWQL makefile" >> "${BASHRC_FILE}"
-    if [[ 1 -eq "$(userTimeTodoExceeded "${AWQL_AUTH_DIR}/custom/auth.sh" "0.100")" ]]; then
+    if isUserTimeTodoExceeded "${AWQL_AUTH_DIR}/custom/auth.sh" "0.100"; then
         # Slow machine, do not load environment
         echo "alias awql='env -i bash ${SCRIPT_ROOT}/awql.sh'" >> "${BASHRC_FILE}"
     else
