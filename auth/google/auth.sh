@@ -171,7 +171,7 @@ function refresh ()
         --write-out "%{http_code}" ${OPTIONS}
     )
 
-    if [[ "$HTTP_STATUS_CODE" -eq 0 ]] || [[ "$HTTP_STATUS_CODE" -gt 400 ]]; then
+    if [[ "$HTTP_STATUS_CODE" -eq 0 || "$HTTP_STATUS_CODE" -gt 400 ]]; then
         echo "RefreshAuthError.GOOGLE_AUTH_REQUEST_FAIL"
         rm -f "$FILE"
         return 1
