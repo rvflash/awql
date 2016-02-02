@@ -168,17 +168,17 @@ function get ()
     if [[ "$ERR_TYPE" -ne 0 ]]; then
         case "${REQUEST[METHOD]}" in
             ${AWQL_QUERY_SELECT})
-                source "${AWQL_INC_DIR}/awql_select.sh"
+                includeOnce "${AWQL_INC_DIR}/awql_select.sh"
                 RESPONSE=$(awqlSelect "$ADWORDS_ID" "$AUTH" "$SERVER" "${REQUEST[QUERY]}" "$FILE" "$VERBOSE")
                 ERR_TYPE=$?
                 ;;
             ${AWQL_QUERY_DESC})
-                source "${AWQL_INC_DIR}/awql_desc.sh"
+                includeOnce "${AWQL_INC_DIR}/awql_desc.sh"
                 RESPONSE=$(awqlDesc "${REQUEST[QUERY]}" "$FILE")
                 ERR_TYPE=$?
                 ;;
             ${AWQL_QUERY_SHOW})
-                source "${AWQL_INC_DIR}/awql_show.sh"
+                includeOnce "${AWQL_INC_DIR}/awql_show.sh"
                 RESPONSE=$(awqlShow "${REQUEST[QUERY]}" "$FILE")
                 ERR_TYPE=$?
                 ;;
@@ -271,195 +271,10 @@ function awqlRead ()
     local SAVE_FILE="$5"
     local VERBOSE="$6"
     local CACHING="$7"
-
-    # Auto completion
     local AUTO_REHASH="$8"
-    local COMPREPLY
 
-    # Get AWQL history file in an array
-    local HISTORY=()
-    if [[ -f "$AWQL_HISTORY_FILE" ]]; then
-        mapfile -t HISTORY < "$AWQL_HISTORY_FILE"
-    fi
-    declare -i HISTORY_SIZE="${#HISTORY[@]}"
-    declare -i HISTORY_INDEX="$HISTORY_SIZE"
-
-    # Launch prompt by sending introducion message
-    local PROMPT="$AWQL_PROMPT"
-    echo -n "$PROMPT"
-
-    # Read one character at a time
-    local QUERY_STRING
-    declare -a QUERY
-    declare -i QUERY_LENGTH
-    declare -i QUERY_INDEX
-    declare -i CHAR_INDEX
-    local CHAR=""
-    while IFS="" read -rsn1 CHAR; do
-        # \x1b is the start of an escape sequence == \033
-        if [[ "$CHAR" == $'\x1b' ]]; then
-            # Get the rest of the escape sequence (3 characters total)
-            while IFS= read -rsn2 REST; do
-                CHAR+="$REST"
-                break
-            done
-        fi
-
-        # @todo Manage moving word by word (alt + left and right arrow keys) // Forward-word and Backward-word
-
-        if [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[H' ]]; then
-            # Go to start (home) or end of the line (Fn or ctrl + left and right arrow keys)
-            if [[ "$CHAR" == $'\x1b[F' ]]; then
-                # Forward to end
-                CHAR_INDEX="$QUERY_LENGTH"
-            else
-                # Backward to start
-                CHAR_INDEX=0
-            fi
-            # Move the cursor
-            echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
-        elif [[ "$CHAR" == $'\x1b[A' || "$CHAR" == $'\x1b[B' ]]; then
-            # Navigate in history with up and down arrow keys
-            if [[ "$CHAR" == $'\x1b[A' && "$HISTORY_INDEX" -gt 0 ]];then
-                # Up
-                HISTORY_INDEX+=-1
-            elif [[ "$CHAR" == $'\x1b[B' && "$HISTORY_INDEX" -lt "$HISTORY_SIZE" ]]; then
-                # Down
-                HISTORY_INDEX+=1
-            fi
-            if [[ "$HISTORY_INDEX" -ne "$HISTORY_SIZE" && "$QUERY_INDEX" -eq 0 ]]; then
-                # Remove current line and replace it by this from historic
-                QUERY[$QUERY_INDEX]="${HISTORY[$HISTORY_INDEX]}"
-                QUERY_LENGTH="${#QUERY[$QUERY_INDEX]}"
-                CHAR_INDEX="$QUERY_LENGTH"
-                echo -ne "\r\033[K${PROMPT}"
-                echo -n "${QUERY[$QUERY_INDEX]}"
-            fi
-        elif [[ "$CHAR" == $'\x1b[C' || "$CHAR" == $'\x1b[D' ]]; then
-            # Moving by char in current query with left and right arrow keys
-            if [[ "$CHAR" == $'\x1b[C' && "$CHAR_INDEX" -lt "$QUERY_LENGTH" ]]; then
-                # Right
-                CHAR_INDEX+=1
-            elif [[ "$CHAR" == $'\x1b[D' && "$CHAR_INDEX" -gt 0 ]]; then
-                # Left
-                CHAR_INDEX+=-1
-            fi
-            # Move the cursor
-            echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
-        elif [[ "$CHAR" == $'\177' ]]; then
-            # Backspace (@see $'\010' to delete char ?)
-            if [[ "$CHAR_INDEX" -gt 0 ]]; then
-                if [[ "$CHAR_INDEX" -eq "$QUERY_LENGTH" ]]; then
-                    QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]%?}"
-                else
-                    QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]::$(($CHAR_INDEX-1))}${QUERY[$QUERY_INDEX]:$CHAR_INDEX}"
-                fi
-                QUERY_LENGTH+=-1
-                CHAR_INDEX+=-1
-
-                # Remove the char as requested
-                echo -ne "\r\033[K${PROMPT}"
-                echo -n "${QUERY[$QUERY_INDEX]}"
-                # Move the cursor
-                echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
-            fi
-        elif [[ "$CHAR" == $'\x09' ]]; then
-            # Tabulation
-            if [[ "$AUTO_REHASH" -eq 1 ]]; then
-                QUERY_STRING="${QUERY[@]}"
-                QUERY_STRING="${QUERY_STRING:0:$CHAR_INDEX}"
-
-                COMPREPLY=$(completion "${QUERY_STRING}")
-                if [[ $? -eq 0 ]]; then
-                    IFS=' ' read -a COMPREPLY <<< "${COMPREPLY}"
-                    declare -i COMPREPLY_LENGTH="${#COMPREPLY[@]}"
-                    if [[ "${COMPREPLY_LENGTH}" -eq 1 ]]; then
-                        # A completed word was found
-                        QUERY[$QUERY_INDEX]+="${COMPREPLY[0]}"
-                        QUERY_LENGTH+=${#COMPREPLY[0]}
-                        CHAR_INDEX+=${#COMPREPLY[0]}
-                    else
-                        # Various completed words were found
-                        # Go to new line to display propositions
-                        echo
-                        local DISPLAY_ALL_COMPLETIONS="$(printf "${AWQL_COMPLETION_CONFIRM}" "${COMPREPLY_LENGTH}")"
-                        if confirm "$DISPLAY_ALL_COMPLETIONS" "$AWQL_CONFIRM"; then
-                            # Display in 3 columns
-                            declare -i WINDOW_WIDTH=$(windowSize "width")
-                            declare -i COLUMN_SIZE=50
-                            declare -i COLUMN_NB="$(($WINDOW_WIDTH/$COLUMN_SIZE))"
-
-                            declare -i I
-                            for ((I=0; I < ${COMPREPLY_LENGTH}; I++)); do
-                                if [[ $(( $I%$COLUMN_NB )) == 0 ]]; then
-                                    echo
-                                fi
-                                printLeftPad "${COMPREPLY[$I]}" "$COLUMN_SIZE"
-                            done
-                        fi
-                    fi
-                    # Reset prompt and display query with new char
-                    echo -ne "\r\033[K${PROMPT}"
-                    echo -n "${QUERY[$QUERY_INDEX]}"
-                    # Move the cursor
-                    echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
-                fi
-            fi
-        elif [[ -z "$CHAR" ]]; then
-            # Enter
-            QUERY_STRING="${QUERY[@]}"
-            QUERY_STRING="$(trim "$QUERY_STRING")"
-            if [[ -z "$QUERY_STRING" ]]; then
-                # Empty lines
-                echo
-                break
-            elif [[ "$QUERY_STRING" == *";" || "$QUERY_STRING" == *"\\"[gG] ]]; then
-                # Query ending
-                if [[ "$HISTORY_INDEX" -lt "$HISTORY_SIZE" ]]; then
-                    # Remove the old position in historic in order to put this query as the last query played
-                    sed -i -e $((${HISTORY_INDEX} + 1))d "$AWQL_HISTORY_FILE"
-                fi
-                # Add query in history
-                echo "$QUERY_STRING" >> "$AWQL_HISTORY_FILE"
-                # Go to new line to display response
-                echo
-                break
-            elif [[  "$QUERY_STRING" == *"\\"[${AWQL_COMMAND_CLEAR}${AWQL_COMMAND_HELP}${AWQL_COMMAND_EXIT}] ]]; then
-                # Awql commands shortcut
-                case "${QUERY_STRING: -1}" in
-                    ${AWQL_COMMAND_CLEAR}) QUERY_STRING="" ;;
-                    ${AWQL_COMMAND_HELP}) QUERY_STRING="${AWQL_TEXT_COMMAND_HELP}" ;;
-                    ${AWQL_COMMAND_EXIT}) QUERY_STRING="${AWQL_TEXT_COMMAND_EXIT}" ;;
-                esac
-                # Go to new line to display response
-                echo
-                break
-            else
-                # Newline
-                PROMPT="$AWQL_PROMPT_NEW_LINE"
-                QUERY_INDEX+=1
-                QUERY_LENGTH=0
-                CHAR_INDEX=0
-                echo
-                echo -n "$PROMPT"
-            fi
-        else
-            # Writting
-            if [[ "$CHAR_INDEX" -eq "$QUERY_LENGTH" ]]; then
-                QUERY[$QUERY_INDEX]+="$CHAR"
-            else
-                QUERY[$QUERY_INDEX]="${QUERY[$QUERY_INDEX]::$CHAR_INDEX}${CHAR}${QUERY[$QUERY_INDEX]:$CHAR_INDEX}"
-            fi
-            QUERY_LENGTH+=1
-            CHAR_INDEX+=1
-
-            # Reset prompt and display query with new char
-            echo -ne "\r\033[K${PROMPT}"
-            echo -n "${QUERY[$QUERY_INDEX]}"
-            # Move the cursor
-            echo -ne "\r\033[$((${CHAR_INDEX}+${#PROMPT}))C"
-        fi
-    done
+    # Open a prompt (with auto-completion ?)
+    reader QUERY_STRING "${AUTO_REHASH}"
 
     # Process query
     awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
