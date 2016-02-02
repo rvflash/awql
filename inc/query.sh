@@ -31,7 +31,7 @@ function queryOrder ()
 # @param $1 Requested sort order
 function querySortOrder ()
 {
-    if [[ "$1" == "DESC" ]] || [[ "$1" == "desc" ]]; then
+    if [[ "$1" == "DESC" || "$1" == "desc" ]]; then
         echo -n "$AWQL_SORT_ORDER_DESC"
     else
         echo -n "$AWQL_SORT_ORDER_ASC"
@@ -43,7 +43,7 @@ function querySortOrder ()
 # @param $1 Column data type
 function querySortOrderType ()
 {
-    if [[ 1 -eq $(inArray "$1" "$AWQL_SORT_NUMERICS") ]]; then
+    if inArray "$1" "$AWQL_SORT_NUMERICS"; then
         echo -n "n"
     else
         echo -n "d"
@@ -84,10 +84,10 @@ function query ()
     local QUERY_ORIGIN="$QUERY"
 
     declare -A REQUEST="([VERTICAL_MODE]=0 [LIMIT]=\"\" [ORDER]=\"\")"
-    REQUEST[METHOD]=$(echo "$QUERY" | awk '{ print tolower($1) }')
+    REQUEST["METHOD"]=$(echo "$QUERY" | awk '{ print tolower($1) }')
 
     # Manage vertical mode, also named G modifier
-    if [[ "${QUERY:${#QUERY}-1}" == "g" ]] || [[ "${QUERY:${#QUERY}-1}" == "G" ]]; then
+    if [[ "${QUERY:${#QUERY}-1}" == [gG] ]]; then
         if [[ "${QUERY:${#QUERY}-2:1}" == "\\" ]]; then
             QUERY="${QUERY::-2}"
         else
@@ -110,7 +110,7 @@ function query ()
     if [[ -z "$QUERY_ORIGIN" ]]; then
         echo "QueryError.MISSING"
         return 2
-    elif [[ "$QUERY_ORIGIN" == ${AWQL_QUERY_EXIT} ||  "$QUERY_ORIGIN" == ${AWQL_QUERY_QUIT} ]]; then
+    elif [[ "$QUERY_ORIGIN" == ${AWQL_QUERY_EXIT} || "$QUERY_ORIGIN" == ${AWQL_QUERY_QUIT} ]]; then
         # Awql command: Exit
         echo "${AWQL_PROMPT_EXIT}"
         return 1
@@ -118,14 +118,14 @@ function query ()
         # Awql command: Help
         help
         return 2
-    elif [[ 0 -eq $(inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS") ]]; then
+    elif ! inArray "${REQUEST[METHOD]}" "$AWQL_QUERY_METHODS"; then
         echo "QueryError.INVALID_QUERY_METHOD"
         return 2
     fi
 
     # Dedicated behavior for select method
     if [[ "${REQUEST[METHOD]}" == "select" ]]; then
-        # Mange the shorthand * to select all columns (without blacklisted fields)
+        # Manage the shorthand * to select all columns (without blacklisted fields)
         if [[ "$QUERY" == ${AWQL_QUERY_SELECT}[[:space:]]*"*"[[:space:]]*${AWQL_QUERY_FROM}* ]]; then
             QUERY=$(echo "$QUERY" | sed -e "s/^${AWQL_QUERY_SELECT}[[:space:]]*\*[[:space:]]*${AWQL_QUERY_FROM}[[:space:]]*//g")
 
@@ -199,14 +199,14 @@ function query ()
     fi
 
     # Calculate a checksum for this query (usefull for unique identifier)
-    REQUEST[CHECKSUM]=$(checksum "$ADWORDS_ID $QUERY" "$AWQL_WRK_DIR")
+    REQUEST["CHECKSUM"]=$(checksum "$ADWORDS_ID $QUERY" "$AWQL_WRK_DIR")
     if [[ $? -ne 0 ]]; then
         echo "QueryError.MISSING_CHECKSUM"
         return 1
     fi
 
     # And the last but not the least
-    REQUEST[QUERY]="$QUERY"
+    REQUEST["QUERY"]="$QUERY"
 
     echo -n "$(arrayToString "$(declare -p REQUEST)")"
 }
