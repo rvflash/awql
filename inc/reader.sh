@@ -62,9 +62,9 @@ function reader ()
         elif [[ "$CHAR" == $'\f' ]]; then
             # Clear the terminal (ctrl + l)
             echo -ne "\r\033c${PROMPT}"
-        elif [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[H' ]]; then
+        elif [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[H' || "$CHAR" == $'\x1b[4' || "$CHAR" == $'\x1b[1' ]]; then
             # Go to start (home) or end of the line (Fn or ctrl + left and right arrow keys)
-            if [[ "$CHAR" == $'\x1b[F' ]]; then
+            if [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[4' ]]; then
                 # Forward to end
                 CHAR_INDEX="$READ_LENGTH"
             else
