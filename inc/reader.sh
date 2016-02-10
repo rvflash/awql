@@ -18,7 +18,11 @@ function reader ()
     # Variable name use to export the response of prompt
     local READER_VAR_NAME="$1"
     local REPLY
-    declare -i WINDOW_WIDTH=$(windowSize "width")
+
+    # Terminal size
+    declare -i WINDOW_WIDTH
+    WINDOW_WIDTH=$(windowSize "width")
+    exitOnError "$?" "InternalError.USE_ONLY_IN_TERMINAL";
 
     # History file
     local HISTORY_FILE="${AWQL_HISTORY_FILE}"
@@ -200,7 +204,7 @@ function reader ()
             fi
         elif [[ "$CHAR" == [[:print:]] ]]; then
             # Manage terminal ending
-            if [[ "$((${CHAR_INDEX}+${#PROMPT}+1))" -gt "$WINDOW_WIDTH" ]]; then
+            if [[ "$((${CHAR_INDEX}+${#PROMPT}+1))" -gt "${WINDOW_WIDTH}" ]]; then
                 PROMPT="$PROMPT_NEW_LINE"
                 READ_INDEX+=1
                 READ_LENGTH=0

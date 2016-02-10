@@ -64,11 +64,15 @@ function dialog ()
 function windowSize ()
 {
     local TYPE="$1"
-    declare -a SIZE="($(echo -ne "cols\nlines" | tput -S))"
+    local SIZE
+    SIZE=$(stty size 2>/dev/null)
+    if [[ $? -ne 0 ]]; then
+        return 1
+    fi
 
     case "$TYPE" in
-        "width" ) echo -n "${SIZE[0]}" ;;
-        "height") echo -n "${SIZE[1]}" ;;
-        *       ) echo -n "${SIZE[@]}" ;;
+        "width" ) echo -n "${SIZE##* }" ;;
+        "height") echo -n "${SIZE%% *}" ;;
+        *       ) echo -n "(${SIZE})" ;;
     esac
 }
