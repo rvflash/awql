@@ -64,7 +64,7 @@ function dialog ()
 function windowSize ()
 {
     local TYPE="$1"
-    declare -a SIZE="($(echo -ne "cols\nlines" | tput -S))"
+    declare -a SIZE="($(echo -ne "cols\nlines" | tty -s && tput -S))"
 
     case "$TYPE" in
         "width" ) echo -n "${SIZE[0]}" ;;
