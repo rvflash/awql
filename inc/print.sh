@@ -30,7 +30,7 @@ function printContext ()
 
     # Time duration
     if [[ -z "$TIME_DURATION" ]]; then
-        TIME_DURATION="0.01"
+        TIME_DURATION="0.00"
     fi
     CONTEXT="$CONTEXT ($TIME_DURATION sec)"
 

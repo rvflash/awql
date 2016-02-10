@@ -7,8 +7,8 @@ declare -r BP_STRINGS_WRK_DIR="/tmp/"
 # @param string $1 String
 # @param string $2 PathToWorkspace with default value from constant named BP_STRINGS_WRK_DIR [optional]
 # @return string
-# @returnStatus If first parameter named string is empty
-# @returnStatus If checkum is empty or cksum methods returns in error
+# @returnStatus 1 If first parameter named string is empty
+# @returnStatus 1 If checkum is empty or cksum methods returns in error
 function checksum ()
 {
     local STR="$1"
