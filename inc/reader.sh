@@ -57,14 +57,12 @@ function reader ()
             done
         fi
 
-        if [[ "$CHAR" == $'\r\n' ]] ; then
-            echo "coucou"
-        elif [[ "$CHAR" == $'\f' ]]; then
+        if [[ "$CHAR" == $'\f' ]]; then
             # Clear the terminal (ctrl + l)
             echo -ne "\r\033c${PROMPT}"
-        elif [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[H' || "$CHAR" == $'\x1b[4~' || "$CHAR" == $'\x1b[1~' ]]; then
+        elif [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[H' || "$CHAR" == $'\001' || "$CHAR" == $'\005' ]]; then
             # Go to start (home) or end of the line (Fn or ctrl + left and right arrow keys)
-            if [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\x1b[4~' ]]; then
+            if [[ "$CHAR" == $'\x1b[F' || "$CHAR" == $'\005' ]]; then
                 # Forward to end
                 CHAR_INDEX="$READ_LENGTH"
             else
