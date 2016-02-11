@@ -4,14 +4,17 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
  
 ## Features
 
+* Auto-refreshed the Google access token. 2 ways for this, the classic with the Google oauth2 services and the second, by calling a web service of your choice
 * Save results in CSV files.
+* In prompt mode, add management of historic of queries with arrow keys
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
-* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC` and `SHOW TABLES [LIKE|WITH]`.
-* Add management of \G modifier to display each column on a line
+* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]` and `SHOW [FULL] TABLES [LIKE|WITH]`.
+* Add management of `\G` modifier to display result vertically (each column on a line)
+* `*` can be used as shorthand to select all columns from all tables
 
 SQL methods adding to AWQL grammar in detail:
 
-#### DESC TABLE_NAME [COLUMN_NAME]
+#### DESC [FULL] TABLE_NAME [COLUMN_NAME]
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "DESC CREATIVE_CONVERSION_REPORT;"
@@ -50,6 +53,18 @@ SQL methods adding to AWQL grammar in detail:
 28 rows in set (0.01 sec)
 ````
 
+The FULL modifier is supported such that DESC FULL displays a fourth output column with uncompatibles fields list.
+
+```bash
+awql -i "123-345-1234" -e 'DESC FULL SEARCH_QUERY_PERFORMANCE_REPORT VideoViews;'
++-------------+-------+------+----------------------------------------------------------------+
+| Field       | Type  | Key  | Not_compatibles                                                |
++-------------+-------+------+----------------------------------------------------------------+
+| VideoViews  | Long  |      | ConversionCategoryName ConversionTrackerId ConversionTypeName  |
++-------------+-------+------+----------------------------------------------------------------+
+1 row in set (0.01 sec)
+````
+
 #### SHOW [FULL] TABLES [LIKE 'pattern']
 
 ```bash
@@ -67,6 +82,34 @@ SQL methods adding to AWQL grammar in detail:
 | CAMPAIGN_SHARED_SET_REPORT                       |
 +--------------------------------------------------+
 8 rows in set (0.01 sec)
+````
+
+The FULL modifier is supported such that SHOW FULL TABLES displays a second output column with the type of table.
+Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUCTURE, EXTENSIONS, ANALYTICS or SHOPPING. 
+
+* SINGLE_ATTRIBUTION   : With single attribution, only one of the triggering criteria (e.g., keyword, placement, audience, etc.) will be recorded for a given impression. The Criteria and Keyword reports follow this model. Each impression is counted exactly once (under one criterion).
+* MULTIPLE_ATTRIBUTION : With multiple attribution, up to one criterion in each dimension that triggered the impression will have the impression recorded for it. For example, the Display Topic and Placements reports follow this model. As opposed to single attribution, multiple attribution reports should **NOT** be aggregated together, since this may double count impressions and clicks.
+* STRUCTURE            : Since these reports do not include performance statistics, you cannot include a `DURING` clause in your AWQL query or use a custom date range in your `ReportDefinition`.
+* EXTENSIONS           : Reports dedicated to ad extensions
+* ANALYTICS            : The reports below include Google Analytics metrics such as `AveragePageviews`, `BounceRate`, `AverageTimeOnSite`, and `PercentNewVisitors`.
+* SHOPPING             : Tables dedicated to shopping campaigns
+
+```bash
+~ $ awql -i "123-456-7890" -e 'SHOW FULL TABLES LIKE "CAMPAIGN%";'
++--------------------------------------------------+-----------------------+
+| Tables_in_v201509 (CAMPAIGN%)                    | Table_type            |
++--------------------------------------------------+-----------------------+
+| CAMPAIGN_AD_SCHEDULE_TARGET_REPORT               |                       |
+| CAMPAIGN_LOCATION_TARGET_REPORT                  | MULTIPLE_ATTRIBUTION  |
+| CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT    | STRUCTURE             |
+| CAMPAIGN_NEGATIVE_LOCATIONS_REPORT               | STRUCTURE             |
+| CAMPAIGN_NEGATIVE_PLACEMENTS_PERFORMANCE_REPORT  | STRUCTURE             |
+| CAMPAIGN_PERFORMANCE_REPORT                      | ANALYTICS             |
+| CAMPAIGN_PLATFORM_TARGET_REPORT                  | MULTIPLE_ATTRIBUTION  |
+| CAMPAIGN_SHARED_SET_REPORT                       |                       |
++--------------------------------------------------+-----------------------+
+8 rows in set (0.01 sec)
+
 ````
 
 #### SHOW TABLES [WITH 'pattern']
@@ -166,30 +209,84 @@ Tracking template:
 1 row in set (0.01 sec)
 ````
 
+#### SELECT * FROM ...
+
+Note that with limits of Adwords tables (uncompatible fields in the same table), some fields will be exclude.
+
+```bash
+~ $ awql -c -v -i "123-456-7890" -e "SELECT * FROM CREATIVE_CONVERSION_REPORT DURING 20150101,20150106\G"
+*************************** 1. row ***************************
+                      Currency: Total
+                       Account:  --
+                     Time zone:  --
+                   Ad group ID:  --
+                      Ad group:  --
+                Ad group state:  --
+                       Network:  --
+Network (with search partners):  --
+                   Campaign ID:  --
+                      Campaign:  --
+                Campaign state:  --
+               Free click rate: 0.00%
+         Conversion Tracker Id:  --
+                   Free clicks: 0
+                         Ad ID:  --
+           Keyword / Placement:  --
+                    Match type:  --
+                    Keyword ID:  --
+                   Client name:  --
+                           Day:  --
+                   Day of week:  --
+                   Customer ID:  --
+                   Impressions: 0
+                         Month:  --
+                  Company name:  --
+                       Quarter:  --
+                          Week:  --
+                          Year:  --
+1 row in set (0,745 sec) @source /tmp/awql/20160106/2407054031.awql
+````
+
 ## Quick start
+
+Clone this repository in the folder of your choice.
 
 ### Set up credentials
 
-First, you need to set up your configuration file named `auth.yaml` properly.
-See `auth-sample.yaml` as example, this file will look like this:
+First, you need to set up the default configuration to use to connect to Google Adwords and create awql command.
+Run `./makefile.sh` in awql folder and follow the instruction.
 
-```yaml
-ACCESS_TOKEN    : ya29.SaMple
-DEVELOPER_TOKEN : dEve1op3er7okeN
-TOKEN_TYPE      : Bearer
+Example with Google as token provider:
+```bash
+~ $ ./makefile.sh
+Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API.
+Add awql as bash alias -------------------------------------- OK
+Your Google developer token: dEve1op3er7okeN
+Use Google to get access tokens (Y/N)? Y
+Your Google client ID: 123456789-Aw91.apps.googleusercontent.com
+Your Google client secret: C13nt5e0r3t
+Your Google refresh token: 1/n-R3fr35h70k3n
+Use Google as token provider -------------------------------- OK
+Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
 ````
-### And, make your first call
 
-Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v]
-* -i for Adwords account ID
-* -a for Yaml authorization file path with access and developper tokens
-* -f for the filepath to save raw AWQL response
-* -e for AWQL query, if not set here, a prompt will be launch
-* -c used to enable cache
-* -v used to print more informations
+### Usage
 
 ```bash
-./awql.sh -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5"
+~ $ awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-c] [-v]
+-i for Google Adwords account ID
+-a for Google Adwords access token
+-d for Google developer token
+-e for AWQL query, if not set here, a prompt will be launch
+-s to append a copy of output to the given file
+-c used to enable cache
+-v used to print more informations
+````
+
+### And, make your first call
+
+```bash
+~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5"
 +--------------+---------+--------------+------------+-----------+--------------------+
 | Campaign     | Clicks  | Impressions  | Cost       | Budget    | Tracking template  |
 +--------------+---------+--------------+------------+-----------+--------------------+
@@ -202,4 +299,27 @@ Usage: awql -i adwordsid [-a authfilepath] [-f awqlfilename] [-e query] [-c] [-v
 5 rows in set (1,449 sec)
 ````
 
-Enjoy!
+### Go further by using your own web service to get a valid access token
+
+This web service must return a JSON response with this format:
+
+```json
+{
+    "access_token": "ya29.ExaMple",
+    "token_type": "Bearer",
+    "expire_at": "2015-12-20T00:35:58+01:00"
+}
+````
+
+Run `./makefile.sh` in order to change default configuration and use this web service.
+
+```bash
+~ $ ./makefile.sh
+Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API.
+Add awql as bash alias -------------------------------------- OK
+Your Google developer token: dEve1op3er7okeN
+Use Google to get access tokens (Y/N)? N
+Url of the web service to use to retrieve a Google access token: http://ws.local:8961/google-token
+Use a custom web service as token provider ------------------ OK
+Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
+````

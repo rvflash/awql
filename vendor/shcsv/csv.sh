@@ -6,21 +6,14 @@
 # Constants
 declare -r CURDATE=$(date +%Y%m%d)
 declare -r TMP_DIR="/tmp/shcsv/${CURDATE}/"
+declare -r CVS_EXT=".csv"
+declare -r CVS_PRINTABLE_EXT=".pcsv"
+declare -r CVS_PRINTABLE_WRK_EXT=".tpcsv"
 declare -r CSV_PRINT_SEP_COLUMN="|"
 declare -r CSV_PRINT_COLUMN_BOUNCE="+"
 declare -r CSV_PRINT_COLUMN_BREAK_LINE="-"
 declare -r CSV_VERTICAL_START_SEP="***************************"
 declare -r CSV_VERTICAL_END_SEP=". row ***************************"
-
-function usage ()
-{
-    echo "Usage: ${SCRIPT} -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-q]"
-    echo "-f for CSV source file"
-    echo "-t for save result"
-    echo "-g for enable vertical mode"
-    echo "-s to define column separator, by default comma"
-    echo "-q for do not print result"
-}
 
 ##
 # Resolve $1 or current path until the file is no longer a symlink
@@ -74,6 +67,17 @@ CLEAN_WRK=0
 VERTICAL_MODE=0
 SILENT=0
 
+# Help
+function usage ()
+{
+    echo "Usage: ${SCRIPT} -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-g] [-q]"
+    echo "-f for CSV source file"
+    echo "-t for save result"
+    echo "-s to define column separator, by default comma"
+    echo "-g for enable vertical mode"
+    echo "-q for do not print result"
+}
+
 # Script usage & check if mysqldump is availabled
 if [ $# -lt 1 ] ; then
     usage
@@ -107,7 +111,8 @@ fi
 # Save process in file
 if [ -z "$CSV_PRINT_FILE" ]; then
     mkdir -p "$TMP_DIR"
-    CSV_PRINT_FILE="$TMP_DIR$(basename $CSV_FILE .csv).pcsv"
+    CSV_PRINT_FILE="$TMP_DIR$(basename ${CSV_FILE} ${CVS_EXT})${CVS_PRINTABLE_EXT}"
+    CSV_PRINT_WRK_FILE="$TMP_DIR$(basename ${CSV_FILE} ${CVS_EXT})${CVS_PRINTABLE_WRK_EXT}"
     CLEAN_WRK=1
 fi
 
@@ -116,23 +121,23 @@ if [ "$VERTICAL_MODE" -eq 0 ]; then
     sed -e "s/$/${CSV_SEP_COLUMN}/g" \
         -e "s/${CSV_SEP_COLUMN}${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN} ${CSV_SEP_COLUMN}/g" \
         -e "s/^/${CSV_PRINT_SEP_COLUMN} /g"  \
-        -e "s/${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "$CSV_FILE" | column -s, -t > "$CSV_PRINT_FILE"
+        -e "s/${CSV_SEP_COLUMN}/${CSV_SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "$CSV_FILE" | column -s, -t > "$CSV_PRINT_WRK_FILE"
 
     # Build with the head line as model  +-----+--+-----+
-    BREAK_LINE=$(head -n 1 "$CSV_PRINT_FILE" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
+    BREAK_LINE=$(head -n 1 "$CSV_PRINT_WRK_FILE" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
     BREAK_LINE=$(printCsvBreakLine "$BREAK_LINE")
 
     # Add breakline at first, third and last line
     sed -e "1i\\
-        ${BREAK_LINE}
-        " \
+${BREAK_LINE}" \
         -e "2i\\
-        ${BREAK_LINE}
-        " \
+${BREAK_LINE}" \
         -e "\$a\\
-        ${BREAK_LINE}
-        " \
-        -i "" "$CSV_PRINT_FILE"
+${BREAK_LINE}" \
+        "$CSV_PRINT_WRK_FILE" > "$CSV_PRINT_FILE"
+    if [ $? -eq 0 ]; then
+        rm -f "$CSV_PRINT_WRK_FILE"
+    fi
 else
     HEADER_LINE=$(head -n 1 "$CSV_FILE")
     declare -a HEADER=($(echo "$HEADER_LINE" | sed -e "s/ /_/g" -e "s/${CSV_SEP_COLUMN}/ /g"))
@@ -151,7 +156,7 @@ else
         -v vhs="$HEADER_NB" \
         -v vcs="$COLUMN_MAX_SIZE" \
         '
-        {printf("%s %d%s\n", vs, NR, ve, $0)}
+        { printf("%s %d%s\n", vs, NR, ve, $0) }
         { split(vh, k, ","); split($0, v, ","); for(i=1; i<=vhs; i++) printf("%*s: %s\n", vcs, k[i], v[i]); }
         ' > "$CSV_PRINT_FILE"
 fi

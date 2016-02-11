@@ -1,0 +1,53 @@
+ConversionCategoryName               : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRateSignificance ClickSignificance Clicks Cost CostPerConvertedClickSignificance CostSignificance CpcSignificance CpmSignificance Ctr CtrSignificance EngagementRate Engagements GmailForwards GmailSaves GmailSecondaryClicks ImpressionSignificance Impressions InteractionRate Interactions PositionSignificance VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+ConversionTrackerId                  : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRateSignificance ClickSignificance Clicks Cost CostPerConvertedClickSignificance CostSignificance CpcSignificance CpmSignificance Ctr CtrSignificance EngagementRate Engagements GmailForwards GmailSaves GmailSecondaryClicks ImpressionSignificance Impressions InteractionRate Interactions PositionSignificance VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+ConversionTypeName                   : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRateSignificance ClickSignificance Clicks Cost CostPerConvertedClickSignificance CostSignificance CpcSignificance CpmSignificance Ctr CtrSignificance EngagementRate Engagements GmailForwards GmailSaves GmailSecondaryClicks ImpressionSignificance Impressions InteractionRate Interactions PositionSignificance VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+CostPerConvertedClickSignificance    : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+ClickSignificance                    : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+ImpressionSignificance               : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+CostSignificance                     : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+CpmSignificance                      : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+ClickConversionRateSignificance      : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+CtrSignificance                      : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+PositionSignificance                 : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+CpcSignificance                      : AllConversionRate AllConversionValue AllConversions ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+AdvertiserExperimentSegmentationBin  : AllConversionRate AllConversionValue AllConversions ClickType CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+ClickType                            : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions Engagements ValuePerAllConversion
+ConvertedClicksSignificance          : AllConversionRate AllConversionValue AllConversions ClickType CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+ViewThroughConversionsSignificance   : AllConversionRate AllConversionValue AllConversions ClickType CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Slot                                 : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Engagements                          : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName
+Interactions                         : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Ctr                                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Clicks                               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionRate                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Cost                                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Impressions                          : ConversionCategoryName ConversionTrackerId ConversionTypeName
+EngagementRate                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile100Rate                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+GmailSecondaryClicks                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewViewability                : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableImpressions      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+GmailSaves                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViews                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile25Rate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableCost             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurability              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+GmailForwards                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCpm                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCtr                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewImpressions                : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile75Rate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViewRate                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpe                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpv                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AveragePosition                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpc                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpm                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCost                          : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile50Rate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ValuePerAllConversion                : ClickType Slot
+CrossDeviceConversions               : ClickType Slot
+CostPerAllConversion                 : ClickType Slot
+AllConversions                       : ClickType Slot
+AllConversionRate                    : ClickType Slot
+AllConversionValue                   : ClickType Slot

@@ -1,0 +1,13 @@
+METHOD           : POST
+PROTOCOL         : https
+HOSTNAME         : accounts.google.com
+PATH             : /o/oauth2/token
+
+CLIENT_ID        : client_id
+CLIENT_SECRET    : client_secret
+REFRESH_TOKEN    : refresh_token
+GRANT_TYPE       : grant_type
+GRANT_TYPE_RT    : refresh_token
+
+CONNECT_TIME_OUT : 1
+TIME_OUT         : 600
