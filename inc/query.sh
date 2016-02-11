@@ -198,8 +198,8 @@ function query ()
         fi
     fi
 
-    # Calculate a checksum for this query (usefull for unique identifier)
-    REQUEST["CHECKSUM"]=$(checksum "$ADWORDS_ID $QUERY" "$AWQL_WRK_DIR")
+    # Calculate a unique identifier for the query
+    REQUEST["CHECKSUM"]=$(checksum "$ADWORDS_ID $QUERY")
     if [[ $? -ne 0 ]]; then
         echo "QueryError.MISSING_CHECKSUM"
         return 1
