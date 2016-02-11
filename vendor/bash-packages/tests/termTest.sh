@@ -30,7 +30,7 @@ function test_windowSize ()
     TEST=$(windowSize)
     echo -n "-$?"
     [[ -n "$TEST" ]] && echo -n 1
-    declare -a SIZE="(${TEST})"
+    declare -a SIZE="${TEST}"
     [[ "${#SIZE[@]}" -eq 2 && "${SIZE[0]}" -gt 0  && "${SIZE[1]}" -gt 0 ]] && echo -n 1
 
     # Check only width
@@ -47,7 +47,7 @@ function test_windowSize ()
     TEST=$(windowSize "any")
     echo -n "-$?"
     [[ -n "$TEST" ]] && echo -n 1
-    declare -a SIZE="(${TEST})"
+    declare -a SIZE="${TEST}"
     [[ "${#SIZE[@]}" -eq 2 && "${SIZE[0]}" -gt 0  && "${SIZE[1]}" -gt 0 ]] && echo -n 1
 }
 

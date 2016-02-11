@@ -1,37 +1,22 @@
 #!/usr/bin/env bash
 
-declare -r BP_STRINGS_WRK_DIR="/tmp/"
-
 ##
 # Calculate and return a checksum for one string
 # @param string $1 String
-# @param string $2 PathToWorkspace with default value from constant named BP_STRINGS_WRK_DIR [optional]
 # @return string
-# @returnStatus 1 If first parameter named string is empty
-# @returnStatus 1 If checkum is empty or cksum methods returns in error
+# @returnStatus If first parameter named string is empty
+# @returnStatus If checkum is empty or cksum methods returns in error
 function checksum ()
 {
-    local STR="$1"
-    if [[ -z "$STR" ]]; then
+    if [[ -z "$1" ]]; then
         return 1
     fi
-    local WRK_DIR="$2"
-    if [[ -z "$WRK_DIR" ]]; then
-        WRK_DIR="$BP_STRINGS_WRK_DIR"
-    fi
-
-    # Create temporary file to apply checksum function on it
-    local CHECKSUM_FILE="${WRK_DIR}${RANDOM}.crc"
-    echo -n "$(trim "$STR")" > "$CHECKSUM_FILE"
 
     local CHECKSUM
-    CHECKSUM="$(cksum "$CHECKSUM_FILE" | awk '{print $1}')"
+    CHECKSUM="$(cksum <<<"$(trim "$1")" | awk '{print $1}')"
     if [[ $? -ne 0 || -z "$CHECKSUM" ]]; then
         return 1
     fi
-
-    # Clean workspace
-    rm -f "$CHECKSUM_FILE"
 
     echo -n "$CHECKSUM"
 }

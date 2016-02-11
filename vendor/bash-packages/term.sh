@@ -60,7 +60,7 @@ function dialog ()
 # @example return width height
 #
 # @param string $1 Type width or height [optional]
-# @return arrayToString
+# @return int or arrayToString
 function windowSize ()
 {
     local TYPE="$1"

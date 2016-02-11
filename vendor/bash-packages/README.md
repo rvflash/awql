@@ -7,9 +7,27 @@
 * Function count
 * Function inArray
 
+## Package database/mysql
+* Function mysqlAffectedRows
+* Function mysqlClose
+* Function mysqlConnect
+* Function mysqlEscapeString
+* Function mysqlLastError
+* Function mysqlFetchAll
+* Function mysqlFetchAssoc
+* Function mysqlFetchArray
+* Function mysqlFetchRaw
+* Function mysqlNumRows
+* Function mysqlOption
+* Function mysqlQuery
+
 ## Package encoding/yaml
 * Function yamlDecode
 * Function yamlFileDecode
+
+## Package encoding/base64
+* Function base64Decode
+* Function base64Encode
 
 ## Package file
 * Function include

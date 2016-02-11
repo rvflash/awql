@@ -5,6 +5,7 @@ source ../strings.sh
 
 # Default entries
 declare -r TEST_STRINGS_MASK="()"
+declare -r -i TEST_STRINGS_CHK=3159589107
 declare -r TEST_STRINGS_WITHOUT_SPACES="Text without leading or trailing spaces"
 declare -r TEST_STRINGS_WITH_LEADING_SPACES=" ${TEST_STRINGS_WITHOUT_SPACES}"
 declare -r TEST_STRINGS_WITH_TRAILING_SPACES="${TEST_STRINGS_WITHOUT_SPACES} "
@@ -31,17 +32,17 @@ function test_checksum ()
     # Confirm previous check
     CONFIRM_TEST=$(checksum "${TEST_STRINGS_WITHOUT_SPACES}")
     echo -n "-$?"
-    [[ "$TEST" == "$CONFIRM_TEST" ]] && echo -n 1
+    [[ "$TEST" == "$CONFIRM_TEST" && "$TEST" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
 
     # Check with leading spaces and expect no change
     TEST=$(checksum "${TEST_STRINGS_WITH_LEADING_SPACES}")
     echo -n "-$?"
-    [[ "$TEST" == "$CONFIRM_TEST" ]] && echo -n 1
+    [[ "$TEST" == "$CONFIRM_TEST" && "$TEST" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
 
     # Check with an other text and expect new hash
     CONFIRM_TEST=$(checksum "${TEST_STRINGS_WITHOUT_SPACES:10}")
     echo -n "-$?"
-    [[ "$CONFIRM_TEST" -gt 0 && "$TEST" != "$CONFIRM_TEST" ]] && echo -n 1
+    [[ "$CONFIRM_TEST" -gt 0 && "$TEST" != "$CONFIRM_TEST" && "$TEST" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
 }
 
 readonly TEST_STRINGS_EMPTY="-01-01-01-01-01-01-11"
