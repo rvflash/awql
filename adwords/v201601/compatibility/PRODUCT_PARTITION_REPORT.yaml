@@ -1,0 +1,11 @@
+ClickType               : AllConversionRate AllConversionValue AllConversions BenchmarkAverageMaxCpc BenchmarkCtr CostPerAllConversion CrossDeviceConversions SearchImpressionShare ValuePerAllConversion
+Device                  : BenchmarkAverageMaxCpc BenchmarkCtr SearchImpressionShare
+BenchmarkAverageMaxCpc  : ClickType Device
+SearchImpressionShare   : ClickType Device
+BenchmarkCtr            : ClickType Device
+CostPerAllConversion    : ClickType
+CrossDeviceConversions  : ClickType
+AllConversionRate       : ClickType
+AllConversions          : ClickType
+AllConversionValue      : ClickType
+ValuePerAllConversion   : ClickType
