@@ -6,6 +6,9 @@
 # @param string $1 Access token (inline mode)
 # @param string $2 Developer token (inline mode)
 # @return arrayToString
+# @returnStatus 1 If auth file can not be retrieved
+# @returnStatus 1 If auth file is not valid
+# @returnStatus 1 If configuration auth file does not exist
 function auth ()
 {
     local ACCESS_TOKEN="$1"

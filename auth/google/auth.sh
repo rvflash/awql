@@ -34,6 +34,7 @@ CLIENT_SECRET=""
 REFRESH_TOKEN=""
 
 # Help
+# @return string
 function usage ()
 {
     echo "Usage: ${SCRIPT} -c clientid -s clientsecret -r refreshtoken"
@@ -83,6 +84,8 @@ fi
 # @param string $2 CLIENT_SECRET
 # @param string $3 REFRESH_TOKEN
 # @return arrayToString
+# @return string If case of returnStatus >0
+# @returnStatus 1 If valid auth can not be retrieved
 function auth ()
 {
     local CLIENT_ID="$1"
@@ -134,6 +137,8 @@ function auth ()
 # @param string $3 REFRESH_TOKEN
 # @param string $4 REQUEST_FILE
 # @param string $5 FILE
+# @return void
+# @returnStatus 1 If request can not be performed
 function refresh ()
 {
     local CLIENT_ID="$1"

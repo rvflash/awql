@@ -22,6 +22,7 @@ source "${AWQL_BASH_PACKAGES_DIR}/array.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/time.sh"
 
 # Help
+# @return string
 function usage ()
 {
     echo "Usage: ${SCRIPT} \"http://ws.sample.com/token\""
@@ -39,6 +40,7 @@ fi
 # Retrieve access token by calling a custom web service
 # @param string $1 URL
 # @return arrayToString
+# @returnStatus 1 If valid token can not be retrieved
 function auth ()
 {
     local URL="$1"
@@ -84,6 +86,7 @@ function auth ()
 # Send request to custom Web Service to retrieve a Google Access Token
 # @param string $1 URL
 # @param string $2 FILE
+# @returnStatus 1 If request can not be performed
 function refresh ()
 {
     local URL="$1"

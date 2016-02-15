@@ -39,6 +39,7 @@ URL=""
 VERBOSE=0
 
 # Help
+# @return string
 function usage ()
 {
     echo "Usage: ${SCRIPT} -a authtype [-c clientid] [-s clientsecret] [-r refreshtoken] [-d developertoken] [-u url]"
@@ -106,6 +107,8 @@ fi
 # @param string $1 Web service url
 # @param string $2 Google developer token
 # @param int $3 Verbose mode
+# @returnStatus 1 If auth file can not be saved
+# @returnStatus 1 If url is not wellformed
 function initCustom ()
 {
     local DEVELOPER_TOKEN="$2"
@@ -143,6 +146,7 @@ function initCustom ()
 # @param string $3 Google refresh token
 # @param string $4 Google developer token
 # @param string $5 Verbose mode
+# @returnStatus 1 If auth file can not be saved
 function initGoogle ()
 {
     local CLIENT_ID="$1"
