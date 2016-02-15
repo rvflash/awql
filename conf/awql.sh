@@ -30,7 +30,7 @@ declare -r AUTH_GOOGLE_TYPE="google"
 declare -r AUTH_CUSTOM_TYPE="custom"
 
 # Adowrds API
-declare -r AWQL_API_VERSION="v201509"
+declare -r AWQL_API_LAST_VERSION="v201601"
 declare -r AWQL_API_DOC_EXTRA_FILE_NAME="extra.yaml"
 declare -r AWQL_API_DOC_FIELDS_FILE_NAME="fields.yaml"
 declare -r AWQL_API_DOC_KEYS_FILE_NAME="keys.yaml"
