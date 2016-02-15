@@ -273,7 +273,7 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 ### Usage
 
 ```bash
-~ $ awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-c] [-v]
+~ $ awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-V apiversion] [-c] [-v] [-A]
 -i for Google Adwords account ID
 -a for Google Adwords access token
 -d for Google developer token
@@ -281,6 +281,8 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 -s to append a copy of output to the given file
 -c used to enable cache
 -v used to print more informations
+-A Disable automatic rehashing. This option is on by default, which enables table and column name completion
+-V Google API version to use
 ````
 
 ### And, make your first call
