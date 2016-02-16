@@ -6,6 +6,8 @@
 # @param string $2 message to log
 # @param string $3 verbose mode
 # @return int
+# @exitStatus 1
+# @returnStatus 1 If previous error code is normal
 function exitOnError ()
 {
     local ERR_CODE="$1"
@@ -31,6 +33,7 @@ function exitOnError ()
 # @param string $1 message to display
 # @param int $2 padding length
 # @param string $3 padding char
+# @return string
 function printLeftPad ()
 {
     local MESSAGE="$1"
@@ -56,6 +59,7 @@ function printLeftPad ()
 # @example Message -------------------------------- OK
 # @param string $1 return code of previous step
 # @param string $2 message to display
+# @exitStatus 1
 function printAndExitOnError ()
 {
     # In
@@ -87,6 +91,7 @@ function printAndExitOnError ()
 # @example return
 # ([ACCESS_TOKEN]="ya29.TgI73hCO7G3OaWdfJ2HTZNCnUlPFS91Ciud6TcoXV0Wg6n7qlI2Bl5H51EnqyyALIFOONYg" [TOKEN_TYPE]=Bearer...)
 # @return arrayToString
+# @returnStatus 1 If token has invalid format
 function tokenFromFile ()
 {
     local TOKEN_FILE="$1"

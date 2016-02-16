@@ -6,10 +6,17 @@
 # Allow access to table structure
 # @param string $1 Awql query
 # @param string $2 Output filepath
+# @param string $3 Api version
+# @return arrayToString Response
+# @returnStatus 2 If query uses a unexisting table
+# @returnStatus 2 If query is empty
+# @returnStatus 1 If configuration files are not loaded
+# @returnStatus 1 If api version is invalid
+# @returnStatus 1 If response file does not exist
 function awqlDesc ()
 {
     # Removes mandatory or optionnal SQL terms
-    local FULL=0
+    declare -i FULL=0
     if [[ "$1" == ${AWQL_QUERY_DESC}[[:space:]]*${AWQL_QUERY_FULL}* ]]; then
         FULL=1
     fi
@@ -18,15 +25,25 @@ function awqlDesc ()
     local TABLE="${QUERY[0]}"
     local COLUMN="${QUERY[1]}"
     local FILE="$2"
+    local API_VERSION="$3"
 
-    if [[ -z "$TABLE" ]]; then
+    if [[ -z "${QUERY}" ]]; then
+        echo "QueryError.EMPTY_QUERY"
+        return 2
+    elif [[ -z "$TABLE" ]]; then
         echo "QueryError.NO_TABLE"
         return 2
+    elif [[ -z "${FILE}" ]]; then
+        echo "InternalError.INVALID_RESPONSE_FILE_PATH"
+        return 1
+    elif [[ -z "${API_VERSION}" ]]; then
+        echo "QueryError.INVALID_API_VERSION"
+        return 1
     fi
 
     # Load tables
     local AWQL_TABLES
-    AWQL_TABLES=$(awqlTables)
+    AWQL_TABLES="$(awqlTables "${API_VERSION}")"
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_TABLES"
         return 1
@@ -41,7 +58,7 @@ function awqlDesc ()
 
     # Load fields
     local AWQL_FIELDS
-    AWQL_FIELDS=$(awqlFields)
+    AWQL_FIELDS="$(awqlFields "${API_VERSION}")"
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_FIELDS"
         return 1
@@ -50,7 +67,7 @@ function awqlDesc ()
 
     # Load key fields
     local AWQL_KEYS
-    AWQL_KEYS=$(awqlKeys)
+    AWQL_KEYS="$(awqlKeys "${API_VERSION}")"
     if [[ $? -ne 0 ]]; then
         echo "$AWQL_KEYS"
         return 1
@@ -60,7 +77,7 @@ function awqlDesc ()
     # Load uncompatible fields
     if [[ "$FULL" -eq 1 ]]; then
         local AWQL_UNCOMPATIBLE_FIELDS
-        AWQL_UNCOMPATIBLE_FIELDS=$(awqlUncompatibleFields "$TABLE")
+        AWQL_UNCOMPATIBLE_FIELDS="$(awqlUncompatibleFields "${TABLE}" "${API_VERSION}")"
         if [[ $? -ne 0 ]]; then
             echo "$AWQL_UNCOMPATIBLE_FIELDS"
             return 1
@@ -93,5 +110,5 @@ function awqlDesc ()
         fi
     done
 
-    echo -n "([FILE]=\"${FILE}\" [CACHED]=0)"
+    echo -n "([FILE]=\"${FILE}\" [CACHED]=1)"
 }

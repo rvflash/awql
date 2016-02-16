@@ -4,21 +4,25 @@
 
 ##
 # Send a curl request to Adwords API to get response for AWQL query
-# @param string $1 Adwords ID
-# @param arrayToString $2 Google authentification tokens
-# @param arrayToString $3 Google request properties
-# @param string $4 Awql query
-# @param array $5 Output filepath
-# @param array $6 verbose mode
+# @param string $1 Awql query
+# @param string $2 Output filepath
+# @param string $3 Api version
+# @param string $4 Adwords ID
+# @param arrayToString $5 Google authentification tokens
+# @param arrayToString $6 Google request properties
+# @param int $7 Verbose
+# @return arrayToString Response
+# @returnStatus 2 If
+# @returnStatus 1 If response is on error
 function awqlSelect ()
 {
-    declare -A -r GOOGLE_AUTH="$2"
-    declare -A -r GOOGLE_REQUEST="$3"
-
-    local ADWORDS_ID="$1"
-    local QUERY="$4"
-    local FILE="$5"
-    local VERBOSE="$6"
+    local QUERY="$1"
+    local FILE="$2"
+    local API_VERSION="$3"
+    local ADWORDS_ID="$4"
+    declare -A -r GOOGLE_AUTH="$5"
+    declare -A -r GOOGLE_REQUEST="$6"
+    declare -i VERBOSE="$7"
 
     # Define curl default properties
     local OPTIONS="--silent"
@@ -35,7 +39,7 @@ function awqlSelect ()
     # Send request to Google API Adwords
     local GOOGLE_URL="${GOOGLE_REQUEST[PROTOCOL]}://${GOOGLE_REQUEST[HOSTNAME]}${GOOGLE_REQUEST[PATH]}"
     local RESPONSE=$(curl \
-        --request "${GOOGLE_REQUEST[METHOD]}" "${GOOGLE_URL}${AWQL_API_VERSION}" \
+        --request "${GOOGLE_REQUEST[METHOD]}" "${GOOGLE_URL}${API_VERSION}" \
         --data-urlencode "${GOOGLE_REQUEST[RESPONSE_FORMAT]}=CSV" \
         --data-urlencode "${GOOGLE_REQUEST[AWQL_QUERY]}=$QUERY" \
         --header "${GOOGLE_REQUEST[AUTHORIZATION]}:${GOOGLE_AUTH[TOKEN_TYPE]} ${GOOGLE_AUTH[ACCESS_TOKEN]}" \
@@ -48,7 +52,7 @@ function awqlSelect ()
 
     if [[ "${RESPONSE_INFO[HTTP_CODE]}" -eq 0 || "${RESPONSE_INFO[HTTP_CODE]}" -gt 400 ]]; then
         # A connexion error occured
-        local ERR_MSG="ConnexionError.NOT_FOUND with API ${AWQL_API_VERSION}"
+        local ERR_MSG="ConnexionError.NOT_FOUND with API ${API_VERSION}"
         if [ "$VERBOSE" -eq 1 ]; then
             ERR_MSG+=" @source $FILE"
         fi
@@ -61,7 +65,7 @@ function awqlSelect ()
         if [[ "$ERR_FIELD" != "" ]]; then
             echo "$ERR_TYPE regarding field(s) named $ERR_FIELD"
         else
-            echo "$ERR_TYPE with API ${AWQL_API_VERSION}"
+            echo "$ERR_TYPE with API ${API_VERSION}"
         fi
         # Except for authentification errors, does not exit on each error, just notice it
         if [[ "$ERR_TYPE"  == "AuthenticationError"* ]]; then

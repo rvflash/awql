@@ -11,13 +11,19 @@
 # echo "set horizontal-scroll-mode off" >> ~/.inputrc
 #
 # In order to identify witch code for each key, use command: sed -n l
-# @param string $1 Name of the variable to retrieve lines
-# @param int $2 Use auto rehash for completion
+# @param string $1 OutpitVarName
+# @param int $2 Auto-rehash
+# @param string $3 Api version
+# @return void
 function reader ()
 {
     # Variable name use to export the response of prompt
     local READER_VAR_NAME="$1"
     local REPLY
+    # Completion
+    declare -i AUTO_REHASH="$2"
+    local COMPREPLY
+    local API_VERSION="$3"
 
     # Terminal size
     declare -i WINDOW_WIDTH
@@ -34,10 +40,6 @@ function reader ()
         declare -i HISTORY_SIZE=${#HISTORY[@]}
         declare -i HISTORY_INDEX=${HISTORY_SIZE}
     fi
-
-    # Completion
-    declare -i AUTO_REHASH="$2"
-    local COMPREPLY
 
     # Introduction messages
     local PROMPT="${AWQL_PROMPT}"
@@ -128,7 +130,7 @@ function reader ()
                 REPLY="${READ[@]}"
                 REPLY="${REPLY:0:$CHAR_INDEX}"
 
-                COMPREPLY=$(completion "${REPLY}")
+                COMPREPLY=$(completion "${REPLY}" "${API_VERSION}")
                 if [[ $? -eq 0 ]]; then
                     IFS=' ' read -a COMPREPLY <<< "${COMPREPLY}"
                     declare -i COMPREPLY_LENGTH="${#COMPREPLY[@]}"

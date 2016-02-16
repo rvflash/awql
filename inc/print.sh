@@ -5,11 +5,13 @@
 ##
 # Add informations about context of the query (time duration & number of lines)
 # @example 2 rows in set (0.93 sec)
-# @param string $1 AWQL filepath
-# @param int $2 Number of elements in file
+#
+# @param string $1 AWQL File path
+# @param int $2 Number of line
 # @param float $3 Time duration in milliseconds to get the data
 # @param string $4 Verbose mode
 # @param bool $5 If 1, data source is cached
+# @return string
 function printContext ()
 {
     local FILE_PATH="$1"
@@ -45,7 +47,7 @@ function printContext ()
         fi
     fi
 
-    echo -en "$CONTEXT\n"
+    echo "$CONTEXT"
     echo
 }
 
@@ -55,6 +57,7 @@ function printContext ()
 # @param arrayToString $2 Response
 # @param string $3 If given, path to save AWQL response
 # @param string $4 Verbose mode
+# @return string
 function print ()
 {
     declare -A REQUEST="$1"
@@ -62,12 +65,12 @@ function print ()
     local SAVE_FILE="$3"
     local VERBOSE="$4"
 
-    local FILE_SIZE=0
+    declare -i FILE_SIZE=0
     local FILE_PATH="${RESPONSE[FILE]}"
     if [[ -n "$FILE_PATH" && -f "$FILE_PATH" ]]; then
-        declare -a LIMIT_QUERY=(${REQUEST[LIMIT]})
-        declare -a ORDER_QUERY=(${REQUEST[ORDER]})
-        local LIMIT_QUERY_SIZE=${#LIMIT_QUERY[@]}
+        declare -a LIMIT_QUERY=("${REQUEST[LIMIT]}")
+        declare -a ORDER_QUERY=("${REQUEST[ORDER]}")
+        declare -i LIMIT_QUERY_SIZE=${#LIMIT_QUERY[@]}
 
         FILE_SIZE=$(wc -l < "$FILE_PATH")
         if [[ "$FILE_SIZE" -gt 1 ]]; then

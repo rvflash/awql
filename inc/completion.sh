@@ -11,7 +11,10 @@ declare -i -r COMPLETION_MODE_DURING=3
 # Return lits of options to propose as completion
 # @param int $1 Mode
 # @param string $2 Filter value
+# @param string $3 Api version
 # @return string
+# @returnStatus 1 If api version is empty
+# @returnStatus 1 If adwords configuration table or field file does not exist
 function completeOptions ()
 {
     local MODE="$1"
@@ -19,11 +22,15 @@ function completeOptions ()
         return
     fi
     local FILTER="$2"
+    local API_VERSION="$3"
+    if [[ -z "$API_VERSION" ]]; then
+        return 1
+    fi
 
     local AWQL_TABLES
     if [[ "$MODE" -eq ${COMPLETION_MODE_TABLES} ]]; then
         # Load tables
-        AWQL_TABLES=$(awqlTables)
+        AWQL_TABLES=$(awqlTables "$API_VERSION")
         if [[ $? -ne 0 ]]; then
             return 1
         fi
@@ -33,8 +40,7 @@ function completeOptions ()
     local AWQL_FIELDS
     if [[ "$MODE" -eq ${COMPLETION_MODE_FIELDS} ]]; then
         # Load fields
-        local AWQL_FIELDS
-        AWQL_FIELDS=$(awqlFields)
+        AWQL_FIELDS=$(awqlFields "$API_VERSION")
         if [[ $? -ne 0 ]]; then
             return 1
         fi
@@ -55,6 +61,9 @@ function completeOptions ()
     fi
 }
 
+##
+# @param string Word
+# @return string
 function completeWord ()
 {
     declare -i POSITION="${#1}"
@@ -95,12 +104,17 @@ function completeWord ()
 
 ##
 # Complete curent query with table or column names and with AWQL keywords.
-# @param string $1
+# @param string $1 Words to complete
+# @param string $2 Api version
+# @return string
+# @returnStatus 1 If word to complete is empty
+# @returnStatus 1 If there is no completion
 function completion ()
 {
     local COMP="$1"
-    if [[ -z "$COMP" ]]; then
-        # Empty string
+    local API_VERSION="$2"
+    if [[ -z "$COMP" || -z "$API_VERSION" ]]; then
+        # Empty string or missing api version
         return 1
     fi
     IFS=' ' read -a WORDS <<< "$COMP"
@@ -167,7 +181,7 @@ function completion ()
     fi
 
     if [[ -z "$OPTIONS" ]]; then
-        OPTIONS=$(completeOptions "$MODE" "$FILTER")
+        OPTIONS=$(completeOptions "$MODE" "$FILTER" "$API_VERSION")
         if [[ $? -ne 0 ]]; then
             return 1
         fi

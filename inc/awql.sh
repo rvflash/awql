@@ -3,13 +3,41 @@
 declare AWQL_EXTRA AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS AWQL_KEYS AWQL_TABLES AWQL_TABLES_TYPE
 
 ##
+# Display information about available AWQL commmands
+# return string
+function awqlHelp ()
+{
+    echo "The AWQL command line tool is developed by Hervé GOUCHET."
+    echo "For developer information, visit:"
+    echo "    https://github.com/rvflash/awql/"
+    echo "For information about AWQL language, visit:"
+    echo "    https://developers.google.com/adwords/api/docs/guides/awql"
+    echo
+    echo "List of all AWQL commands:"
+    echo "Note that all text commands must be first on line and end with ';'"
+    printLeftPad "${AWQL_TEXT_COMMAND_CLEAR}" 10 " "
+    echo "(\\${AWQL_COMMAND_CLEAR}) Clear the current input statement."
+    printLeftPad "${AWQL_TEXT_COMMAND_EXIT}" 10 " "
+    echo "(\\${AWQL_COMMAND_EXIT}) Exit awql. Same as quit."
+    printLeftPad "${AWQL_TEXT_COMMAND_HELP}" 10 " "
+    echo "(\\${AWQL_COMMAND_HELP}) Display this help."
+    printLeftPad "${AWQL_TEXT_COMMAND_QUIT}" 10 " "
+    echo "(\\${AWQL_COMMAND_EXIT}) Quit awql command line tool."
+}
+
+##
 # Get all field names with for each, their description
 # @example ([AccountDescriptiveName]="The descriptive name...")
 # @use AWQL_EXTRA
+# @param string $1 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
+# @notUsedYet
 function awqlExtra ()
 {
+    local API_VERSION="$1"
     if [[ -z "$AWQL_EXTRA" ]]; then
-        AWQL_EXTRA=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
+        AWQL_EXTRA=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_EXTRA_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_EXTRA_FIELDS"
             return 1
@@ -22,10 +50,14 @@ function awqlExtra ()
 # Get all fields names with for each, the type of data
 # @example ([AccountDescriptiveName]="String")
 # @use AWQL_FIELDS
+# @param string $1 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
 function awqlFields ()
 {
+    local API_VERSION="$1"
     if [[ -z "$AWQL_FIELDS" ]]; then
-        AWQL_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
+        AWQL_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_FIELDS"
             return 1
@@ -38,10 +70,15 @@ function awqlFields ()
 # Get all table names with for each, the list of their blacklisted fields
 # @example ([PRODUCT_PARTITION_REPORT]="AccountDescriptiveName AdGroupId...")
 # @use AWQL_BLACKLISTED_FIELDS
+# @param string $1 API version
+# @return string
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
 function awqlBlacklistedFields ()
 {
+    local API_VERSION="$1"
     if [[ -z "$AWQL_BLACKLISTED_FIELDS" ]]; then
-        AWQL_BLACKLISTED_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
+        AWQL_BLACKLISTED_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_BLACKLISTED_FIELDS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_BLACKLISTED_FIELDS"
             return 1
@@ -54,12 +91,17 @@ function awqlBlacklistedFields ()
 # Get all fields names with for each, the list of their incompatible fields
 # @example ([AccountDescriptiveName]="Hour")
 # @use AWQL_UNCOMPATIBLE_FIELDS
+# @param string $1 Table
+# @param string $2 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
 function awqlUncompatibleFields ()
 {
     local TABLE="$1"
+    local API_VERSION="$2"
 
     if [[ -z "$AWQL_UNCOMPATIBLE_FIELDS" ]]; then
-        AWQL_UNCOMPATIBLE_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
+        AWQL_UNCOMPATIBLE_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${TABLE}.yaml")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_UNCOMPATIBLE_FIELDS"
             return 1
@@ -72,10 +114,14 @@ function awqlUncompatibleFields ()
 # Get all table names with for each, their structuring keys
 # @example ([PRODUCT_PARTITION_REPORT]="ClickType Date...")
 # @use AWQL_KEYS
+# @param string $1 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
 function awqlKeys ()
 {
+    local API_VERSION="$1"
     if [[ -z "$AWQL_KEYS" ]]; then
-        AWQL_KEYS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
+        AWQL_KEYS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_KEYS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_KEYS"
             return 1
@@ -88,10 +134,14 @@ function awqlKeys ()
 # Get all table names with for each, the list of their fields
 # @example ([PRODUCT_PARTITION_REPORT]="AccountDescriptiveName AdGroupId...")
 # @use AWQL_TABLES
+# @param string $1 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
 function awqlTables ()
 {
+    local API_VERSION="$1"
     if [[ -z "$AWQL_TABLES" ]]; then
-        AWQL_TABLES=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
+        AWQL_TABLES=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_TABLES_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_TABLES"
             return 1
@@ -104,10 +154,14 @@ function awqlTables ()
 # Get all table names with for each, their type
 # @example ([PRODUCT_PARTITION_REPORT]="SHOPPING")
 # @use AWQL_TABLES_TYPE
+# @param string $1 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
 function awqlTablesType ()
 {
+    local API_VERSION="$1"
     if [[ -z "$AWQL_TABLES_TYPE" ]]; then
-        AWQL_TABLES_TYPE=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
+        AWQL_TABLES_TYPE=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${API_VERSION}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
             echo "InternalError.INVALID_AWQL_TABLES_TYPE"
             return 1
@@ -120,6 +174,8 @@ function awqlTablesType ()
 # Get data from cache if available
 # @param string $1 FilePath
 # @param string $2 Caching enabled
+# @return string
+# @returnStatus 1 If data is not cached
 function getFromCache ()
 {
     local FILE="$1"
@@ -138,26 +194,24 @@ function getFromCache ()
 
 ##
 # Fetch internal cache or send request to Adwords to get results
-# @param string $1 Adwords ID
-# @param arrayToString $2 User request
-# @param array $3 Google authentification tokens
-# @param array $4 Google request properties
-# @param array $5 Verbose mode
-# @param array $6 Enable caching
+# @param arrayToString $1 User request
+# @param arrayToString $2 Google authentification tokens
+# @param arrayToString $3 Google request properties
+# @param string
+# @returnStatus 2 If query is invalid
+# @returnStatus 1 If case of fatal error
 function get ()
 {
     # In
-    local ADWORDS_ID="$1"
-    declare -A REQUEST="$2"
-    local AUTH="$3"
-    local SERVER="$4"
-    local VERBOSE="$5"
-    local CACHING="$6"
+    declare -A REQUEST="$1"
+    local AUTH="$2"
+    local SERVER="$3"
 
     # Out
     local FILE="${AWQL_WRK_DIR}/${REQUEST[CHECKSUM]}${AWQL_FILE_EXT}"
 
     # Overload caching mode for local database AWQL methods
+    declare -i CACHING="${REQUEST[CACHING]}"
     if [[ "${REQUEST[METHOD]}" != ${AWQL_QUERY_SELECT} ]]; then
         CACHING=1
     fi
@@ -169,17 +223,17 @@ function get ()
         case "${REQUEST[METHOD]}" in
             ${AWQL_QUERY_SELECT})
                 includeOnce "${AWQL_INC_DIR}/awql_select.sh"
-                RESPONSE=$(awqlSelect "$ADWORDS_ID" "$AUTH" "$SERVER" "${REQUEST[QUERY]}" "$FILE" "$VERBOSE")
+                RESPONSE=$(awqlSelect "${REQUEST[QUERY]}" "$FILE" "${REQUEST[API_VERSION]}" "${REQUEST[ADWORDS_ID]}" "$AUTH" "$SERVER" "${REQUEST[VERBOSE]}" )
                 ERR_TYPE=$?
                 ;;
             ${AWQL_QUERY_DESC})
                 includeOnce "${AWQL_INC_DIR}/awql_desc.sh"
-                RESPONSE=$(awqlDesc "${REQUEST[QUERY]}" "$FILE")
+                RESPONSE=$(awqlDesc "${REQUEST[QUERY]}" "$FILE" "${REQUEST[API_VERSION]}")
                 ERR_TYPE=$?
                 ;;
             ${AWQL_QUERY_SHOW})
                 includeOnce "${AWQL_INC_DIR}/awql_show.sh"
-                RESPONSE=$(awqlShow "${REQUEST[QUERY]}" "$FILE")
+                RESPONSE=$(awqlShow "${REQUEST[QUERY]}" "$FILE" "${REQUEST[API_VERSION]}")
                 ERR_TYPE=$?
                 ;;
             *)
@@ -207,26 +261,30 @@ function get ()
 ##
 # Build a call to Google Adwords and retrieve report for the AWQL query
 # @param string $1 Query
-# @param string $2 Adwords ID
-# @param string $3 Google Access Token
-# @param string $4 Google Developer Token
-# @param arrayToString $5 Google request configuration
-# @param string $6 Save file path
-# @param int $7 Cachine mode
-# @param int $8 Verbose mode
+# @param string $2 Api version
+# @param string $3 Adwords ID
+# @param string $4 Google Access Token
+# @param string $5 Google Developer Token
+# @param arrayToString $6 Google request configuration
+# @param string $7 Save file path
+# @param int $8 Cachine mode
+# @param int $9 Verbose mode
+# @param string
+# @returnStatus 1 If query is invalid
 function awql ()
 {
     local QUERY="$1"
-    local ADWORDS_ID="$2"
-    local ACCESS_TOKEN="$3"
-    local DEVELOPER_TOKEN="$4"
-    local REQUEST="$5"
-    local SAVE_FILE="$6"
-    local VERBOSE="$7"
-    local CACHING="$8"
+    local API_VERSION="$2"
+    local ADWORDS_ID="$3"
+    local ACCESS_TOKEN="$4"
+    local DEVELOPER_TOKEN="$5"
+    local REQUEST="$6"
+    local SAVE_FILE="$7"
+    local VERBOSE="$8"
+    local CACHING="$9"
 
     # Prepare and validate query, manage all extended behaviors to AWQL basics
-    QUERY=$(query "$ADWORDS_ID" "$QUERY")
+    QUERY=$(query "$ADWORDS_ID" "$QUERY" "$API_VERSION" "$VERBOSE" "$CACHING")
     if exitOnError "$?" "$QUERY" "$VERBOSE"; then
         return 1
     fi
@@ -242,7 +300,7 @@ function awql ()
 
     # Send request to Adwords or local cache to get report
     local RESPONSE
-    RESPONSE=$(get "$ADWORDS_ID" "$QUERY" "$AUTH" "$REQUEST" "$VERBOSE" "$CACHING")
+    RESPONSE=$(get "$QUERY" "$AUTH" "$REQUEST")
     if exitOnError "$?" "$RESPONSE" "$VERBOSE"; then
         return 1
     fi
@@ -254,28 +312,33 @@ function awql ()
 ##
 # Read user prompt to retrieve AWQL query.
 # Enable up and down arrow keys to navigate in history of queries.
-# @param string $1 Adwords ID
-# @param string $2 Google Access Token
-# @param string $3 Google Developer Token
-# @param arrayToString $4 Google request configuration
-# @param string $5 Save file path
-# @param int $6 Cachine mode
-# @param int $7 Verbose mode
-# @param int $8 Auto rehash for completion
+# @param string $1 Auto rehash for completion
+# @param string $2 Api version
+# @param string $3 Adwords ID
+# @param string $4 Google Access Token
+# @param string $5 Google Developer Token
+# @param arrayToString $6 Google request configuration
+# @param string $7 Save file path
+# @param int $8 Cachine mode
+# @param int $9 Verbose mode
+# @param string
+# @returnStatus 1 If query is invalid
 function awqlRead ()
 {
-    local ADWORDS_ID="$1"
-    local ACCESS_TOKEN="$2"
-    local DEVELOPER_TOKEN="$3"
-    local REQUEST="$4"
-    local SAVE_FILE="$5"
-    local VERBOSE="$6"
-    local CACHING="$7"
-    local AUTO_REHASH="$8"
+    local AUTO_REHASH="$1"
+    local API_VERSION="$2"
+    local ADWORDS_ID="$3"
+    local ACCESS_TOKEN="$4"
+    local DEVELOPER_TOKEN="$5"
+    local REQUEST="$6"
+    local SAVE_FILE="$7"
+    local VERBOSE="$8"
+    local CACHING="$9"
 
     # Open a prompt (with auto-completion ?)
-    reader QUERY_STRING "${AUTO_REHASH}"
+    local QUERY_STRING
+    reader QUERY_STRING "${AUTO_REHASH}" "${API_VERSION}"
 
     # Process query
-    awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING"
+    awql "$QUERY_STRING" "$ADWORDS_ID" "$ACCESS_TOKEN" "$DEVELOPER_TOKEN" "$REQUEST" "$SAVE_FILE" "$VERBOSE" "$CACHING" "$API_VERSION"
 }
