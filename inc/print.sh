@@ -34,7 +34,7 @@ function printContext ()
     if [[ -z "$TIME_DURATION" ]]; then
         TIME_DURATION="0.00"
     fi
-    CONTEXT="$CONTEXT ($TIME_DURATION sec)"
+    CONTEXT="$CONTEXT (${TIME_DURATION/,/.} sec)"
 
     if [[ "$VERBOSE" -eq 1 ]]; then
         if [[ -n "$FILE_PATH" && -f "$FILE_PATH" ]]; then
@@ -63,14 +63,14 @@ function print ()
     declare -A REQUEST="$1"
     declare -A RESPONSE="$2"
     local SAVE_FILE="$3"
-    local VERBOSE="$4"
+    declare -i VERBOSE="$4"
 
     declare -i FILE_SIZE=0
     local FILE_PATH="${RESPONSE[FILE]}"
     if [[ -n "$FILE_PATH" && -f "$FILE_PATH" ]]; then
-        declare -a LIMIT_QUERY=("${REQUEST[LIMIT]}")
-        declare -a ORDER_QUERY=("${REQUEST[ORDER]}")
-        declare -i LIMIT_QUERY_SIZE=${#LIMIT_QUERY[@]}
+        declare -a LIMIT_QUERY="(${REQUEST[LIMIT]})"
+        declare -a ORDER_QUERY="(${REQUEST[ORDER]})"
+        declare -i LIMIT_QUERY_SIZE="${#LIMIT_QUERY[@]}"
 
         FILE_SIZE=$(wc -l < "$FILE_PATH")
         if [[ "$FILE_SIZE" -gt 1 ]]; then

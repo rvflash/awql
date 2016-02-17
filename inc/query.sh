@@ -73,7 +73,7 @@ function query ()
     if [[ -z "${ADWORDS_ID}" || -z "${API_VERSION}" ]]; then
         return 1
     fi
-    declare -A REQUEST='([LIMIT]="" [ORDER]="" [VERTICAL_MODE]=0)'
+    declare -A REQUEST="([LIMIT]=\"\" [ORDER]=\"\" [VERTICAL_MODE]=0)"
 
     # Manage vertical mode, also named G modifier
     local QUERY=$(trim "$2")
@@ -156,8 +156,10 @@ function query ()
                 echo "QueryError.UNKNOWN_TABLE"
                 return 2
             fi
-            FIELDS=$(arrayDiff "$FIELDS" "${AWQL_BLACKLISTED_FIELDS[$TABLE]}")
-            QUERY="SELECT ${FIELDS// /, } FROM $QUERY"
+
+            declare -ar TABLE_FIELDS=$(arrayDiff "$FIELDS" "${AWQL_BLACKLISTED_FIELDS[$TABLE]}")
+            FIELDS="${TABLE_FIELDS[@]}"
+            QUERY="SELECT ${FIELDS// /, } FROM ${QUERY}"
             QUERY_ORIGIN="$QUERY"
         fi
 

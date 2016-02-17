@@ -44,7 +44,7 @@ function awqlSelect ()
         --data-urlencode "${GOOGLE_REQUEST[AWQL_QUERY]}=$QUERY" \
         --header "${GOOGLE_REQUEST[AUTHORIZATION]}:${GOOGLE_AUTH[TOKEN_TYPE]} ${GOOGLE_AUTH[ACCESS_TOKEN]}" \
         --header "${GOOGLE_REQUEST[DEVELOPER_TOKEN]}:${GOOGLE_AUTH[DEVELOPER_TOKEN]}" \
-        --header "${GOOGLE_REQUEST[ADWORDS_ID]}:$ADWORDS_ID" \
+        --header "${GOOGLE_REQUEST[ADWORDS_ID]}:${ADWORDS_ID}" \
         --output "$FILE" \
         --write-out "([FILE]=\"${FILE}\" [CACHED]=0 [HTTP_CODE]=%{http_code} [TIME_DURATION]='%{time_total}')" ${OPTIONS}
     )
@@ -63,9 +63,9 @@ function awqlSelect ()
         local ERR_TYPE=$(awk -F 'type>|<\/type' '{print $2}' "$FILE")
         local ERR_FIELD=$(awk -F 'fieldPath>|<\/fieldPath' '{print $2}' "$FILE")
         if [[ "$ERR_FIELD" != "" ]]; then
-            echo "$ERR_TYPE regarding field(s) named $ERR_FIELD"
+            echo "${ERR_TYPE} regarding field(s) named ${ERR_FIELD}"
         else
-            echo "$ERR_TYPE with API ${API_VERSION}"
+            echo "${ERR_TYPE} with API ${API_VERSION}"
         fi
         # Except for authentification errors, does not exit on each error, just notice it
         if [[ "$ERR_TYPE"  == "AuthenticationError"* ]]; then

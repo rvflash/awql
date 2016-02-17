@@ -232,5 +232,5 @@ function reader ()
         fi
     done
 
-    eval ${READER_VAR_NAME}=\"${REPLY}\"
+    eval "${READER_VAR_NAME}=\"${REPLY}\""
 }
