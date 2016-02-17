@@ -1,11 +1,11 @@
-ACCOUNT_PERFORMANCE_REPORT                       : ConversionTypeName ConversionTrackerId ConversionCategoryName Slot ClickType HourOfDay
-AD_CUSTOMIZERS_FEED_ITEM_REPORT                  : ConversionTrackerId ConversionTypeName ConversionCategoryName Slot
-AD_PERFORMANCE_REPORT                            : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickType Slot Device ClickAssistedConversionValue ClickAssistedConversionsOverLastClickConversions ImpressionAssistedConversionValue ImpressionAssistedConversionsOverLastClickConversions PercentNewVisitors ClickAssistedConversions ImpressionAssistedConversions AveragePageviews AverageTimeOnSite BounceRate CrossDeviceConversions AllConversionValue ValuePerAllConversion AllConversionRate AllConversions CostPerAllConversion
-ADGROUP_PERFORMANCE_REPORT                       : ConversionTypeName ConversionTrackerId ConversionCategoryName Slot ClickType HourOfDay Device ImpressionAssistedConversions ImpressionAssistedConversionValue AverageTimeOnSite ClickAssistedConversions ClickAssistedConversionValue AveragePageviews RelativeCtr ClickAssistedConversionsOverLastClickConversions ImpressionAssistedConversionsOverLastClickConversions PercentNewVisitors BounceRate SearchRankLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare SearchImpressionShare SearchExactMatchImpressionShare OfflineInteractionRate NumOfflineInteractions NumOfflineImpressions CrossDeviceConversions CostPerAllConversion AllConversionRate AllConversions AllConversionValue ValuePerAllConversion
-AGE_RANGE_PERFORMANCE_REPORT                     : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType
-AUDIENCE_PERFORMANCE_REPORT                      : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType Slot
-AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT          : ConversionTypeName ConversionTrackerId ConversionCategoryName
-BID_GOAL_PERFORMANCE_REPORT                      : HourOfDay
+ACCOUNT_PERFORMANCE_REPORT                       : ConversionTypeName ConversionTrackerId ConversionCategoryName Slot ClickType HourOfDay SearchBudgetLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare ContentRankLostImpressionShare ContentBudgetLostImpressionShare ContentImpressionShare InteractionRate EngagementRate Ctr VideoViewRate AllConversionRate
+AD_CUSTOMIZERS_FEED_ITEM_REPORT                  : ConversionTrackerId ConversionTypeName ConversionCategoryName Slot Ctr InteractionRate EngagementRate VideoViewRate AllConversionRate
+AD_PERFORMANCE_REPORT                            : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickType Slot Device ClickAssistedConversionValue ClickAssistedConversionsOverLastClickConversions ImpressionAssistedConversionValue ImpressionAssistedConversionsOverLastClickConversions PercentNewVisitors ClickAssistedConversions ImpressionAssistedConversions AveragePageviews AverageTimeOnSite BounceRate Ctr EngagementRate InteractionRate VideoViewRate VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate CrossDeviceConversions AllConversionValue ValuePerAllConversion AllConversionRate AllConversions CostPerAllConversion
+ADGROUP_PERFORMANCE_REPORT                       : ConversionTypeName ConversionTrackerId ConversionCategoryName Slot ClickType HourOfDay Device ImpressionAssistedConversions ImpressionAssistedConversionValue AverageTimeOnSite ClickAssistedConversions ClickAssistedConversionValue AveragePageviews RelativeCtr ClickAssistedConversionsOverLastClickConversions ImpressionAssistedConversionsOverLastClickConversions PercentNewVisitors BounceRate SearchRankLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare SearchImpressionShare SearchExactMatchImpressionShare OfflineInteractionRate NumOfflineInteractions NumOfflineImpressions CrossDeviceConversions Ctr EngagementRate CostPerAllConversion InteractionRate AllConversionRate VideoViewRate VideoQuartile75Rate AllConversions AllConversionValue VideoQuartile50Rate VideoQuartile25Rate VideoQuartile100Rate ValuePerAllConversion
+AGE_RANGE_PERFORMANCE_REPORT                     : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType InteractionRate Ctr VideoQuartile100Rate VideoQuartile25Rate EngagementRate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate AllConversionRate
+AUDIENCE_PERFORMANCE_REPORT                      : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType Slot VideoQuartile25Rate VideoQuartile100Rate Ctr InteractionRate VideoViewRate EngagementRate VideoQuartile75Rate VideoQuartile50Rate AllConversionRate
+AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT          : ConversionTypeName ConversionTrackerId ConversionCategoryName Ctr EngagementRate InteractionRate VideoViewRate
+BID_GOAL_PERFORMANCE_REPORT                      : HourOfDay AllConversionRate
 BUDGET_PERFORMANCE_REPORT                        : 
 CALL_METRICS_CALL_DETAILS_REPORT                 : 
 CAMPAIGN_AD_SCHEDULE_TARGET_REPORT               : 
@@ -13,74 +13,31 @@ CAMPAIGN_LOCATION_TARGET_REPORT                  :
 CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT    : 
 CAMPAIGN_NEGATIVE_LOCATIONS_REPORT               : 
 CAMPAIGN_NEGATIVE_PLACEMENTS_PERFORMANCE_REPORT  : 
-CAMPAIGN_PERFORMANCE_REPORT                      : ConversionTypeName ConversionCategoryName ConversionTrackerId Slot ClickType HourOfDay Device ImpressionReach AverageFrequency ClickAssistedConversionValue RelativeCtr ImpressionAssistedConversions BounceRate PercentNewVisitors ClickAssistedConversionsOverLastClickConversions AverageTimeOnSite ImpressionAssistedConversionValue AveragePageviews ImpressionAssistedConversionsOverLastClickConversions ClickAssistedConversions ContentRankLostImpressionShare ContentImpressionShare ContentBudgetLostImpressionShare OfflineInteractionRate NumOfflineInteractions InvalidClickRate NumOfflineImpressions InvalidClicks SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare SearchBudgetLostImpressionShare CrossDeviceConversions AllConversions ValuePerAllConversion AllConversionValue CostPerAllConversion AllConversionRate
+CAMPAIGN_PERFORMANCE_REPORT                      : ConversionTypeName ConversionCategoryName ConversionTrackerId Slot ClickType HourOfDay Device ImpressionReach AverageFrequency ClickAssistedConversionValue RelativeCtr ImpressionAssistedConversions BounceRate PercentNewVisitors ClickAssistedConversionsOverLastClickConversions AverageTimeOnSite ImpressionAssistedConversionValue AveragePageviews ImpressionAssistedConversionsOverLastClickConversions ClickAssistedConversions ContentRankLostImpressionShare ContentImpressionShare ContentBudgetLostImpressionShare OfflineInteractionRate NumOfflineInteractions InvalidClickRate NumOfflineImpressions InvalidClicks SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare SearchBudgetLostImpressionShare CrossDeviceConversions Ctr EngagementRate InteractionRate VideoQuartile25Rate VideoViewRate AllConversions VideoQuartile100Rate ValuePerAllConversion AllConversionValue CostPerAllConversion AllConversionRate VideoQuartile50Rate VideoQuartile75Rate
 CAMPAIGN_PLATFORM_TARGET_REPORT                  : 
 CAMPAIGN_SHARED_SET_REPORT                       : 
 CLICK_PERFORMANCE_REPORT                         : 
 CREATIVE_CONVERSION_REPORT                       : 
-CRITERIA_PERFORMANCE_REPORT                      : ConversionTypeName ConversionCategoryName ConversionTrackerId ClickType Slot AllConversionRate AllConversions AllConversionValue CostPerAllConversion ValuePerAllConversion CrossDeviceConversions
-DESTINATION_URL_REPORT                           : ConversionCategoryName ConversionTypeName ConversionTrackerId ClickType Slot
-DISPLAY_KEYWORD_PERFORMANCE_REPORT               : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType
-DISPLAY_TOPICS_PERFORMANCE_REPORT                : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType
-FINAL_URL_REPORT                                 : ConversionTrackerId ConversionCategoryName ConversionTypeName ClickType Slot
-GENDER_PERFORMANCE_REPORT                        : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType
-GEO_PERFORMANCE_REPORT                           : ConversionTypeName ConversionTrackerId ConversionCategoryName
-KEYWORDLESS_CATEGORY_REPORT                      : ConversionTypeName ConversionTrackerId ConversionCategoryName
-KEYWORDLESS_QUERY_REPORT                         : ConversionCategoryName ConversionTrackerId ConversionTypeName
-KEYWORDS_PERFORMANCE_REPORT                      : ConversionTrackerId ConversionCategoryName ConversionTypeName ClickType Slot Device AverageTimeOnSite ImpressionAssistedConversions PercentNewVisitors ImpressionAssistedConversionValue ClickAssistedConversionValue ClickAssistedConversionsOverLastClickConversions ClickAssistedConversions BounceRate ImpressionAssistedConversionsOverLastClickConversions AveragePageviews SearchRankLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare CostPerAllConversion AllConversions CrossDeviceConversions ValuePerAllConversion AllConversionValue AllConversionRate
+CRITERIA_PERFORMANCE_REPORT                      : ConversionTypeName ConversionCategoryName ConversionTrackerId ClickType Slot EngagementRate Ctr InteractionRate VideoQuartile25Rate VideoQuartile100Rate VideoViewRate VideoQuartile75Rate VideoQuartile50Rate AllConversionRate AllConversions AllConversionValue CostPerAllConversion ValuePerAllConversion CrossDeviceConversions
+DESTINATION_URL_REPORT                           : ConversionCategoryName ConversionTypeName ConversionTrackerId ClickType Slot Ctr EngagementRate VideoQuartile100Rate VideoQuartile25Rate InteractionRate VideoViewRate VideoQuartile75Rate VideoQuartile50Rate AllConversionRate
+DISPLAY_KEYWORD_PERFORMANCE_REPORT               : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType InteractionRate Ctr EngagementRate VideoQuartile100Rate VideoQuartile25Rate VideoQuartile75Rate VideoViewRate VideoQuartile50Rate AllConversionRate
+DISPLAY_TOPICS_PERFORMANCE_REPORT                : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType InteractionRate Ctr VideoQuartile100Rate VideoQuartile25Rate EngagementRate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate AllConversionRate
+FINAL_URL_REPORT                                 : ConversionTrackerId ConversionCategoryName ConversionTypeName ClickType Slot InteractionRate EngagementRate Ctr VideoViewRate AllConversionRate
+GENDER_PERFORMANCE_REPORT                        : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType InteractionRate Ctr VideoQuartile100Rate VideoQuartile25Rate EngagementRate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate AllConversionRate
+GEO_PERFORMANCE_REPORT                           : ConversionTypeName ConversionTrackerId ConversionCategoryName Ctr
+KEYWORDLESS_CATEGORY_REPORT                      : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickConversionRate Ctr
+KEYWORDLESS_QUERY_REPORT                         : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickConversionRate Ctr
+KEYWORDS_PERFORMANCE_REPORT                      : ConversionTrackerId ConversionCategoryName ConversionTypeName ClickType Slot Device AverageTimeOnSite ImpressionAssistedConversions PercentNewVisitors ImpressionAssistedConversionValue ClickAssistedConversionValue ClickAssistedConversionsOverLastClickConversions ClickAssistedConversions BounceRate ImpressionAssistedConversionsOverLastClickConversions AveragePageviews SearchRankLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare VideoViewRate VideoQuartile25Rate Ctr VideoQuartile75Rate InteractionRate VideoQuartile100Rate EngagementRate VideoQuartile50Rate CostPerAllConversion AllConversions CrossDeviceConversions ValuePerAllConversion AllConversionValue AllConversionRate
 LABEL_REPORT                                     : 
 PAID_ORGANIC_QUERY_REPORT                        : 
-PLACEHOLDER_FEED_ITEM_REPORT                     : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Slot
-PLACEHOLDER_REPORT                               : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Slot
-PLACEMENT_PERFORMANCE_REPORT                     : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType
-PRODUCT_PARTITION_REPORT                         : ClickType Device
-SEARCH_QUERY_PERFORMANCE_REPORT                  : ConversionTypeName ConversionTrackerId ConversionCategoryName
+PLACEHOLDER_FEED_ITEM_REPORT                     : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Slot EngagementRate InteractionRate Ctr VideoViewRate AllConversionRate
+PLACEHOLDER_REPORT                               : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Slot EngagementRate Ctr InteractionRate VideoViewRate AllConversionRate
+PLACEMENT_PERFORMANCE_REPORT                     : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Ctr VideoQuartile100Rate VideoQuartile25Rate InteractionRate EngagementRate VideoViewRate VideoQuartile75Rate VideoQuartile50Rate AllConversionRate
+PRODUCT_PARTITION_REPORT                         : ClickType Device SearchImpressionShare AllConversionRate
+SEARCH_QUERY_PERFORMANCE_REPORT                  : ConversionTypeName ConversionTrackerId ConversionCategoryName EngagementRate InteractionRate Ctr VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate
 SHARED_SET_CRITERIA_REPORT                       : 
 SHARED_SET_REPORT                                : 
-SHOPPING_PERFORMANCE_REPORT                      : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickType
-URL_PERFORMANCE_REPORT                           : ConversionTypeName ConversionTrackerId ConversionCategoryName
-USER_AD_DISTANCE_REPORT                          : ConversionTypeName ConversionCategoryName
-VIDEO_PERFORMANCE_REPORT                         : ConversionTypeName ConversionCategoryName Engagements
-ACCOUNT_PERFORMANCE_REPORT                       : ConversionTypeName ConversionTrackerId ConversionCategoryName Slot ClickType HourOfDay
-AD_CUSTOMIZERS_FEED_ITEM_REPORT                  : ConversionTrackerId ConversionTypeName ConversionCategoryName Slot
-AD_PERFORMANCE_REPORT                            : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickType Slot Device ClickAssistedConversionValue ClickAssistedConversionsOverLastClickConversions ImpressionAssistedConversionValue ImpressionAssistedConversionsOverLastClickConversions PercentNewVisitors ClickAssistedConversions ImpressionAssistedConversions AveragePageviews AverageTimeOnSite BounceRate CrossDeviceConversions AllConversionValue ValuePerAllConversion AllConversionRate AllConversions CostPerAllConversion
-ADGROUP_PERFORMANCE_REPORT                       : ConversionTypeName ConversionTrackerId ConversionCategoryName Slot ClickType HourOfDay Device ImpressionAssistedConversions ImpressionAssistedConversionValue AverageTimeOnSite ClickAssistedConversions ClickAssistedConversionValue AveragePageviews RelativeCtr ClickAssistedConversionsOverLastClickConversions ImpressionAssistedConversionsOverLastClickConversions PercentNewVisitors BounceRate SearchRankLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare SearchImpressionShare SearchExactMatchImpressionShare OfflineInteractionRate NumOfflineInteractions NumOfflineImpressions CrossDeviceConversions CostPerAllConversion AllConversionRate AllConversions AllConversionValue ValuePerAllConversion
-AGE_RANGE_PERFORMANCE_REPORT                     : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType
-AUDIENCE_PERFORMANCE_REPORT                      : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType Slot
-AUTOMATIC_PLACEMENTS_PERFORMANCE_REPORT          : ConversionTypeName ConversionTrackerId ConversionCategoryName
-BID_GOAL_PERFORMANCE_REPORT                      : HourOfDay
-BUDGET_PERFORMANCE_REPORT                        : 
-CALL_METRICS_CALL_DETAILS_REPORT                 : 
-CAMPAIGN_AD_SCHEDULE_TARGET_REPORT               : 
-CAMPAIGN_LOCATION_TARGET_REPORT                  : 
-CAMPAIGN_NEGATIVE_KEYWORDS_PERFORMANCE_REPORT    : 
-CAMPAIGN_NEGATIVE_LOCATIONS_REPORT               : 
-CAMPAIGN_NEGATIVE_PLACEMENTS_PERFORMANCE_REPORT  : 
-CAMPAIGN_PERFORMANCE_REPORT                      : ConversionTypeName ConversionCategoryName ConversionTrackerId Slot ClickType HourOfDay Device ImpressionReach AverageFrequency ClickAssistedConversionValue RelativeCtr ImpressionAssistedConversions BounceRate PercentNewVisitors ClickAssistedConversionsOverLastClickConversions AverageTimeOnSite ImpressionAssistedConversionValue AveragePageviews ImpressionAssistedConversionsOverLastClickConversions ClickAssistedConversions ContentRankLostImpressionShare ContentImpressionShare ContentBudgetLostImpressionShare OfflineInteractionRate NumOfflineInteractions InvalidClickRate NumOfflineImpressions InvalidClicks SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare SearchBudgetLostImpressionShare CrossDeviceConversions AllConversions ValuePerAllConversion AllConversionValue CostPerAllConversion AllConversionRate
-CAMPAIGN_PLATFORM_TARGET_REPORT                  : 
-CAMPAIGN_SHARED_SET_REPORT                       : 
-CLICK_PERFORMANCE_REPORT                         : 
-CREATIVE_CONVERSION_REPORT                       : 
-CRITERIA_PERFORMANCE_REPORT                      : ConversionTypeName ConversionCategoryName ConversionTrackerId ClickType Slot AllConversionRate AllConversions AllConversionValue CostPerAllConversion ValuePerAllConversion CrossDeviceConversions
-DESTINATION_URL_REPORT                           : ConversionCategoryName ConversionTypeName ConversionTrackerId ClickType Slot
-DISPLAY_KEYWORD_PERFORMANCE_REPORT               : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType
-DISPLAY_TOPICS_PERFORMANCE_REPORT                : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType
-FINAL_URL_REPORT                                 : ConversionTrackerId ConversionCategoryName ConversionTypeName ClickType Slot
-GENDER_PERFORMANCE_REPORT                        : ConversionTrackerId ConversionTypeName ConversionCategoryName ClickType
-GEO_PERFORMANCE_REPORT                           : ConversionTypeName ConversionTrackerId ConversionCategoryName
-KEYWORDLESS_CATEGORY_REPORT                      : ConversionTypeName ConversionTrackerId ConversionCategoryName
-KEYWORDLESS_QUERY_REPORT                         : ConversionCategoryName ConversionTrackerId ConversionTypeName
-KEYWORDS_PERFORMANCE_REPORT                      : ConversionTrackerId ConversionCategoryName ConversionTypeName ClickType Slot Device AverageTimeOnSite ImpressionAssistedConversions PercentNewVisitors ImpressionAssistedConversionValue ClickAssistedConversionValue ClickAssistedConversionsOverLastClickConversions ClickAssistedConversions BounceRate ImpressionAssistedConversionsOverLastClickConversions AveragePageviews SearchRankLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare CostPerAllConversion AllConversions CrossDeviceConversions ValuePerAllConversion AllConversionValue AllConversionRate
-LABEL_REPORT                                     : 
-PAID_ORGANIC_QUERY_REPORT                        : 
-PLACEHOLDER_FEED_ITEM_REPORT                     : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Slot
-PLACEHOLDER_REPORT                               : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType Slot
-PLACEMENT_PERFORMANCE_REPORT                     : ConversionTypeName ConversionTrackerId ConversionCategoryName ClickType
-PRODUCT_PARTITION_REPORT                         : ClickType Device
-SEARCH_QUERY_PERFORMANCE_REPORT                  : ConversionTypeName ConversionTrackerId ConversionCategoryName
-SHARED_SET_CRITERIA_REPORT                       : 
-SHARED_SET_REPORT                                : 
-SHOPPING_PERFORMANCE_REPORT                      : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickType
-URL_PERFORMANCE_REPORT                           : ConversionTypeName ConversionTrackerId ConversionCategoryName
-USER_AD_DISTANCE_REPORT                          : ConversionTypeName ConversionCategoryName
-VIDEO_PERFORMANCE_REPORT                         : ConversionTypeName ConversionCategoryName Engagements
+SHOPPING_PERFORMANCE_REPORT                      : ConversionCategoryName ConversionTrackerId ConversionTypeName ClickType ClickConversionRate Ctr AllConversionRate
+URL_PERFORMANCE_REPORT                           : ConversionTypeName ConversionTrackerId ConversionCategoryName Ctr EngagementRate InteractionRate VideoQuartile100Rate VideoViewRate VideoQuartile75Rate VideoQuartile50Rate VideoQuartile25Rate
+USER_AD_DISTANCE_REPORT                          : ConversionTypeName ConversionCategoryName Ctr
+VIDEO_PERFORMANCE_REPORT                         : ConversionTypeName ConversionCategoryName Engagements EngagementRate Ctr VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate
