@@ -8,13 +8,40 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Save results in CSV files.
 * In prompt mode, add management of historic of queries with arrow keys
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
-* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]` and `SHOW [FULL] TABLES [LIKE|WITH]`.
+* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]`, `SHOW [FULL] TABLES [LIKE|WITH]` and `CREATE [OR REPLACE] VIEW`.
 * Add management of `\G` modifier to display result vertically (each column on a line)
-* `*` can be used as shorthand to select all columns from all tables
+* The view offers possibility to filter the AWQL report tables to create your own report, with only the columns that interest you.
+* `*` can be used as shorthand to select all columns from all views
 
 SQL methods adding to AWQL grammar in detail:
 
-#### DESC [FULL] TABLE_NAME [COLUMN_NAME]
+#### CREATE [OR REPLACE] VIEW view_name [(column_list)] AS select_statement
+
+```bash
+~ $ awql -i "123-456-7890" -e "CREATE VIEW CAMPAIGN_REPORT AS SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks, Conversions, Cost, AverageCpc FROM CAMPAIGN_PERFORMANCE_REPORT;"
+```
+
+
+#### SELECT * FROM view_name
+
+Only works on view. Adwords tables are not designed for that. Too much columns, fields incompatibles between them.
+
+```bash
+~ $ awql -c -v -i "123-456-7890" -e "SELECT * FROM CAMPAIGN_REPORT LIMIT 5;
++--------------+--------------------+-----------------+--------------+---------+--------------+--------------+-----------+
+| Campaign ID  | Campaign           | Campaign state  | Impressions  | Clicks  | Conversions  | Cost         | Avg. CPC  |
++--------------+--------------------+-----------------+--------------+---------+--------------+--------------+-----------+
+| 296640682    | @2 #sp             | paused          | 297897       | 8962    | 455.0        | 5786650000   | 645687    |
+| 296747482    | @3 #sp             | paused          | 511010       | 13150   | 403.0        | 9464370000   | 719724    |
+| 355842362    | Sports #1          | enabled         | 1768447      | 48403   | 1,791.0      | 26885290000  | 555447    |
+| 355843562    | Bijoux #1          | enabled         | 21600        | 442     | 35.0         | 195850000    | 443100    |
+| 355844402    | Audio et Vidéo #1  | enabled         | 91901        | 2351    | 40.0         | 1001070000   | 425806    |
++--------------+--------------------+-----------------+--------------+---------+--------------+--------------+-----------+
+5 rows in set (0.00 sec) @cached
+```
+
+
+#### DESC [FULL] table_name [column_name]
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "DESC CREATIVE_CONVERSION_REPORT;"
@@ -51,7 +78,7 @@ SQL methods adding to AWQL grammar in detail:
 | Year                     | Integer                                                                               | MUL  |
 +--------------------------+---------------------------------------------------------------------------------------+------+
 28 rows in set (0.01 sec)
-````
+```
 
 The FULL modifier is supported such that DESC FULL displays a fourth output column with uncompatibles fields list.
 
@@ -63,7 +90,8 @@ awql -i "123-345-1234" -e 'DESC FULL SEARCH_QUERY_PERFORMANCE_REPORT VideoViews;
 | VideoViews  | Long  |      | ConversionCategoryName ConversionTrackerId ConversionTypeName  |
 +-------------+-------+------+----------------------------------------------------------------+
 1 row in set (0.01 sec)
-````
+```
+
 
 #### SHOW [FULL] TABLES [LIKE 'pattern']
 
@@ -82,7 +110,7 @@ awql -i "123-345-1234" -e 'DESC FULL SEARCH_QUERY_PERFORMANCE_REPORT VideoViews;
 | CAMPAIGN_SHARED_SET_REPORT                       |
 +--------------------------------------------------+
 8 rows in set (0.01 sec)
-````
+```
 
 The FULL modifier is supported such that SHOW FULL TABLES displays a second output column with the type of table.
 Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUCTURE, EXTENSIONS, ANALYTICS or SHOPPING. 
@@ -109,8 +137,8 @@ Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUC
 | CAMPAIGN_SHARED_SET_REPORT                       |                       |
 +--------------------------------------------------+-----------------------+
 8 rows in set (0.01 sec)
+```
 
-````
 
 #### SHOW TABLES [WITH 'pattern']
 
@@ -145,7 +173,8 @@ Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUC
 | USER_AD_DISTANCE_REPORT                        |
 +------------------------------------------------+
 24 rows in set (0.01 sec)
-````
+```
+
 
 #### SELECT ... LIMIT [offset,] row_count
 
@@ -159,9 +188,10 @@ Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUC
 | @2 #sp    | 432     | 26469        | 450420000  |                    |
 +-----------+---------+--------------+------------+--------------------+
 3 rows in set (0.01 sec)
-````
+```
 
-#### SELECT ... ORDER BY col_name [ASC | DESC]
+
+#### SELECT ... ORDER BY column_name [ASC | DESC]
 
 ```bash
 ~ $ awql -i "123-456-7890" -e "SELECT CampaignName, Clicks, Impressions FROM CAMPAIGN_PERFORMANCE_REPORT ORDER BY Impressions DESC"
@@ -193,7 +223,8 @@ Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUC
 | Lingerie #1  | 0       | 0            |
 +--------------+---------+--------------+
 23 rows in set (0.01 sec)
-````
+```
+
 
 #### SELECT ... \G
 
@@ -207,45 +238,7 @@ Values for the second column are SINGLE_ATTRIBUTION, MULTIPLE_ATTRIBUTION, STRUC
            Budget: 33000000
 Tracking template:
 1 row in set (0.01 sec)
-````
-
-#### SELECT * FROM ...
-
-Note that with limits of Adwords tables (uncompatible fields in the same table), some fields will be exclude.
-
-```bash
-~ $ awql -c -v -i "123-456-7890" -e "SELECT * FROM CREATIVE_CONVERSION_REPORT DURING 20150101,20150106\G"
-*************************** 1. row ***************************
-                      Currency: Total
-                       Account:  --
-                     Time zone:  --
-                   Ad group ID:  --
-                      Ad group:  --
-                Ad group state:  --
-                       Network:  --
-Network (with search partners):  --
-                   Campaign ID:  --
-                      Campaign:  --
-                Campaign state:  --
-               Free click rate: 0.00%
-         Conversion Tracker Id:  --
-                   Free clicks: 0
-                         Ad ID:  --
-           Keyword / Placement:  --
-                    Match type:  --
-                    Keyword ID:  --
-                   Client name:  --
-                           Day:  --
-                   Day of week:  --
-                   Customer ID:  --
-                   Impressions: 0
-                         Month:  --
-                  Company name:  --
-                       Quarter:  --
-                          Week:  --
-                          Year:  --
-1 row in set (0,745 sec) @source /tmp/awql/20160106/2407054031.awql
-````
+```
 
 ## Quick start
 
@@ -268,7 +261,7 @@ Your Google client secret: C13nt5e0r3t
 Your Google refresh token: 1/n-R3fr35h70k3n
 Use Google as token provider -------------------------------- OK
 Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
-````
+```
 
 ### Usage
 
@@ -283,7 +276,7 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 -v used to print more informations
 -A Disable automatic rehashing. This option is on by default, which enables table and column name completion
 -V Google API version to use
-````
+```
 
 ### And, make your first call
 
@@ -299,7 +292,7 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 | Mode #1      | 196     | 13168        | 242870000  | 26000000  |                    |
 +--------------+---------+--------------+------------+-----------+--------------------+
 5 rows in set (1,449 sec)
-````
+```
 
 ### Go further by using your own web service to get a valid access token
 
@@ -311,7 +304,7 @@ This web service must return a JSON response with this format:
     "token_type": "Bearer",
     "expire_at": "2015-12-20T00:35:58+01:00"
 }
-````
+```
 
 Run `./makefile.sh` in order to change default configuration and use this web service.
 
@@ -324,4 +317,4 @@ Use Google to get access tokens (Y/N)? N
 Url of the web service to use to retrieve a Google access token: http://ws.local:8961/google-token
 Use a custom web service as token provider ------------------ OK
 Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
-````
+```
