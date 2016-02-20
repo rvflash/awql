@@ -11,6 +11,7 @@
 declare -r CSV_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 declare -r CSV_WRK_DIR="/tmp/shcsv"
 declare -r CVS_EXT="csv"
+declare -r CSV_PRINT_SEP_REPLACER="§"
 declare -r CSV_PRINT_SEP_COLUMN="|"
 declare -r CSV_PRINT_COLUMN_BOUNCE="+"
 declare -r CSV_PRINT_COLUMN_BREAK_LINE="-"
@@ -78,11 +79,16 @@ function csvHorizontalMode ()
     fi
     local WRK_FILE="${CSV_WRK_DIR}/${RANDOM}.w${CVS_EXT}"
 
-    # Add a empty column, manage columns empty or not, and ignore empty lines
-    sed -e "s/$/${SEP_COLUMN}/g" \
+    # Add a leading separator delimiter
+    # Manage columns empty or not
+    # Protect separator protected by quotes
+    # Ignore empty lines
+    sed -e "s/\"\(.*\)${SEP_COLUMN}\(.*\)\"/\1${CSV_PRINT_SEP_REPLACER}\2/g" \
+        -e "s/$/${SEP_COLUMN}/g" \
         -e "s/${SEP_COLUMN}${SEP_COLUMN}/${SEP_COLUMN} ${SEP_COLUMN}/g" \
-        -e "s/^/${CSV_PRINT_SEP_COLUMN} /g"  \
-        -e "s/${SEP_COLUMN}/${SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" "${FILE}" | column -s, -t > "${WRK_FILE}"
+        -e "s/^/${CSV_PRINT_SEP_COLUMN} /g" \
+        -e "s/${SEP_COLUMN}/${SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" \
+        "${FILE}" | column -s, -t | tr "${CSV_PRINT_SEP_REPLACER}" "${SEP_COLUMN}" > "${WRK_FILE}"
 
     # Build with the head line as model  +-----+--+-----+
     local SEP=$(head -n 1 "${WRK_FILE}" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
@@ -151,7 +157,7 @@ function csvVerticalMode ()
     done
 
     # Explode each column as line and build vertical display
-    sed 1d "${FILE}" | \
+    sed -e "s/\"\(.*\)${SEP_COLUMN}\(.*\)\"/\1${CSV_PRINT_SEP_REPLACER}\2/g" -e "1d" "${FILE}" | \
     awk -v vs="${CSV_VERTICAL_START_SEP}" \
         -v ve="${CSV_VERTICAL_END_SEP}" \
         -v vh="${HEADER_LINE}" \
@@ -164,10 +170,11 @@ function csvVerticalMode ()
             printf("%s %d%s\n", vs, NR, ve, $0);
         }
         {
-            split($0, v, ",");
+            split($0, v, sep);
             for (i=1; i<=vhs; i++) printf("%*s: %s\n", vcs, k[i], v[i]);
         }
-        ' > "${PRINT_FILE}"
+        ' | \
+    tr "${CSV_PRINT_SEP_REPLACER}" "${SEP_COLUMN}" > "${PRINT_FILE}"
     if [[ $? -ne 0 ]]; then
         return 1
     elif [[ ${SILENT} -eq 0 ]]; then
