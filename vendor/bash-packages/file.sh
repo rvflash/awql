@@ -1,32 +1,43 @@
 #!/usr/bin/env bash
 
+##
+# bash-packages
+#
+# Part of bash-packages project.
+#
+# @package file
+# @copyright 2016 Hervé Gouchet
+# @license http://www.apache.org/licenses/LICENSE-2.0
+# @source https://github.com/rvflash/bash-packages
+
 declare BP_USER_HOME
 declare -A -i BP_INCLUDE_FILE
 declare -r BP_USER_NAME="$(logname)"
 
+
 ##
 # The include statement includes and evaluates the specified file.
 # @param string $1 File
-# @param int $2 OnceMode If 1, enabled once mode
+# @param int $2 OnceMode If 1, enabled once mode [optional]
 # @returnStatus 1 If first parameter named path does not exist
 function include ()
 {
-    local FILE_PATH
-    FILE_PATH="$(realpath "$1")"
-    if [[ $? -ne 0 || ! -f "$FILE_PATH" ]]; then
+    local filePath
+    filePath="$(realpath "$1")"
+    if [[ $? -ne 0 || ! -f "$filePath" ]]; then
         return  1
     fi
 
     declare -i ONCE="$2"
-    if [[ -z "${BP_INCLUDE_FILE["$FILE_PATH"]}" ]]; then
-        BP_INCLUDE_FILE["$FILE_PATH"]=1
+    if [[ -z "${BP_INCLUDE_FILE[$filePath]}" ]]; then
+        BP_INCLUDE_FILE[$filePath]=1
     elif [[ "$ONCE" -eq 0 ]]; then
-        BP_INCLUDE_FILE["$FILE_PATH"]+=1
+        BP_INCLUDE_FILE[$filePath]+=1
     else
         return 0
     fi
 
-    source "$FILE_PATH"
+    source "$filePath"
 }
 
 ##
@@ -45,95 +56,23 @@ function includeOnce ()
 }
 
 ##
-# Returns canonicalized absolute pathname
-# Expands all symbolic links and resolves references to '/./', '/../' and extra '/' characters in the input path
-# @param string $1 path
-# @return string
-# @returnStatus 1 If first parameter named path is empty
-# @returnStatus 1 If first parameter named path does not exist
-function realpath ()
+# The import statement includes once and evaluates all files specified in arguments
+# @param string $@ Paths
+# @returnStatus 1 If there is no file path in entry
+# @returnStatus 1 If one of the file path can not be evaluated
+function import ()
 {
-    local DEST_PATH="$1"
-    if [[ -z "$DEST_PATH" ]]; then
-        return 1
-    fi
-    local SOURCE_DIR="$(physicalDirname "$0")"
-    if [[ $? -ne 0 || -z "$SOURCE_DIR" ]]; then
+    if [[ $# -eq 0 ]]; then
         return 1
     fi
 
-    # Transform relative path to physical path
-    DEST_PATH=$(resolvePath "$DEST_PATH" "$SOURCE_DIR")
-    if [[ -z "$DEST_PATH" ]]; then
-        return 1
-    fi
-
-    local DEST_DIR="$(physicalDirname "$DEST_PATH")"
-    if [[ $? -ne 0 || -z "$DEST_DIR" ]]; then
-        # No directory
-        return 1
-    elif [[ -d "$DEST_PATH" ]]; then
-        # Directory
-        echo -n ${DEST_DIR}
-    elif [[ ! -f "$DEST_PATH" ]]; then
-        # No file
-        return 1
-    else
-        # File
-        echo -n "${DEST_DIR}/$(basename "$DEST_PATH")"
-    fi
-}
-
-##
-# Resolve all shortcut patterns in a path (.. | ~/ | etc.)
-# To check if the path is valid, see realpath function
-# @param string $1 Path
-# @param string $2 SourceDir
-# @return string
-function resolvePath ()
-{
-    local DEST_PATH DEST_FILE DEST_DIR SOURCE_DIR
-
-    if [[ -z "$1" ]]; then
-        # Current path
-        DEST_DIR="$PWD"
-        DEST_FILE="$(basename "$0")"
-        DEST_PATH="${DEST_DIR}/${DEST_FILE}"
-        SOURCE_DIR="$DEST_DIR"
-    else
-        DEST_PATH="$1"
-        DEST_DIR="$(dirname "$DEST_PATH")"
-        DEST_FILE="$(basename "$DEST_PATH")"
-        SOURCE_DIR="$2"
-        if [[ -z "$SOURCE_DIR" ]]; then
-            SOURCE_DIR="$(physicalDirname "$0")"
-            if [[ $? -ne 0 ]]; then
-                return 0
-            fi
-        fi
-    fi
-
-    if [[ "$DEST_PATH" == "."* ]]; then
-        # ../test.sh
-        DEST_PATH="${SOURCE_DIR}/${DEST_DIR}/${DEST_FILE}"
-    elif [[ "$DEST_PATH" == "~/"* ]]; then
-        # ~/test.sh
-        DEST_PATH="$(userHome)/${DEST_PATH:2}"
+    local filePath
+    for filePath in "$@"; do
+        includeOnce "${filePath}"
         if [[ $? -ne 0 ]]; then
-            return 0
+            return 1
         fi
-    elif [[ "$DEST_PATH" != "/"* ]]; then
-        if [[ "$DEST_DIR" == "." ]]; then
-            # test.sh
-            DEST_PATH="${SOURCE_DIR}/${DEST_FILE}"
-        else
-            # test/test.sh
-            DEST_PATH="${SOURCE_DIR}/${DEST_DIR}/${DEST_FILE}"
-        fi
-    fi
-
-    # /test.sh
-    echo -n "$DEST_PATH"
+    done
 }
 
 ##
@@ -143,23 +82,148 @@ function resolvePath ()
 # @returnStatus 1 If first parameter named dir does not exists
 function physicalDirname ()
 {
-    local DIR="$1"
-    if [[ -z "$DIR" ]]; then
+    local dir="$1"
+    if [[ -z "$dir" ]]; then
         # Get current directory path
-        DIR="$PWD"
-    elif [[ ! -d "$DIR" ]]; then
+        dir="$PWD"
+    elif [[ ! -d "$dir" ]]; then
         # DirPath is not a directory
-        DIR="$(dirname "$DIR")"
+        dir="$(dirname "$dir")"
     fi
 
-    DIR="$(cd "$DIR" 2>/dev/null && pwd -P)"
-    if [[ $? -eq 0 && -n "$DIR" ]]; then
-        echo -n "${DIR}"
+    dir="$(cd "$dir" 2>/dev/null && pwd -P)"
+    if [[ $? -eq 0 && -n "$dir" ]]; then
+        echo -n "${dir}"
     else
         return 1
     fi
 }
 
+##
+# Returns canonicalized absolute pathname
+# Expands all symbolic links and resolves references to '/./', '/../' and extra '/' characters in the input path
+# @param string $1 path
+# @return string
+# @returnStatus 1 If first parameter named path is empty
+# @returnStatus 1 If first parameter named path does not exist
+function realpath ()
+{
+    local dstPath="$1"
+    if [[ -z "$dstPath" ]]; then
+        return 1
+    fi
+    local srcDir="$(physicalDirname "$0")"
+    if [[ $? -ne 0 || -z "$srcDir" ]]; then
+        return 1
+    fi
+
+    # Transform relative path to physical path
+    dstPath=$(resolvePath "$dstPath" "$srcDir")
+    if [[ -z "$dstPath" ]]; then
+        return 1
+    fi
+
+    local dstDir="$(physicalDirname "$dstPath")"
+    if [[ $? -ne 0 || -z "$dstDir" ]]; then
+        # No directory
+        return 1
+    elif [[ -d "$dstPath" ]]; then
+        # Directory
+        echo -n ${dstDir}
+    elif [[ ! -f "$dstPath" ]]; then
+        # No file
+        return 1
+    else
+        # File
+        echo -n "${dstDir}/$(basename "$dstPath")"
+    fi
+}
+
+##
+# Resolve all shortcut patterns in a path (.. | ~/ | etc.)
+# To check if the path is valid, see realpath function
+# @param string $1 Path [optional]
+# @param string $2 SourceDir [optional]
+# @return string
+function resolvePath ()
+{
+    local dstPath dstFile dstDir srcDir
+
+    if [[ -z "$1" ]]; then
+        # Current path
+        dstDir="$PWD"
+        dstFile="$(basename "$0")"
+        dstPath="${dstDir}/${dstFile}"
+        srcDir="$dstDir"
+    else
+        dstPath="$1"
+        dstDir="$(dirname "$dstPath")"
+        dstFile="$(basename "$dstPath")"
+        srcDir="$2"
+        if [[ -z "$srcDir" ]]; then
+            srcDir="$(physicalDirname "$0")"
+            if [[ $? -ne 0 ]]; then
+                return 0
+            fi
+        fi
+    fi
+
+    if [[ "$dstPath" == "."* ]]; then
+        # ../test.sh
+        dstPath="${srcDir}/${dstDir}/${dstFile}"
+    elif [[ "$dstPath" == "~/"* ]]; then
+        # ~/test.sh
+        dstPath="$(userHome)/${dstPath:2}"
+        if [[ $? -ne 0 ]]; then
+            return 0
+        fi
+    elif [[ "$dstPath" != "/"* ]]; then
+        if [[ "$dstDir" == "." ]]; then
+            # test.sh
+            dstPath="${srcDir}/${dstFile}"
+        else
+            # test/test.sh
+            dstPath="${srcDir}/${dstDir}/${dstFile}"
+        fi
+    fi
+
+    # /test.sh
+    echo -n "$dstPath"
+}
+
+##
+# List files and directories inside the specified path
+# @param string $1 Path
+# @param int $2 WithFile If O, list only directories, otherwise list all files and directories [optional]
+# @param int $2 CompletePath If 0, list only the directory or files names, otherwise the complete path [optional]
+# @return string
+# @returnStatus 1 If first parameter named path does not exist or not a folder
+function scanDirectory ()
+{
+    local srcDir="$1"
+    if [[ -z "$srcDir" ]]; then
+        srcDir="$(dirname "$0")"
+    fi
+    srcDir="$(realpath "$srcDir")"
+    if [[ $? -ne 0 || -z "$srcDir" ]]; then
+        return 1
+    fi
+    declare -i withFile="$2"
+    declare -i completePath="$3"
+
+    local scanDir
+    if [[ ${withFile} -eq 0 ]]; then
+        scanDir=$(ls -d "$srcDir"/*/)
+    else
+        scanDir=$(ls -d "$srcDir"/*)
+    fi
+
+    if [[ ${completePath} -eq 0 ]]; then
+        echo -e "$scanDir" | sed -e "s/\/$//g" -e "s/^.*\///g"
+    else
+        echo -e "$scanDir"
+    fi
+}
 
 ##
 # Returns path to user home
@@ -168,17 +232,17 @@ function physicalDirname ()
 # @returnStatus 1 If sudo to get home path fails
 function userHome ()
 {
-    if [[ -z "$BP_USER_NAME" ]]; then
+    if [[ -z "${BP_USER_NAME}" ]]; then
         return 1
-    elif [[ -z "$BP_USER_HOME" ]]; then
+    elif [[ -z "${BP_USER_HOME}" ]]; then
         BP_USER_HOME="$(sudo -u ${BP_USER_NAME} -H sh -c 'echo "$HOME"')"
         if [[ $? -ne 0 ]]; then
             return 1
         fi
     fi
 
-    if [[ -n "$BP_USER_HOME" ]]; then
-        echo -n "$BP_USER_HOME"
+    if [[ -n "${BP_USER_HOME}" ]]; then
+        echo -n "${BP_USER_HOME}"
     else
         return 1
     fi

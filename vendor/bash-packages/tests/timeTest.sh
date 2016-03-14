@@ -19,12 +19,12 @@ readonly TEST_TIME_TIMESTAMP="-01"
 
 function test_timestamp ()
 {
-    local TEST
+    local test
 
     # Check
-    TEST=$(timestamp)
+    test=$(timestamp)
     echo -n "-$?"
-    [[ "$TEST" -gt 0 ]] && echo -n 1
+    [[ "$test" -gt 0 ]] && echo -n 1
 }
 
 
@@ -32,23 +32,23 @@ readonly TEST_TIME_TIME_TODO="-11-11-011"
 
 function test_timeTodo ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(timeTodo)
+    test=$(timeTodo)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check bad command
-    TEST=$(timeTodo "${TEST_TIME_BAD_COMMAND}")
+    test=$(timeTodo "${TEST_TIME_BAD_COMMAND}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check command
-    TEST=$(timeTodo "${TEST_TIME_COMMAND}")
+    test=$(timeTodo "${TEST_TIME_COMMAND}")
     echo -n "-$?"
-    [[ -n "$TEST" && "$TEST" == "("*")" ]] && echo -n 1
-    declare -A TIMER="$TEST"
+    [[ -n "$test" && "$test" == "("*")" ]] && echo -n 1
+    declare -A TIMER="$test"
     [[ -n "${TIMER[user]}" && -n "${TIMER[sys]}" && -n "${TIMER[real]}" ]] && echo -n 1
 
 }
@@ -59,19 +59,19 @@ readonly TEST_TIME_USER_TIME_TODO="-11-11-01"
 function test_userTimeTodo ()
 {
     # Check nothing
-    TEST=$(userTimeTodo)
+    test=$(userTimeTodo)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check bad command
-    TEST=$(userTimeTodo "${TEST_TIME_BAD_COMMAND}")
+    test=$(userTimeTodo "${TEST_TIME_BAD_COMMAND}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check command
-    TEST=$(userTimeTodo "${TEST_TIME_COMMAND}")
+    test=$(userTimeTodo "${TEST_TIME_COMMAND}")
     echo -n "-$?"
-    [[ -n "$TEST" && "$TEST" == "0."* ]] && echo -n 1
+    [[ -n "$test" && "$test" == "0."* ]] && echo -n 1
 }
 
 
@@ -79,32 +79,32 @@ readonly TEST_TIME_USER_TIME_TODO_EXCEEDED="-11-11-11-11-01"
 
 function test_isUserTimeTodoExceeded ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(isUserTimeTodoExceeded)
+    test=$(isUserTimeTodoExceeded)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check with one argument missing
-    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND")
+    test=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check with duration exceeding the command's duration
-    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_HIGH_DURATION_COMMAND")
+    test=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_HIGH_DURATION_COMMAND")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check with medium duration
-    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_MEDIUM_DURATION_COMMAND")
+    test=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_MEDIUM_DURATION_COMMAND")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check with low duration
-    TEST=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_LOW_DURATION_COMMAND")
+    test=$(isUserTimeTodoExceeded "$TEST_TIME_COMMAND" "$TEST_TIME_LOW_DURATION_COMMAND")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 }
 
 
@@ -112,27 +112,27 @@ readonly TEST_TIME_UTC_DATE_TIME_FROM_TIMESTAMP="-11-11-01-01"
 
 function test_utcDateTimeFromTimestamp ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(utcDateTimeFromTimestamp)
+    test=$(utcDateTimeFromTimestamp)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check invalid timestamp
-    TEST=$(utcDateTimeFromTimestamp "${TEST_TIME_BAD_TYPE_TIMESTAMP}")
+    test=$(utcDateTimeFromTimestamp "${TEST_TIME_BAD_TYPE_TIMESTAMP}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check bad timestamp
-    TEST=$(utcDateTimeFromTimestamp "${TEST_TIME_BAD_TIMESTAMP}")
+    test=$(utcDateTimeFromTimestamp "${TEST_TIME_BAD_TIMESTAMP}")
     echo -n "-$?"
-    [[ "$TEST" == "1970"* ]] && echo -n 1
+    [[ "$test" == "1970"* ]] && echo -n 1
 
      # Check valid timestamp
-    TEST=$(utcDateTimeFromTimestamp "${TEST_TIME_VALID_TIMESTAMP}")
+    test=$(utcDateTimeFromTimestamp "${TEST_TIME_VALID_TIMESTAMP}")
     echo -n "-$?"
-    [[ "$TEST" == "$TEST_TIME_VALID_DATETIME" ]] && echo -n 1
+    [[ "$test" == "$TEST_TIME_VALID_DATETIME" ]] && echo -n 1
 }
 
 
@@ -140,22 +140,22 @@ readonly TEST_TIME_TIMESTAMP_FROM_UTC_DATE_TIME="-11-11-01"
 
 function test_timestampFromUtcDateTime ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(timestampFromUtcDateTime)
+    test=$(timestampFromUtcDateTime)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check invalid datetime
-    TEST=$(timestampFromUtcDateTime "${TEST_TIME_COMMAND}")
+    test=$(timestampFromUtcDateTime "${TEST_TIME_COMMAND}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
      # Check valid timestamp
-    TEST=$(timestampFromUtcDateTime "${TEST_TIME_VALID_DATETIME}")
+    test=$(timestampFromUtcDateTime "${TEST_TIME_VALID_DATETIME}")
     echo -n "-$?"
-    [[ "$TEST" == "$TEST_TIME_VALID_TIMESTAMP" ]] && echo -n 1
+    [[ "$test" == "$TEST_TIME_VALID_TIMESTAMP" ]] && echo -n 1
 }
 
 # Launch all functional tests

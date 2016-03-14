@@ -11,40 +11,112 @@ declare -r TEST_ARRAY_FROM_STRING_SURROUND="(first second third fourth)"
 declare -r TEST_ARRAY_NUMERIC_INDEX="([0]=\"first\" [1]=\"second\" [2]=\"third\" [3]=\"fourth\")"
 declare -r TEST_ARRAY_ASSOCIATIVE_INDEX="([\"one\"]=\"first\" [\"two\"]=\"second\" [\"three\"]=\"third\" [\"four\"]=\"fourth\")"
 declare -r TEST_ARRAY_ASSOCIATIVE_INDEX_DIFF="([four]=\"fourth\" [three]=\"third\" )"
+declare -r TEST_ARRAY_ASSOCIATIVE_INDEX_OVER="([four]=\"fifth\")"
 declare -r TEST_ARRAY_DECLARE_ASSOCIATIVE_INDEX="declare -A rv='${TEST_ARRAY_ASSOCIATIVE_INDEX}'"
 declare -r TEST_ARRAY_DECLARE_NUMERIC_INDEX="declare -a RV='${TEST_ARRAY_NUMERIC_INDEX}'"
 declare -r TEST_ARRAY_NUMERIC_INDEX_DIFF="([2]=\"third\" [3]=\"fourth\")"
+declare -r TEST_ARRAY_MIXED_INDEX="([one]=\"1 one\" [two]=\"2 two\" [1]=\"1\")"
+declare -r TEST_ARRAY_MERGE_NUMERIC_INDEX="([0]=\"first\" [1]=\"second\" [2]=\"third\" [3]=\"fourth\" [4]=\"first\" [5]=\"second\" [6]=\"third\" [7]=\"fourth\")"
+declare -r TEST_ARRAY_MERGE_ASSOC_INDEX_WITH_MINUS="([four]=\"fourth\" [one]=\"first\" [two]=\"second\" [0]=\"first\" [1]=\"second\" [three]=\"third\" )"
+declare -r TEST_ARRAY_MERGE_ASSOCIATIVE_INDEX="([four]=\"fifth\" [three]=\"third\" )"
+
 
 readonly TEST_ARRAY_ARRAY_DIFF="-01-01-01-01-01"
 
 function test_arrayDiff ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(arrayDiff)
+    test=$(arrayDiff)
     echo -n "-$?"
-    [[ "$TEST" == "()" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     # Check with only first parameter
-    TEST=$(arrayDiff "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    test=$(arrayDiff "${TEST_ARRAY_FROM_STRING_SURROUND}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ARRAY_NUMERIC_INDEX}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ARRAY_NUMERIC_INDEX}" ]] && echo -n 1
 
     # Check with arrays with no difference
-    TEST=$(arrayDiff "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    test=$(arrayDiff "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_SURROUND}")
     echo -n "-$?"
-    [[ "$TEST" == "()" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     # Check with associative array with differences
-    TEST=$(arrayDiff "${TEST_ARRAY_ASSOCIATIVE_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
+    test=$(arrayDiff "${TEST_ARRAY_ASSOCIATIVE_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ARRAY_ASSOCIATIVE_INDEX_DIFF}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ARRAY_ASSOCIATIVE_INDEX_DIFF}" ]] && echo -n 1
 
     # Check with numeric indexed arrays with differences
-    TEST=$(arrayDiff "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
+    test=$(arrayDiff "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ARRAY_NUMERIC_INDEX_DIFF}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ARRAY_NUMERIC_INDEX_DIFF}" ]] && echo -n 1
+}
+
+
+readonly TEST_ARRAY_KEY_EXISTS="-11-11-11-01-01"
+
+function test_arrayKeyExists ()
+{
+    local test
+
+    # Check nothing
+    test=$(arrayKeyExists)
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Search with no array as second parameter
+    test=$(arrayKeyExists "fifth")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Search in basic array a unexisting value
+    test=$(arrayKeyExists "fifth" "${TEST_ARRAY_FROM_STRING}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Search in indexed array an existing value
+    test=$(arrayKeyExists "2" "${TEST_ARRAY_NUMERIC_INDEX}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Search in associative array an existing value
+    test=$(arrayKeyExists "two" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+}
+
+
+readonly TEST_ARRAY_ARRAY_MERGE="-01-01-01-01-01"
+
+function test_arrayMerge ()
+{
+    local test
+
+    # Check nothing
+    test=$(arrayMerge)
+    echo -n "-$?"
+    [[ "$test" == "()" ]] && echo -n 1
+
+    # Check with only first parameter
+    test=$(arrayMerge "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_NUMERIC_INDEX}" ]] && echo -n 1
+
+    # Check with indexed arrays with same values
+    test=$(arrayMerge "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_MERGE_NUMERIC_INDEX}" ]] && echo -n 1
+
+    # Check with associative array with differences
+    test=$(arrayMerge "${TEST_ARRAY_ASSOCIATIVE_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_MERGE_ASSOC_INDEX_WITH_MINUS}" ]] && echo -n 1
+
+    # Check with numeric indexed arrays with differences
+    test=$(arrayMerge "${TEST_ARRAY_ASSOCIATIVE_INDEX_DIFF}" "${TEST_ARRAY_ASSOCIATIVE_INDEX_OVER}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_MERGE_ASSOCIATIVE_INDEX}" ]] && echo -n 1
 }
 
 
@@ -52,37 +124,37 @@ readonly TEST_ARRAY_ARRAY_SEARCH="-11-11-11-01-01-01"
 
 function test_arraySearch ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(arraySearch)
+    test=$(arraySearch)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check with empty needle
-    TEST=$(arraySearch "" "${TEST_ARRAY_FROM_STRING}")
+    test=$(arraySearch "" "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check with empty haystack
-    TEST=$(arraySearch "third" "")
+    test=$(arraySearch "third" "")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check in basic array
-    TEST=$(arraySearch "third" "${TEST_ARRAY_FROM_STRING}")
+    test=$(arraySearch "third" "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ "$TEST" -eq 2 ]] && echo -n 1
+    [[ "$test" -eq 2 ]] && echo -n 1
 
     # Check in numeric indexed array
-    TEST=$(arraySearch "third" "${TEST_ARRAY_NUMERIC_INDEX}")
+    test=$(arraySearch "third" "${TEST_ARRAY_NUMERIC_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" -eq 2 ]] && echo -n 1
+    [[ "$test" -eq 2 ]] && echo -n 1
 
     # Check in associative array
-    TEST=$(arraySearch "third" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
+    test=$(arraySearch "third" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" == "three" ]] && echo -n 1
+    [[ "$test" == "three" ]] && echo -n 1
 }
 
 
@@ -90,27 +162,27 @@ readonly TEST_ARRAY_ARRAY_TO_STRING="-01-01-01-01"
 
 function test_arrayToString ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(arrayToString)
+    test=$(arrayToString)
     echo -n "-$?"
-    [[ "$TEST" == "()" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     # Simple string
-    TEST=$(arrayToString "${TEST_ARRAY_FROM_STRING}")
+    test=$(arrayToString "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ARRAY_FROM_STRING_SURROUND}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ARRAY_FROM_STRING_SURROUND}" ]] && echo -n 1
 
     # Associative declared associative array
-    TEST=$(arrayToString "${TEST_ARRAY_DECLARE_ASSOCIATIVE_INDEX}")
+    test=$(arrayToString "${TEST_ARRAY_DECLARE_ASSOCIATIVE_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ARRAY_ASSOCIATIVE_INDEX}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ARRAY_ASSOCIATIVE_INDEX}" ]] && echo -n 1
 
     # Associative declared indexed array
-    TEST=$(arrayToString "${TEST_ARRAY_DECLARE_NUMERIC_INDEX}")
+    test=$(arrayToString "${TEST_ARRAY_DECLARE_NUMERIC_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ARRAY_NUMERIC_INDEX}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ARRAY_NUMERIC_INDEX}" ]] && echo -n 1
 }
 
 
@@ -118,80 +190,87 @@ readonly TEST_ARRAY_COUNT="-01-01-01-01-01-01-01"
 
 function test_count ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(count)
+    test=$(count)
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
     # Check empty array
-    TEST=$(count "()")
+    test=$(count "()")
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
     # Check empty array with only space inside
-    TEST=$(count "( )")
+    test=$(count "( )")
     echo -n "-$?"
-    [[ "$TEST" -eq 0 ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
     # Check associative array with values
-    TEST=$(count "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
+    test=$(count "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" -eq 4 ]] && echo -n 1
+    [[ "$test" -eq 4 ]] && echo -n 1
 
     # Check array with values between parentheses
-    TEST=$(count "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    test=$(count "${TEST_ARRAY_FROM_STRING_SURROUND}")
     echo -n "-$?"
-    [[ "$TEST" -eq 4 ]] && echo -n 1
+    [[ "$test" -eq 4 ]] && echo -n 1
 
     # Check basic array with values
-    TEST=$(count "${TEST_ARRAY_FROM_STRING}")
+    test=$(count "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ "$TEST" -eq 4 ]] && echo -n 1
+    [[ "$test" -eq 4 ]] && echo -n 1
 
     # Check indexed array with values
-    TEST=$(count "${TEST_ARRAY_NUMERIC_INDEX}")
+    test=$(count "${TEST_ARRAY_NUMERIC_INDEX}")
     echo -n "-$?"
-    [[ "$TEST" -eq 4 ]] && echo -n 1
+    [[ "$test" -eq 4 ]] && echo -n 1
 }
 
 
-readonly TEST_ARRAY_IN_ARRAY="-11-11-01-01-01"
+readonly TEST_ARRAY_IN_ARRAY="-11-11-11-01-01-01"
 
 function test_inArray ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(inArray)
+    test=$(inArray)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
+
+    # Search with no array as second parameter
+    test=$(inArray "fifth")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
 
     # Search in basic array a unexisting value
-    TEST=$(inArray "fifth" "${TEST_ARRAY_FROM_STRING}" )
+    test=$(inArray "fifth" "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Search in basic array an existing value
-    TEST=$(inArray "second" "${TEST_ARRAY_FROM_STRING}")
+    test=$(inArray "second" "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Search in indexed array an existing value
-    TEST=$(inArray "second" "${TEST_ARRAY_NUMERIC_INDEX}")
+    test=$(inArray "second" "${TEST_ARRAY_NUMERIC_INDEX}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Search in associative array an existing value
-    TEST=$(inArray "second" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
+    test=$(inArray "second" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 }
 
 
 # Launch all functional tests
 bashUnit "arrayDiff" "${TEST_ARRAY_ARRAY_DIFF}" "$(test_arrayDiff)"
+bashUnit "arrayKeyExists" "${TEST_ARRAY_KEY_EXISTS}" "$(test_arrayKeyExists)"
+bashUnit "arrayMerge" "${TEST_ARRAY_ARRAY_MERGE}" "$(test_arrayMerge)"
 bashUnit "arraySearch" "${TEST_ARRAY_ARRAY_SEARCH}" "$(test_arraySearch)"
 bashUnit "arrayToString" "${TEST_ARRAY_ARRAY_TO_STRING}" "$(test_arrayToString)"
 bashUnit "count" "${TEST_ARRAY_COUNT}" "$(test_count)"

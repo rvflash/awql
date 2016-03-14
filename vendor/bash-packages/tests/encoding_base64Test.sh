@@ -12,17 +12,17 @@ readonly TEST_ENCODING_BASE64_DECODE="-11-01"
 
 function test_base64Decode ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(base64Decode)
+    test=$(base64Decode)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check
-    TEST=$(base64Decode "${TEST_ENCODING_ENCODED_STR}")
+    test=$(base64Decode "${TEST_ENCODING_ENCODED_STR}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ENCODING_STR}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ENCODING_STR}" ]] && echo -n 1
 }
 
 
@@ -30,17 +30,17 @@ readonly TEST_ENCODING_BASE64_ENCODE="-11-01"
 
 function test_base64Encode ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(base64Encode)
+    test=$(base64Encode)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check
-    TEST=$(base64Encode "${TEST_ENCODING_STR}")
+    test=$(base64Encode "${TEST_ENCODING_STR}")
     echo -n "-$?"
-    [[ "$TEST" == "${TEST_ENCODING_ENCODED_STR}" ]] && echo -n 1
+    [[ "$test" == "${TEST_ENCODING_ENCODED_STR}" ]] && echo -n 1
 }
 
 

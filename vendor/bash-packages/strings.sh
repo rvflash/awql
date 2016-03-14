@@ -1,24 +1,35 @@
 #!/usr/bin/env bash
 
 ##
+# bash-packages
+#
+# Part of bash-packages project.
+#
+# @package string
+# @copyright 2016 Hervé Gouchet
+# @license http://www.apache.org/licenses/LICENSE-2.0
+# @source https://github.com/rvflash/bash-packages
+
+##
 # Calculate and return a checksum for one string
-# @param string $1 String
+# @param string $1 Str
 # @return string
-# @returnStatus If first parameter named string is empty
-# @returnStatus If checkum is empty or cksum methods returns in error
+# @returnStatus 1 If first parameter named string is empty
+# @returnStatus 1 If checkum is empty or cksum methods returns in error
 function checksum ()
 {
-    if [[ -z "$1" ]]; then
+    local str="$1"
+    if [[ -z "$str" ]]; then
         return 1
     fi
 
-    local CHECKSUM
-    CHECKSUM="$(cksum <<<"$(trim "$1")" | awk '{print $1}')"
-    if [[ $? -ne 0 || -z "$CHECKSUM" ]]; then
+    declare -i checksum
+    checksum="$(cksum <<<"$(trim "$str")" | awk '{print $1}')"
+    if [[ $? -ne 0 || -z "$checksum" ]]; then
         return 1
     fi
 
-    echo -n "$CHECKSUM"
+    echo -n "$checksum"
 }
 
 ##
@@ -30,12 +41,12 @@ function checksum ()
 #     0.0 (0 as a float)
 #     FALSE
 #     array() (an empty array)
-#
+# @param string $1 Str
 # @returnStatus 1 If empty, 0 otherwise
 function isEmpty ()
 {
-    local VAR="$1"
-    if [[ -z "${VAR}" || "${VAR}" == 0 || "${VAR}" == "0.0" || "${VAR}" == false || "${VAR}" =~ ^\(([[:space:]]*)?\)*$ ]]; then
+    local str="$1"
+    if [[ -z "$str" || "$str" == 0 || "$str" == "0.0" || "$str" == false || "$str" =~ ^\(([[:space:]]*)?\)*$ ]]; then
         return 0
     fi
 
@@ -43,24 +54,72 @@ function isEmpty ()
 }
 
 ##
+# Print a string and apply on it a left padding
+# @param string $1 Str
+# @param int $2 Pad length
+# @param string $3 Padding char [optional]
+# @return string
+function printLeftPadding ()
+{
+    local str="$1"
+    declare -i pad="$2"
+    local chr="$3"
+
+    if [[ -z "$chr" ]]; then
+        pad+=${#str}
+        printf "%${pad}s" "$str"
+    else
+        if [[ ${pad} -gt 1 ]]; then
+            local PADDING=$(printf '%0.1s' "$chr"{1..500})
+            printf '%*.*s' 0 $((${pad} - 1)) "${PADDING}"
+        fi
+        echo -n " $str"
+    fi
+}
+
+##
+# Print a string and apply on it a right padding
+# @param string $1 Str
+# @param int $2 Pad length
+# @param string $3 Padding char [optional]
+# @return string
+function printRightPadding ()
+{
+    local str="$1"
+    declare -i pad="$2"
+    local chr="$3"
+
+    if [[ -z "$chr" ]]; then
+        pad+=${#str}
+        printf "%-${pad}s" "$str"
+    else
+        echo -n "$str "
+        if [[ ${pad} -gt 1 ]]; then
+            local PADDING=$(printf '%0.1s' "$chr"{1..500})
+            printf '%*.*s' 0 $((${pad} - 1)) "${PADDING}"
+        fi
+    fi
+}
+
+##
 # This function returns a string with whitespace (or other characters) stripped from the beginning and end of str
-# @param string $1 String
+# @param string $1 Str
 # @param string $2 Character to mask [optional]
 # @return string
 function trim ()
 {
-    local STR="$1"
-    if [[ -z "$STR" ]]; then
+    local str="$1"
+    if [[ -z "$str" ]]; then
         return 0
     fi
 
-    local MASK="$2"
-    if [[ -n "$MASK" ]]; then
+    local mask="$2"
+    if [[ -n "$mask" ]]; then
         # Escape special chars
-        MASK=$( echo "$MASK" | sed -e 's/[]\/$*.^|[]/\\&/g' )
+        mask=$( echo "$mask" | sed -e 's/[]\/$*.^|[]/\\&/g' )
         # Remove characters to mask
-        STR=$( echo "$STR" | sed -e "s/^[[:space:]]*[${MASK}]*//" -e "s/[${MASK}]*[[:space:]]*$//" )
+        str=$( echo "$str" | sed -e "s/^[[:space:]]*[${mask}]*//" -e "s/[${mask}]*[[:space:]]*$//" )
     fi
 
-    echo -n "$STR" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"
+    echo -n "$str" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"
 }

@@ -1,98 +1,108 @@
 #!/usr/bin/env bash
 
 ##
+# bash-packages
+#
+# Part of bash-packages project.
+#
+# @package net
+# @copyright 2016 Hervé Gouchet
+# @license http://www.apache.org/licenses/LICENSE-2.0
+# @source https://github.com/rvflash/bash-packages
+
+##
 # Parse a URL and return its components
 # @example http://login:password@example.com/dir/file.ext?a=sth&b=std
 #     (SCHEME:"http" USER:"login" PASS:"password" HOST:"example.com" PORT:80 PATH:"/dir/file.ext" QUERY:"a=sth&b=std")
-# @return stringable
+# @return arrayToString
 # @returnStatus 1 If Url is empty or invalid
 function parseUrl ()
 {
-    local URL="$1"
-    if [[ -z "$URL" || "$URL" != *"://"* ]]; then
+    local url="$1"
+    if [[ -z "$url" || "$url" != *"://"* ]]; then
         return 1
     fi
 
-    local SCHEME="${URL%%:*}"
-    local HOST=""
-    declare -i PORT=80
-    if [[ "ftp" == "$SCHEME" ]]; then
-        PORT=21
-    elif [[ "https" == "$SCHEME" ]]; then
-        PORT=443
+    local scheme="${url%%:*}"
+    local host=""
+    declare -i port=80
+    if [[ "ftp" == "$scheme" ]]; then
+        port=21
+    elif [[ "https" == "$scheme" ]]; then
+        port=443
     fi
-    local PATH=""
-    local CURRENT_POSITION="${#SCHEME}"
-    if [[ "$CURRENT_POSITION" -gt 0 ]]; then
+    local path=""
+    declare -i currentPos="${#scheme}"
+    if [[ "$currentPos" -gt 0 ]]; then
         # Manage :// after scheme
-        CURRENT_POSITION=$((CURRENT_POSITION+3))
+        currentPos=$((currentPos+3))
 
         # Manage pass & user
-        local PASS=""
-        local USER="${URL:$CURRENT_POSITION}"
-        if [[ "$URL" == *"@"* ]]; then
-            USER="${USER%%:*}"
+        local pass=""
+        local user="${url:$currentPos}"
+        if [[ "$url" == *"@"* ]]; then
+            user="${user%%:*}"
             # Manage ":" between username and password
-            CURRENT_POSITION=$((CURRENT_POSITION+${#USER}+1))
+            currentPos=$((currentPos+${#user}+1))
             # Get the password to use with
-            PASS="${URL:$CURRENT_POSITION}"
-            PASS="${PASS%%@*}"
+            pass="${url:$currentPos}"
+            pass="${pass%%@*}"
             # Manage "@" between password and domain
-            CURRENT_POSITION=$((CURRENT_POSITION+${#PASS}+1))
+            currentPos=$((currentPos+${#pass}+1))
         else
-            USER=""
+            user=""
         fi
 
         # Manage host & path
-        if [[ "$URL" == *"?"* ]]; then
-            PATH="${URL%%\?*}"
-            PATH="${PATH:$CURRENT_POSITION}"
+        if [[ "$url" == *"?"* ]]; then
+            path="${url%%\?*}"
+            path="${path:$currentPos}"
         else
-            PATH="${URL:$CURRENT_POSITION}"
+            path="${url:$currentPos}"
         fi
-        CURRENT_POSITION=$((CURRENT_POSITION+${#PATH}))
-        HOST="${PATH%%/*}"
-        PATH="${PATH:${#HOST}}"
+        currentPos=$((currentPos+${#path}))
+        host="${path%%/*}"
+        path="${path:${#host}}"
 
         # Manage host
-        if [[ "$HOST" == *":"* ]]; then
-            PORT="$((${HOST##*:}+0))"
-            HOST="${HOST%%:*}"
+        if [[ "$host" == *":"* ]]; then
+            port="$((${host##*:}+0))"
+            host="${host%%:*}"
         fi
 
         # Manage query
-        local QUERY=""
-        local FRAGMENT=""
-        if [[ "${URL:$CURRENT_POSITION}" == "?"* ]]; then
-            QUERY="${URL:$CURRENT_POSITION+1}"
+        local query=""
+        local fragment=""
+        if [[ "${url:$currentPos}" == "?"* ]]; then
+            query="${url:$currentPos+1}"
         fi
 
         # Manage fragment
-        if [[ "$QUERY" == *"#"* ]]; then
-            FRAGMENT="${QUERY##*#}"
-            QUERY="${QUERY%%#*}"
-        elif [[ "$PATH" == *"#"* ]]; then
-            FRAGMENT="${PATH##*#}"
-            PATH="${PATH%%#*}"
+        if [[ "$query" == *"#"* ]]; then
+            fragment="${query##*#}"
+            query="${query%%#*}"
+        elif [[ "$path" == *"#"* ]]; then
+            fragment="${path##*#}"
+            path="${path%%#*}"
         fi
-        if [[ -z "$PATH" ]]; then
-            PATH="/"
+        if [[ -z "$path" ]]; then
+            path="/"
         fi
     fi
 
-    # Check URL compliance
-    if [[ "$CURRENT_POSITION" -eq 0 ]] || [[ "$HOST" == "" ]]; then
+    # Check url compliance
+    if [[ "$currentPos" -eq 0 ]] || [[ "$host" == "" ]]; then
         return 1
     fi
 
     echo -n "(" \
-        "[SCHEME]=\"${SCHEME}\"" \
-        "[USER]=\"${USER}\"" \
-        "[PASS]=\"${PASS}\"" \
-        "[HOST]=\"${HOST}\"" \
-        "[PORT]=${PORT}" \
-        "[PATH]=\"${PATH}\"" \
-        "[QUERY]=\"${QUERY}\"" \
-        "[FRAGMENT]=\"${FRAGMENT}\"" \
+        "[SCHEME]=\"${scheme}\"" \
+        "[USER]=\"${user}\"" \
+        "[PASS]=\"${pass}\"" \
+        "[HOST]=\"${host}\"" \
+        "[PORT]=${port}" \
+        "[PATH]=\"${path}\"" \
+        "[QUERY]=\"${query}\"" \
+        "[FRAGMENT]=\"${fragment}\"" \
     ")"
 }
