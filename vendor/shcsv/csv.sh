@@ -8,8 +8,6 @@
 # @source https://github.com/rvflash/shcsv
 
 # Constants
-declare -r CSV_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-declare -r CSV_WRK_DIR="/tmp/shcsv"
 declare -r CVS_EXT="csv"
 declare -r CSV_PRINT_SEP_REPLACER="§"
 declare -r CSV_PRINT_SEP_COLUMN="|"
@@ -17,7 +15,12 @@ declare -r CSV_PRINT_COLUMN_BOUNCE="+"
 declare -r CSV_PRINT_COLUMN_BREAK_LINE="-"
 declare -r CSV_VERTICAL_START_SEP="***************************"
 declare -r CSV_VERTICAL_END_SEP=". row ***************************"
+declare -r CSV_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+declare -r CSV_WRK_DIR="/tmp/shcsv"
 
+if [[ ! -d "${CSV_WRK_DIR}" ]]; then
+    mkdir -p "${CSV_WRK_DIR}"
+fi
 
 ##
 # Print a break line for table
@@ -26,19 +29,19 @@ declare -r CSV_VERTICAL_END_SEP=". row ***************************"
 # @return string
 function csvBreakLine ()
 {
-    local LINE=""
-    declare -a COLUMNS
-    IFS="${CSV_PRINT_SEP_COLUMN}" read -ra COLUMNS <<< "$1"
-    if [[ "${#COLUMNS[@]}" -gt 0 ]]; then
-        local COLUMN
-        for COLUMN in "${COLUMNS[@]}"; do
-            LINE+="${CSV_PRINT_COLUMN_BOUNCE}"
-            LINE+=$(printf "%0.s${CSV_PRINT_COLUMN_BREAK_LINE}" $(seq 1 ${#COLUMN}))
+    local line column
+
+    declare -a columns
+    IFS="${CSV_PRINT_SEP_COLUMN}" read -ra columns <<< "$1"
+    if [[ "${#columns[@]}" -gt 0 ]]; then
+        for column in "${columns[@]}"; do
+            line+="${CSV_PRINT_COLUMN_BOUNCE}"
+            line+=$(printf "%0.s${CSV_PRINT_COLUMN_BREAK_LINE}" $(seq 1 ${#column}))
         done
-        LINE+="${CSV_PRINT_COLUMN_BOUNCE}"
+        line+="${CSV_PRINT_COLUMN_BOUNCE}"
     fi
 
-    echo "${LINE}"
+    echo "$line"
 }
 
 ##
@@ -58,53 +61,57 @@ function csvBreakLine ()
 # @return string
 function csvHorizontalMode ()
 {
-    local FILE="$1"
-    if [[ ! -f "${FILE}" ]]; then
+    local file="$1"
+    if [[ ! -f "$file" ]]; then
         return 1
     fi
-    local PRINT_FILE="$2"
-    declare -i SILENT="$3"
-    local SEP_COLUMN="$4"
-    if [[ -z "${SEP_COLUMN}" ]]; then
-        SEP_COLUMN=","
+    local printFile="$2"
+    declare -i silent="$3"
+    local columnSep="$4"
+    if [[ -z "${columnSep}" ]]; then
+        columnSep=","
     fi
 
-    declare -i CLEAN_WRK=0
-    if [[ -z "${PRINT_FILE}" ]]; then
-        if [[ ${SILENT} -eq 1 ]]; then
+    declare -i cleanWrk=0
+    if [[ -z "$printFile" ]]; then
+        if [[ ${silent} -eq 1 ]]; then
             return 2
         fi
-        PRINT_FILE="${CSV_WRK_DIR}/$(basename ${CSV_FILE} .${CVS_EXT}).p${CVS_EXT}"
-        CLEAN_WRK=1
+        printFile="${CSV_WRK_DIR}/$(basename "$file" ".${CVS_EXT}").p${CVS_EXT}"
+        cleanWrk=1
     fi
-    local WRK_FILE="${CSV_WRK_DIR}/${RANDOM}.w${CVS_EXT}"
+    local wrkFile="${CSV_WRK_DIR}/${RANDOM}.w${CVS_EXT}"
 
     # Add a leading separator delimiter
     # Manage columns empty or not
     # Protect separator protected by quotes
     # Ignore empty lines
-    sed -e "s/\"\(.*\)${SEP_COLUMN}\(.*\)\"/\1${CSV_PRINT_SEP_REPLACER}\2/g" \
-        -e "s/$/${SEP_COLUMN}/g" \
-        -e "s/${SEP_COLUMN}${SEP_COLUMN}/${SEP_COLUMN} ${SEP_COLUMN}/g" \
+    sed -e "s/\"\(.*\)${columnSep}\(.*\)\"/\1${CSV_PRINT_SEP_REPLACER}\2/g" \
+        -e "s/$/${columnSep}/g" \
+        -e "s/${columnSep}${columnSep}/${columnSep} ${columnSep}/g" \
         -e "s/^/${CSV_PRINT_SEP_COLUMN} /g" \
-        -e "s/${SEP_COLUMN}/${SEP_COLUMN}${CSV_PRINT_SEP_COLUMN} /g" \
-        "${FILE}" | column -s, -t | tr "${CSV_PRINT_SEP_REPLACER}" "${SEP_COLUMN}" > "${WRK_FILE}"
+        -e "s/${columnSep}/${columnSep}${CSV_PRINT_SEP_COLUMN} /g" "$file" | \
+        column -s, -t | tr "${CSV_PRINT_SEP_REPLACER}" "$columnSep" > "$wrkFile"
 
-    # Build with the head line as model  +-----+--+-----+
-    local SEP=$(head -n 1 "${WRK_FILE}" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
-    SEP=$(csvBreakLine "${SEP}")
-
-    # Add break line at first, third and last line
-    { echo "${SEP}"; head -n 1 "${WRK_FILE}"; echo "${SEP}"; tail -n +2 "${WRK_FILE}"; echo "${SEP}"; } > "${PRINT_FILE}"
     if [[ $? -ne 0 ]]; then
         return 1
-    elif [[ ${SILENT} -eq 0 ]]; then
-        cat "${PRINT_FILE}"
+    fi
+
+    # Build with the head line as model  +-----+--+-----+
+    local lineSep=$(head -n 1 "$wrkFile" | sed -e "s/^${CSV_PRINT_SEP_COLUMN}//g" -e "s/${CSV_PRINT_SEP_COLUMN} $//g")
+    lineSep=$(csvBreakLine "$lineSep")
+
+    # Add break line at first, third and last line
+    { echo "$lineSep"; head -n 1 "$wrkFile"; echo "$lineSep"; tail -n +2 "$wrkFile"; echo "$lineSep"; } > "$printFile"
+    if [[ $? -ne 0 ]]; then
+        return 1
+    elif [[ ${silent} -eq 0 ]]; then
+        cat "$printFile"
     fi
 
     # Clean workspace
-    if [[ ${CLEAN_WRK} -eq 1 ]]; then
-        rm -f "${PRINT_FILE}"
+    if [[ ${cleanWrk} -eq 1 ]]; then
+        rm -f "$printFile"
     fi
 }
 
@@ -124,46 +131,46 @@ function csvHorizontalMode ()
 # @return string
 function csvVerticalMode ()
 {
-    local FILE="$1"
-    if [[ ! -f "${FILE}" ]]; then
+    local file="$1"
+    if [[ ! -f "$file" ]]; then
         return 1
     fi
-    local PRINT_FILE="$2"
-    declare -i SILENT="$3"
-    local SEP_COLUMN="$4"
-    if [[ -z "${SEP_COLUMN}" ]]; then
-        SEP_COLUMN=","
+    local printFile="$2"
+    declare -i silent="$3"
+    local columnSep="$4"
+    if [[ -z "${columnSep}" ]]; then
+        columnSep=","
     fi
 
-    declare -i CLEAN_WRK=0
-    if [[ -z "${PRINT_FILE}" ]]; then
-        if [[ ${SILENT} -eq 1 ]]; then
+    declare -i cleanWrk=0
+    if [[ -z "${printFile}" ]]; then
+        if [[ ${silent} -eq 1 ]]; then
             return 2
         fi
-        PRINT_FILE="${CSV_WRK_DIR}/$(basename ${FILE} .${CVS_EXT}).p${CVS_EXT}"
-        CLEAN_WRK=1
+        printFile="${CSV_WRK_DIR}/$(basename "$file" ".${CVS_EXT}").p${CVS_EXT}"
+        cleanWrk=1
     fi
 
     # Extract header to get all column names
-    local HEADER_LINE=$(head -n 1 "$FILE")
-    declare -a HEADER=($(echo "$HEADER_LINE" | sed -e "s/ /_/g" -e "s/${SEP_COLUMN}/ /g"))
-    declare -i HEADER_NB="${#HEADER[@]}"
-    declare -i COLUMN_MAX_SIZE=0
-    local COLUMN
-    for COLUMN in "${HEADER[@]}"; do
-        if [ ${#COLUMN} -gt ${COLUMN_MAX_SIZE} ]; then
-            COLUMN_MAX_SIZE=${#COLUMN}
+    local lineHead=$(head -n 1 "$file")
+    declare -a columns=($(echo "$lineHead" | sed -e "s/ /_/g" -e "s/${columnSep}/ /g"))
+    declare -i columnSize="${#columns[@]}"
+    declare -i columnMaxSize=0
+    local column
+    for column in "${columns[@]}"; do
+        if [ ${#column} -gt ${columnMaxSize} ]; then
+            columnMaxSize=${#column}
         fi
     done
 
     # Explode each column as line and build vertical display
-    sed -e "s/\"\(.*\)${SEP_COLUMN}\(.*\)\"/\1${CSV_PRINT_SEP_REPLACER}\2/g" -e "1d" "${FILE}" | \
+    sed -e "s/\"\(.*\)${columnSep}\(.*\)\"/\1${CSV_PRINT_SEP_REPLACER}\2/g" -e "1d" "$file" | \
     awk -v vs="${CSV_VERTICAL_START_SEP}" \
         -v ve="${CSV_VERTICAL_END_SEP}" \
-        -v vh="${HEADER_LINE}" \
-        -v vhs="${HEADER_NB}" \
-        -v vcs="${COLUMN_MAX_SIZE}" \
-        -v sep="${SEP_COLUMN}" \
+        -v vh="$lineHead" \
+        -v vhs="$columnSize" \
+        -v vcs="$columnMaxSize" \
+        -v sep="$columnSep" \
         '
         {
             split(vh, k, sep);
@@ -174,16 +181,17 @@ function csvVerticalMode ()
             for (i=1; i<=vhs; i++) printf("%*s: %s\n", vcs, k[i], v[i]);
         }
         ' | \
-    tr "${CSV_PRINT_SEP_REPLACER}" "${SEP_COLUMN}" > "${PRINT_FILE}"
+    tr "${CSV_PRINT_SEP_REPLACER}" "$columnSep" > "$printFile"
+
     if [[ $? -ne 0 ]]; then
         return 1
-    elif [[ ${SILENT} -eq 0 ]]; then
-        cat "${PRINT_FILE}"
+    elif [[ ${silent} -eq 0 ]]; then
+        cat "$printFile"
     fi
 
     # Clean workspace
-    if [[ ${CLEAN_WRK} -eq 1 ]]; then
-        rm -f "${PRINT_FILE}"
+    if [[ ${cleanWrk} -eq 1 ]]; then
+        rm -f "$printFile"
     fi
 }
 
@@ -192,7 +200,7 @@ function csvVerticalMode ()
 # @return string
 function usage ()
 {
-    echo "Usage: csv.sh -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-g] [-q]"
+    echo "usage: csv.sh -f csvSourceFile [-t csvSaveFile] [-s columnSeparator] [-g] [-q]"
     echo "-f for CSV source file path"
     echo "-t for save result in this file path"
     echo "-s to define column separator, by default: comma"
@@ -201,7 +209,7 @@ function usage ()
 }
 
 # Script is not sourced ?
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     # Script usage & check if mysqldump is availabled
     if [[ $# -lt 1 ]] ; then
         usage
@@ -209,31 +217,31 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     fi
 
     # Default values
-    declare CSV_FILE=""
-    declare CSV_PRINT_FILE=""
-    declare CSV_SEP_COLUMN=","
-    declare -i CSV_VERTICAL_MODE=0
-    declare -i CSV_QUIET_MODE=0
+    declare -- csvFile=""
+    declare -- csvPrintFile=""
+    declare -- csvColumnSep=","
+    declare -i csvVerticalMode=0
+    declare -i csvSilentMode=0
 
     # Read the options
     # Use getopts vs getopt for MacOs portability
     while getopts "f::t::s:gq" FLAG; do
         case "${FLAG}" in
             f)
-                CSV_FILE="$OPTARG"
-                if [[ "${CSV_FILE:0:1}" != "/" ]]; then
-                    CSV_FILE="${CSV_ROOT_DIR}/${CSV_FILE}"
+                csvFile="$OPTARG"
+                if [[ "${csvFile:0:1}" != "/" ]]; then
+                    csvFile="${CSV_ROOT_DIR}/${csvFile}"
                 fi
                 ;;
             t)
-                CSV_PRINT_FILE="$OPTARG"
-                if [[ "${CSV_PRINT_FILE:0:1}" != "/" ]]; then
-                    CSV_PRINT_FILE="${CSV_ROOT_DIR}/${CSV_PRINT_FILE}"
+                csvPrintFile="$OPTARG"
+                if [[ "${csvPrintFile:0:1}" != "/" ]]; then
+                    csvPrintFile="${CSV_ROOT_DIR}/${csvPrintFile}"
                 fi
                 ;;
-            s) if [[ -n "${OPTARG}" ]]; then CSV_SEP_COLUMN="$OPTARG"; fi ;;
-            g) CSV_VERTICAL_MODE=1 ;;
-            q) CSV_QUIET_MODE=1 ;;
+            s) if [[ -n "${OPTARG}" ]]; then csvColumnSep="$OPTARG"; fi ;;
+            g) csvVerticalMode=1 ;;
+            q) csvSilentMode=1 ;;
             *) usage; exit 1 ;;
             ?) exit 2 ;;
         esac
@@ -241,23 +249,21 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     shift $(( OPTIND - 1 ));
 
     # Mandatory options
-    if [[ -z "${CSV_FILE}" ]]; then
+    if [[ -z "$csvFile" ]]; then
         echo "Please give a CSV file path in input"
         exit 1
-    elif [[ ! -f "${CSV_FILE}" ]]; then
-        echo "File ${CSV_FILE} does not exist"
+    elif [[ ! -f "$csvFile" ]]; then
+        echo "File ${csvFile} does not exist"
         exit 1
-    elif [[ ${CSV_QUIET_MODE} -eq 1 && -z "${CSV_PRINT_FILE}" ]]; then
+    elif [[ ${csvSilentMode} -eq 1 && -z "$csvPrintFile" ]]; then
         echo "With these options, no action to do"
         exit 1
-    elif [[ ! -d "$CSV_WRK_DIR" ]]; then
-        mkdir -p "$CSV_WRK_DIR"
     fi
 
     # Build or print CSV file
-    if [[ "${CSV_VERTICAL_MODE}" -eq 0 ]]; then
-        csvHorizontalMode "${CSV_FILE}" "${CSV_PRINT_FILE}" "${CSV_QUIET_MODE}" "${CSV_SEP_COLUMN}"
+    if [[ ${csvVerticalMode} -eq 0 ]]; then
+        csvHorizontalMode "$csvFile" "$csvPrintFile" "$csvSilentMode" "$csvColumnSep"
     else
-        csvVerticalMode "${CSV_FILE}" "${CSV_PRINT_FILE}" "${CSV_QUIET_MODE}" "${CSV_SEP_COLUMN}"
+        csvVerticalMode "$csvFile" "$csvPrintFile" "$csvSilentMode" "$csvColumnSep"
     fi
 fi

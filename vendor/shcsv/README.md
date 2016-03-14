@@ -1,14 +1,16 @@
-# SHCSV 
+# ShCsv 
 
 Bash library to print a CSV file in a shell terminal with readable columns and lines, like with Mysql command line.
 Two modes ar now available. The basic, with all columns in one line and the vertical mode, where each column has it line.
 
-Usage: csv.sh -f csvsourcefile [-t csvsavefile] [-s columnseparator] [-g] [-q]
-* -f for CSV source file
-* -t for save result
-* -g for enable vertical mode
-* -s to define column separator, by default comma
-* -q for do not print result
+```bash
+usage: csv.sh -f csvSourceFile [-t csvSaveFile] [-s columnSeparator] [-g] [-q]
+-f for CSV source file path
+-t for save result in this file path
+-s to define column separator, by default: comma
+-g for enable vertical mode
+-q for does not print result
+```
 
 ## Examples 
 
@@ -21,7 +23,7 @@ Day,Campaign ID,Campaign,Clicks,Impressions,Cost,Mobile Url,Campaign state,Track
 2015-10-22,123,@3 #sp,10,854,13290000,,paused,
 2015-10-24,1234567890,@4 #sp,4,547,4740000,,paused,
 2015-10-26,123456,@5 #sp,4,577,1310000,,paused,
-````
+```
 
 ### Print a CSV file in the term
 
@@ -36,13 +38,13 @@ $ ./csv.sh -f "sample.csv"
 | 2015-10-24  | 1234567890   | @4 #sp    | 4       | 547          | 4740000   |             | paused          |                             |
 | 2015-10-26  | 123456       | @5 #sp    | 4       | 577          | 1310000   |             | paused          |                             |
 +-------------+--------------+-----------+---------+--------------+-----------+-------------+-----------------+-----------------------------+
-````
+```
 
 ### Save result in an other file, named sample.pcsv and do not display the result
 
 ```bash
 $ ./csv.sh -f "sample.csv" -t "sample.pcsv" -q
-````
+```
 
 ### Print it in vertical mode
 
@@ -98,4 +100,4 @@ Tracking template:
        Mobile Url:
    Campaign state: paused
 Tracking template:
-````
+```
