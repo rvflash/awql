@@ -8,7 +8,7 @@ Bash command line tool to request Google Adwords API Reports with AWQL language 
 * Save results in CSV files.
 * In prompt mode, add management of historic of queries with arrow keys
 * Caching datas in order to do not request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
-* Add following SQL methods to AWQL grammar: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]`, `SHOW [FULL] TABLES [LIKE|WITH]` and `CREATE [OR REPLACE] VIEW`.
+* Add following SQL methods to AWQL grammar for reports: `LIMIT` and `ORDER BY` in `SELECT` queries, `DESC [FULL]`, `SHOW [FULL] TABLES [LIKE|WITH]` and `CREATE [OR REPLACE] VIEW`.
 * Add management of `\G` modifier to display result vertically (each column on a line)
 * The view offers possibility to filter the AWQL report tables to create your own report, with only the columns that interest you.
 * `*` can be used as shorthand to select all columns from all views
@@ -318,3 +318,7 @@ Url of the web service to use to retrieve a Google access token: http://ws.local
 Use a custom web service as token provider ------------------ OK
 Installation successfull. Open a new terminal or reload your bash environment. Enjoy!
 ```
+
+## Require
+
+Bash 4.3.11+

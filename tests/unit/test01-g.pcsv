@@ -1,0 +1,50 @@
+*************************** 1. row ***************************
+              Day: 2015-10-01
+      Campaign ID: 1234567890
+         Campaign: @1 #sp
+           Clicks: 11
+      Impressions: 297
+             Cost: 4420000
+       Mobile Url:
+   Campaign state: paused
+Tracking template:
+*************************** 2. row ***************************
+              Day: 2015-10-20
+      Campaign ID: 1234567890
+         Campaign: @2 #sp
+           Clicks: 17
+      Impressions: 1242
+             Cost: 17170000
+       Mobile Url:
+   Campaign state: paused
+Tracking template: https://github.com/rvflash
+*************************** 3. row ***************************
+              Day: 2015-10-22
+      Campaign ID: 123
+         Campaign: @3 #sp
+           Clicks: 10
+      Impressions: 854
+             Cost: 13290000
+       Mobile Url:
+   Campaign state: paused
+Tracking template:
+*************************** 4. row ***************************
+              Day: 2015-10-24
+      Campaign ID: 1234567890
+         Campaign: @4 #sp
+           Clicks: 4
+      Impressions: 547
+             Cost: 4740000
+       Mobile Url:
+   Campaign state: paused
+Tracking template:
+*************************** 5. row ***************************
+              Day: 2015-10-26
+      Campaign ID: 123456
+         Campaign: @5 #sp
+           Clicks: 4
+      Impressions: 577
+             Cost: 1310000
+       Mobile Url:
+   Campaign state: paused
+Tracking template:
