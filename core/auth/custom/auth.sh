@@ -17,7 +17,7 @@ SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
 
 # Requires
 source "${SCRIPT_ROOT}/../../conf/awql.sh"
-source "${AWQL_INC_DIR}/common.sh"
+source "${SCRIPT_ROOT}/common.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/array.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/time.sh"
 

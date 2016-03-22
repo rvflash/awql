@@ -56,6 +56,33 @@ function usage ()
     fi
 }
 
+##
+# Exit in case of error, if $1 is not equals to 0
+# @param string $1 return code of previous step
+# @param string $2 message to log
+# @param string $3 verbose mode
+# @return int
+# @exitStatus 1
+# @returnStatus 1 If previous error code is normal
+function exitOnError ()
+{
+    local ERR_CODE="$1"
+    local ERR_MSG="$2"
+    local ERR_LOG="$3"
+
+    if [[ "$ERR_CODE" -ne 0 ]]; then
+        if [[ -n "$ERR_MSG" && -n "$ERR_LOG" ]]; then
+            echo "$ERR_MSG"
+        fi
+        if [[ "$ERR_CODE" -eq 1 ]]; then
+            exit 1
+        fi
+        return 0
+    fi
+
+    return 1
+}
+
 # Script usage
 if [ $# -lt 1 ] ; then
     usage

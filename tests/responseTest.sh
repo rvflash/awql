@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit -o pipefail -o errtrace
 source ../vendor/bash-packages/testing.sh
-source ../inc/print.sh
+source ../core/print.sh
 
 # Default entries
 declare -r TEST_PRINT_TEST_DIR="${PWD}/unit"
@@ -74,22 +74,22 @@ function test_buildDataFile ()
     #7 Check with valid AWQL file and limited response to line 2 at 5
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" "${TEST_PRINT_RANGE_LIMIT}")
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}" && $(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}"") -eq 4 ]] && echo -n 1
 
     #8 Check with valid AWQL file and limited response to 3 lines
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" 3)
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_OFFSET3}" && $(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_OFFSET3}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}"") -eq 4 ]] && echo -n 1
 
     #9 Check with valid AWQL file and limited response to line 2 at 5 and order by ascendant campaign names (second column)
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" "${TEST_PRINT_RANGE_LIMIT}" "${TEST_PRINT_ALPHA_ORDER}")
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}" && $(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}"") -eq 4 ]] && echo -n 1
 
     #10 Check with valid AWQL file and limited response to line 2 at 5 and order by descendant cost (third column)
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" "${TEST_PRINT_RANGE_LIMIT}" "${TEST_PRINT_NUMERIC_DESC_ORDER}")
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}" && $(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}"") -eq 4 ]] && echo -n 1
 
     # Clean workspace
     if [[ -n "${TEST_PRINT_TEST_DIR}" && -d "${TEST_PRINT_TEST_DIR}" && -n "${AWQL_FILE_EXT}" ]]; then

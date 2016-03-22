@@ -72,7 +72,7 @@ function arrayDiff ()
     elif [[ "$type1" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr1="$haystack1"
     else
-        declare -a arr1="(${haystack1})"
+        read -a arr1 <<<"$haystack1"
     fi
     if [[ "${#arr1[@]}" -eq 0 ]]; then
         echo "()"
@@ -90,7 +90,7 @@ function arrayDiff ()
     elif [[ "$type2" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr2="$haystack2"
     else
-        declare -a arr2="(${haystack2})"
+        read -a arr2 <<<"$haystack2"
     fi
     if [[ "${#arr2[@]}" -eq 0 ]]; then
         arrayToString "$(declare -p arr1)"
@@ -140,7 +140,7 @@ function arrayKeyExists ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="$haystack"
     else
-        declare -a arr="(${haystack})"
+        read -a arr <<<"$haystack"
     fi
 
     local key
@@ -184,7 +184,7 @@ function arrayMerge ()
     elif [[ "$type1" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr1="$haystack1"
     else
-        declare -a arr1="(${haystack1})"
+        read -a arr1 <<<"$haystack1"
     fi
 
     local haystack2="$2"
@@ -198,7 +198,7 @@ function arrayMerge ()
     elif [[ "$type2" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr2="$haystack2"
     else
-        declare -a arr2="(${haystack2})"
+        read -a arr2 <<<"$haystack2"
     fi
     if [[ "${#arr1[@]}" -eq 0 && "${#arr2[@]}" -eq 0 ]]; then
         echo "()"
@@ -278,7 +278,7 @@ function arraySearch ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="${haystack}"
     else
-        declare -a arr="(${haystack})"
+        read -a arr <<<"$haystack"
     fi
 
     local key
@@ -345,7 +345,7 @@ function count ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="$haystack"
     else
-        declare -a arr="(${haystack})"
+        read -a arr <<<"$haystack"
     fi
     count="${#arr[@]}"
 
@@ -376,7 +376,7 @@ function inArray ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="$haystack"
     else
-        declare -a arr="(${haystack})"
+        read -a arr <<<"$haystack"
     fi
 
     local value
