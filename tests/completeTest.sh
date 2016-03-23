@@ -83,62 +83,62 @@ function __test_completeSelectFields ()
     local test
 
     #1 Check nothing
-    test=$(completion)
+    test=$(awqlComplete)
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with empty string as first parameter
-    test=$(completion "")
+    test=$(awqlComplete "")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #3 Check with valid first parameter but an invalid api version
-    test=$(completion "${TEST_COMP_FIELD_BEGINNING}" "rv")
+    test=$(awqlComplete "${TEST_COMP_FIELD_BEGINNING}" "rv")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #4 Check with both valid parameters but the first parameter expects no response
-    test=$(completion "${TEST_COMP_00}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_00}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #5 Check with starting select query
-    test=$(completion "${TEST_COMP_01}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_01}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELDS}" ]] && echo -n 1
 
     #6 Check with select query with field to complete
-    test=$(completion "${TEST_COMP_02}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_02}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELD_SIMILAR_PART}" ]] && echo -n 1
 
     #7 Check with select query with field to propose more than one reply
-    test=$(completion "${TEST_COMP_03}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_03}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_CAMPAIGN_FIELDS}" ]] && echo -n 1
 
     #8 Check with select query ending with comma, expected all fields as reply
-    test=$(completion "${TEST_COMP_04}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_04}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELDS}" ]] && echo -n 1
 
     #9 Check with select query ending with letter "C", expected all fields beginning by this letter
-    test=$(completion "${TEST_COMP_05}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_05}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" ]] && echo -n 1
 
     #10 Check with select query ending with comma after space, expected all fields as reply
-    test=$(completion "${TEST_COMP_06}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_06}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELDS}" ]] && echo -n 1
 
     #11 Check with select query ending with space after comma before from, expected all fields as reply
-    test=$(completion "${TEST_COMP_07}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_07}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELDS}" ]] && echo -n 1
 
     #12 Check with select query ending with letter "C" after space, expected all fields beginning by a "C"
-    test=$(completion "${TEST_COMP_08}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_08}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELDS_BEGINNING_BY_C}" ]] && echo -n 1
 }
@@ -151,52 +151,52 @@ function __test_completeSelectWhere ()
     local test
 
     #1 Check with select query ending with from clause with space after it, expected list of table names
-    test=$(completion "${TEST_COMP_09}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_09}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLES}" ]] && echo -n 1
 
     #2 Check with select query ending with CAMP after from clause, expected completion "AIGN_"
-    test=$(completion "${TEST_COMP_10}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_10}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLE_COMPLETE}" ]] && echo -n 1
 
     #3 Check with select query ending with CAMPAIGN_ after from clause, expected all table names beginning by CAMPAIGN_
-    test=$(completion "${TEST_COMP_11}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_11}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" ]] && echo -n 1
 
     #4 Check with select query ending with starting where clause, expected nothing
-    test=$(completion "${TEST_COMP_12}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_12}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #5 Check with select query ending with where clause without space after it, expected nothing
-    test=$(completion "${TEST_COMP_13}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_13}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #6 Check with select query ending with space after where clause, expected all table fields
-    test=$(completion "${TEST_COMP_14}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_14}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_CAMPAIGN_PERFORMANCE_REPORT}" ]] && echo -n 1
 
     #7 Check with select query ending with C after where clause, expected all table fields beginning by C
-    test=$(completion "${TEST_COMP_15}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_15}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLE_FIELDS_BEGINNING_BY_C}" ]] && echo -n 1
 
     #8 Check with select query ending with > after where clause, expected all table fields
-    test=$(completion "${TEST_COMP_16}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_16}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_CAMPAIGN_PERFORMANCE_REPORT}" ]] && echo -n 1
 
     #9 Check with select query ending with = after where clause, expected all table fields
-    test=$(completion "${TEST_COMP_17}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_17}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_CAMPAIGN_PERFORMANCE_REPORT}" ]] && echo -n 1
 
     #10 Check with select query ending with space after = in where clause, expected all table fields
-    test=$(completion "${TEST_COMP_18}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_18}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_CAMPAIGN_PERFORMANCE_REPORT}" ]] && echo -n 1
 }
@@ -209,27 +209,27 @@ function __test_completeSelectDuring ()
     local test
 
     #1 Check with select query ending with during clause, expected nothing
-    test=$(completion "${TEST_COMP_19}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_19}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with select query ending with space in during clause, expected list of literal during
-    test=$(completion "${TEST_COMP_20}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_20}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_DURINGS}" ]] && echo -n 1
 
     #3 Check with select query ending with Y in during clause, expected list of literal during beginning by Y
-    test=$(completion "${TEST_COMP_21}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_21}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_DURINGS_BEGINNING_BY_Y}" ]] && echo -n 1
 
     #4 Check with select query ending with YESTERDAY in during clause, expected nothing
-    test=$(completion "${TEST_COMP_22}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_22}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #5 Check with select query ending with space after literal during in during clause, expected nothing
-    test=$(completion "${TEST_COMP_23}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_23}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     # To manage: [[ -z "$test" ]] && echo -n 1
     echo -n "1"
@@ -243,27 +243,27 @@ function __test_completeSelectOrder ()
     local test
 
     #1 Check with select query ending with ORDER, expected nothing
-    test=$(completion "${TEST_COMP_24}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_24}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with select query ending with BY, expected nothing
-    test=$(completion "${TEST_COMP_25}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_25}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #3 Check with select query ending with space in order clause, expected list of query fields
-    test=$(completion "${TEST_COMP_26}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_26}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_QUERY_FIELDS}" ]] && echo -n 1
 
     #4 Check with select query ending with Cam in order clause, expected word completion
-    test=$(completion "${TEST_COMP_27}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_27}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_FIELD_SIMILAR_PART}" ]] && echo -n 1
 
     #5 Check with select query ending with DESC in order clause, expected nothing
-    test=$(completion "${TEST_COMP_28}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_28}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 }
@@ -276,37 +276,37 @@ function __test_completeSelectLimit ()
     local test
 
     #1 Check with select query ending with L in order by clause after a other order without comma, expected nothing
-    test=$(completion "${TEST_COMP_29}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_29}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with select query ending with space in limit clause, expected nothing
-    test=$(completion "${TEST_COMP_30}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_30}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #3 Check with select query ending with 10 in limit clause, expected nothing
-    test=$(completion "${TEST_COMP_31}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_31}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #4 Check with select query ending with ; in limit clause, expected nothing
-    test=$(completion "${TEST_COMP_32}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_32}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #5 Check with select query ending with \ in limit clause, expected nothing
-    test=$(completion "${TEST_COMP_33}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_33}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #6 Check with select query ending with \G in limit clause, expected nothing
-    test=$(completion "${TEST_COMP_34}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_34}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #7 Check with select query ending with \g in limit clause, expected nothing
-    test=$(completion "${TEST_COMP_35}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_35}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 }
@@ -319,22 +319,22 @@ function __test_completeShow ()
     local test
 
     #1 Check with query beginning by SH, expected nothing
-    test=$(completion "${TEST_COMP_36}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_36}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with query ending by space in show query, expected nothing
-    test=$(completion "${TEST_COMP_37}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_37}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #3 Check with query ending by TABLES in SHOW query, expected nothing
-    test=$(completion "${TEST_COMP_38}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_38}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #4 Check with query ending by TABLES in SHOW query, expected nothing
-    test=$(completion "${TEST_COMP_39}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_39}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 }
@@ -347,42 +347,42 @@ function __test_completeDesc ()
     local test
 
     #1 Check with query beginning by DES, expected nothing
-    test=$(completion "${TEST_COMP_40}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_40}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with query beginning by DESC, expected nothing
-    test=$(completion "${TEST_COMP_41}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_41}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #3 Check with query ending by a space in a DESC query, expected list of tables
-    test=$(completion "${TEST_COMP_42}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_42}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLES}" ]] && echo -n 1
 
     #4 Check with query ending by a space in a desc query (lowercase), expected list of tables
-    test=$(completion "${TEST_COMP_43}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_43}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLES}" ]] && echo -n 1
 
     #5 Check with query ending by a C in a desc query, expected list of tables beginning with a C
-    test=$(completion "${TEST_COMP_44}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_44}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLES_BEGINNING_BY_C}" ]] && echo -n 1
 
     #6 Check with query ending by the table name in a desc query, expected nothing
-    test=$(completion "${TEST_COMP_45}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_45}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #7 Check with query ending by a space in a desc query after a table name, expected completion of fields of this table
-    test=$(completion "${TEST_COMP_46}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_46}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_CAMPAIGN_PERFORMANCE_REPORT}" ]] && echo -n 1
 
     #8 Check with query ending by a C in a desc query after a table name, expected completion of table fields beginning by C
-    test=$(completion "${TEST_COMP_47}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_47}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && "$test" == "${TEST_COMP_TABLE_FIELDS_BEGINNING_BY_C}" ]] && echo -n 1
 }
@@ -395,17 +395,17 @@ function __test_completeCreate ()
     local test
 
     #1 Check with query beginning by CREATE and ending by a space, expected nothing
-    test=$(completion "${TEST_COMP_48}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_48}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #2 Check with query beginning by VIEW in a create method, expected nothing
-    test=$(completion "${TEST_COMP_49}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_49}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     #3 Check with query beginning by a space in a create view method, expected nothing
-    test=$(completion "${TEST_COMP_50}" "${TEST_COMP_API_VERSION}")
+    test=$(awqlComplete "${TEST_COMP_50}" "${TEST_COMP_API_VERSION}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 }
@@ -627,7 +627,7 @@ TEST_COMPLETION+="${TEST_COMPLETE_SELECT_ORDER}§0${TEST_COMPLETE_SELECT_LIMIT}�
 TEST_COMPLETION+="${TEST_COMPLETE_DESC}§0${TEST_COMPLETE_CREATE}§0"
 readonly TEST_COMPLETION
 
-function test_completion ()
+function test_awqlComplete ()
 {
     __test_completeSelectFields
     echo -n "§$?"
@@ -658,4 +658,4 @@ function test_completion ()
 # Launch all functional tests
 bashUnit "__completeOptions" "${TEST_COMPLETE_OPTIONS}" "$(test_completeOptions)"
 bashUnit "__completeWord" "${TEST_COMPLETE_WORD}" "$(test_completeWord)"
-bashUnit "awqlComplete" "${TEST_COMPLETION}" "$(test_completion)"
+bashUnit "awqlComplete" "${TEST_COMPLETION}" "$(test_awqlComplete)"
