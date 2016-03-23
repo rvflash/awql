@@ -146,7 +146,7 @@ function __printFile ()
 # @param arrayToString $1 Request
 # @param arrayToString $2 Response
 # @return string
-function print ()
+function awqlResponse ()
 {
     if [[ $1 != "("*")" || $2 != "("*")" ]]; then
         return 1

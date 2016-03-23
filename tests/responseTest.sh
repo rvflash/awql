@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -o errexit -o pipefail -o errtrace
 source ../vendor/bash-packages/testing.sh
-source ../core/print.sh
+source ../core/response.sh
 
 # Default entries
+declare -r -i TEST_PRINT_FILE_SIZE=1908
+declare -r TEST_PRINT_DURATION="0.93"
 declare -r TEST_PRINT_TEST_DIR="${PWD}/unit"
 declare -r TEST_PRINT_UNKNOWN_CSV_FILE="/awql/file.csv"
 declare -r TEST_PRINT_HEADER_FILE="${TEST_PRINT_TEST_DIR}/test00.csv"
@@ -20,8 +22,6 @@ declare -r TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC="${TEST_PRI
 declare -r TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC="${TEST_PRINT_TEST_DIR}/test01_2-3_k3-1.awql"
 declare -r TEST_PRINT_PRINT_CSV_FILE="${TEST_PRINT_TEST_DIR}/test01.pcsv"
 declare -r TEST_PRINT_VPRINT_CSV_FILE="${TEST_PRINT_TEST_DIR}/test01-g.pcsv"
-declare -r -i TEST_PRINT_FILE_SIZE=1908
-declare -r TEST_PRINT_DURATION="0.93"
 declare -r TEST_PRINT_EMPTY="$(echo -e "Empty set (0.00 sec) \n")"
 declare -r TEST_PRINT_ONE_LINE_WITH_HEADER="$(echo -e "1 row in set (0.00 sec) \n")"
 declare -r TEST_PRINT_ALL_LINE="$(echo -e "$((${TEST_PRINT_FILE_SIZE}-1)) rows in set (${TEST_PRINT_DURATION} sec) \n")"
@@ -74,22 +74,22 @@ function test_buildDataFile ()
     #7 Check with valid AWQL file and limited response to line 2 at 5
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" "${TEST_PRINT_RANGE_LIMIT}")
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}"") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}" && "$(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}")" -eq 4 ]] && echo -n 1
 
     #8 Check with valid AWQL file and limited response to 3 lines
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" 3)
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_OFFSET3}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}"") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_OFFSET3}" && "$(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3}")" -eq 4 ]] && echo -n 1
 
     #9 Check with valid AWQL file and limited response to line 2 at 5 and order by ascendant campaign names (second column)
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" "${TEST_PRINT_RANGE_LIMIT}" "${TEST_PRINT_ALPHA_ORDER}")
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}"") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}" && "$(wc -l <"${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC}")" -eq 4 ]] && echo -n 1
 
     #10 Check with valid AWQL file and limited response to line 2 at 5 and order by descendant cost (third column)
     test=$(__buildDataFile "${TEST_PRINT_AWQL_FILE}" "${TEST_PRINT_RANGE_LIMIT}" "${TEST_PRINT_NUMERIC_DESC_ORDER}")
     echo -n "-$?"
-    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}" && $("wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}"") -eq 4 ]] && echo -n 1
+    [[ "$test" == "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}" && "$(wc -l < "${TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC}")" -eq 4 ]] && echo -n 1
 
     # Clean workspace
     if [[ -n "${TEST_PRINT_TEST_DIR}" && -d "${TEST_PRINT_TEST_DIR}" && -n "${AWQL_FILE_EXT}" ]]; then
@@ -189,14 +189,14 @@ function test_printFile ()
 }
 
 
-readonly TEST_PRINT="-11"
+readonly TEST_AWQL_RESPONSE="-11"
 
-function test_print ()
+function test_awqlResponse ()
 {
     local test
 
     # Check nothing
-    test=$(print)
+    test=$(awqlResponse)
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 }
@@ -206,4 +206,4 @@ function test_print ()
 bashUnit "__buildDataFile" "${TEST_PRINT_BUILD_DATA_FILE}" "$(test_buildDataFile)"
 bashUnit "__printContext" "${TEST_PRINT_CONTEXT}" "$(test_printContext)"
 bashUnit "__printFile" "${TEST_PRINT_FILE}" "$(test_printFile)"
-bashUnit "print" "${TEST_PRINT}" "$(test_print)"
+bashUnit "awqlResponse" "${TEST_AWQL_RESPONSE}" "$(test_awqlResponse)"
