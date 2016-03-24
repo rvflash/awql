@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
 # @includeBy /inc/awql.sh
+# Load configuration file if is not already loaded
+if [[ -z "${AWQL_ROOT_DIR}" ]]; then
+    declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "${AWQL_CUR_DIR}/../../conf/awql.sh"
+fi
+
 
 ##
 # Views has stored in user home in a folder named .awql/views
-# Each view has its own configuration file with structure details and query source.
+# Each view has its own configuration file with structure details (name, query source, etc.)
 #
 # @example /home/hgouchet/.awql/views/CAMPAIGN_REPORT.yaml
 # > ORIGIN  : SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O ORDER BY Clicks DESC LIMIT 5;
@@ -19,9 +25,7 @@
 
 ##
 # Allow access to table listing and information
-# @param string $1 Awql query
-# @param string $2 Output filepath
-# @param string $3 Api version
+# @param string $1 Request
 # @param arrayToString Response
 # @returnStatus 2 If query uses a un-existing table
 # @returnStatus 2 If query is empty
@@ -30,116 +34,55 @@
 # @returnStatus 1 If response file does not exist
 function awqlCreate ()
 {
-    declare -i fullQuery=0
-    local queryStr="${1//\'/}"
-    if [[ "$queryStr" == ${AWQL_QUERY_SHOW}[[:space:]]*${AWQL_QUERY_FULL}* ]]; then
-        fullQuery=1
+    if [[ -z "$1" || "$1" != "("*")" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
     fi
-    queryStr="$(echo "$queryStr" | sed -e "s/${AWQL_QUERY_SHOW}[[:space:]]*${AWQL_QUERY_FULL}//g" -e "s/^${AWQL_QUERY_SHOW}//g")"
-    local file="$2"
-    local apiVersion="$3"
+    declare -A -r request="$1"
+    if [[ -z "${request["${AWQL_REQUEST_DEFINITION}"]}" || "${request["${AWQL_REQUEST_DEFINITION}"]}" != "("*")" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
+    elif [[ -z "${request["${AWQL_REQUEST_VIEW}"]}" || -z "${request["${AWQL_REQUEST_FIELD_NAMES}"]}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
+    fi
+    declare -A -r table="${request["${AWQL_REQUEST_DEFINITION}"]}"
+    if [[ -z "${table["${AWQL_REQUEST_QUERY}"]}" || -z "${table["${AWQL_REQUEST_FIELD_NAMES}"]}" || -z "${table["${AWQL_REQUEST_TABLE}"]}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
+    fi
 
-    declare -a query="($(trim "$queryStr"))"
-    if [[ "${#query[@]}" -eq 0 ]]; then
-        echo "QueryError.EMPTY_QUERY"
+    local file="${AWQL_USER_VIEWS_DIR}/${request["${AWQL_REQUEST_VIEW}"]}.yaml"
+    if [[ -f "$file" && "${request["${AWQL_REQUEST_REPLACE}"]}" -eq 0 ]]; then
+        echo "${AWQL_QUERY_ERROR_VIEW_ALREADY_EXISTS}"
         return 2
-    elif [[ -z "$file" ]]; then
-        echo "InternalError.INVALID_RESPONSE_FILE_PATH"
-        return 1
-    elif [[ -z "$apiVersion" ]]; then
-        echo "QueryError.INVALID_API_VERSION"
-        return 1
     fi
+    declare -i pad=10
 
-    # Load tables
-    declare -A -r awqlTables="$(awqlTables "$apiVersion")"
-    if [[ -z "$awqlTables" ]]; then
-        echo "InternalError.INVALID_AWQL_TABLES"
-        return 1
-    elif [[ "${query[0]}" != ${AWQL_QUERY_TABLES} ]]; then
-        echo "QueryError.INVALID_SHOW_TABLES"
-        return 2
-    elif ([[ "${query[1]}" != ${AWQL_QUERY_LIKE} && "${query[1]}" != ${AWQL_QUERY_WITH} && -n "${query[1]}" ]]); then
-        echo "QueryError.INVALID_SHOW_TABLES_METHOD"
-        return 2
-    elif [[ -z "$file" ]]; then
-        echo "InternalError.INVALID_RESPONSE_FILE_PATH"
-        return 1
-    elif [[ -z "$apiVersion" ]]; then
-        echo "QueryError.INVALID_API_VERSION"
-        return 1
-    fi
+    # Query source
+    printRightPadding "${AWQL_VIEW_ORIGIN}" $((${pad}-${#AWQL_VIEW_ORIGIN})) > "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_QUERY}"]}\n" >> "$file"
+    # Column names
+    printRightPadding "${AWQL_VIEW_NAMES}" $((${pad}-${#AWQL_VIEW_NAMES})) >> "$file"
+    echo -ne ": ${request["${AWQL_REQUEST_FIELD_NAMES}"]}\n" >> "$file"
+    # Columns
+    printRightPadding "${AWQL_VIEW_FIELDS}" $((${pad}-${#AWQL_VIEW_FIELDS})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_FIELD_NAMES}"]}\n" >> "$file"
+    # Table name
+    printRightPadding "${AWQL_VIEW_TABLE}" $((${pad}-${#AWQL_VIEW_TABLE})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_TABLE}"]}\n" >> "$file"
+    # Where
+    printRightPadding "${AWQL_VIEW_WHERE}" $((${pad}-${#AWQL_VIEW_WHERE})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_WHERE}"]}\n" >> "$file"
+    # During
+    printRightPadding "${AWQL_VIEW_DURING}" $((${pad}-${#AWQL_VIEW_DURING})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_DURING}"]}\n" >> "$file"
+    # Order
+    printRightPadding "${AWQL_VIEW_ORDER}" $((${pad}-${#AWQL_VIEW_ORDER})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_ORDER}"]}\n" >> "$file"
+    # Limit
+    printRightPadding "${AWQL_VIEW_LIMIT}" $((${pad}-${#AWQL_VIEW_LIMIT})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_LIMIT}"]}\n" >> "$file"
 
-    # Manage SHOW TABLES without anything or with LIKE / WITH behaviors
-    local queryStr="${query[1]}"
-    if [[ -n "${query[2]}" ]]; then
-        queryStr="${query[2]}"
-    fi
-
-    # Full mode: display type of tables
-    if [[ ${fullQuery} -eq 1 ]]; then
-        declare -A -r awqlTablesType="$(awqlTablesType "$apiVersion")"
-        if [[ -z "$awqlTablesType" ]]; then
-            echo "InternalError.INVALID_AWQL_TABLES_TYPE"
-            return 1
-        fi
-    fi
-
-    local showTables table
-    if [[ -z "${query[1]}" || "${query[1]}" == ${AWQL_QUERY_LIKE} ]]; then
-        # List tables that match the search terms
-        for table in "${!awqlTables[@]}"; do
-            # Also manage Like with %
-            if [[ -z "${queryStr#%}" || "${queryStr#%}" = "$table" ]] ||
-               ([[ "$queryStr" == "%"*"%" && "$table" == *"${queryStr:1:-1}"* ]]) ||
-               ([[ "$queryStr" == "%"* && "$table" == *"${queryStr:1}" ]]) ||
-               ([[ "$queryStr" == *"%" && "$table" == "${queryStr::-1}"* ]]); then
-
-                if [ -n "$showTables" ]; then
-                    showTables+="\n"
-                fi
-                showTables+="$table"
-
-                if [[ ${fullQuery} -eq 1 ]]; then
-                    showTables+=",${awqlTablesType[$table]}"
-                fi
-            fi
-        done
-
-        if [[ -n "$queryStr" ]]; then
-            queryStr=" (${queryStr})"
-        fi
-    else
-        # List tables that expose this column name
-        if [[ -z "$queryStr" ]]; then
-            echo "QueryError.MISSING_COLUMN_NAME"
-            return 2
-        fi
-
-        for table in "${!awqlTables[@]}"; do
-            if inArray "$queryStr" "${awqlTables[$table]}"; then
-                if [[ -n "$showTables" ]]; then
-                    showTables+="\n"
-                fi
-                showTables+="$table"
-
-                if [[ ${fullQuery} -eq 1 ]]; then
-                    showTables+=",${awqlTablesType[$table]}"
-                fi
-            fi
-        done
-
-        queryStr="${AWQL_TABLES_WITH}${queryStr}"
-    fi
-
-    if [[ -n "$showTables" ]]; then
-        local header="${AWQL_TABLES_IN}${apiVersion}${queryStr}"
-        if [[ ${fullQuery} -eq 1 ]]; then
-            header+=",${AWQL_TABLE_TYPE}"
-        fi
-        echo -e "$header" > "$file"
-        echo -e "$showTables" | sort -t, -k+1 -d >> "$file"
-    fi
-
-    echo -n "([FILE]=\"${file}\" [CACHED]=1)"
+    echo "()"
 }
