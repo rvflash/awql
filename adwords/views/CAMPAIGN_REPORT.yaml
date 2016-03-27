@@ -3,6 +3,4 @@ NAMES     : CampaignId CampaignName CampaignStatus Impressions Clicks
 FIELDS    : CampaignId CampaignName CampaignStatus Impressions Clicks
 TABLE     : CAMPAIGN_PERFORMANCE_REPORT
 WHERE     : Impressions > O
-DURING    :
 ORDER     : Clicks DESC
-LIMIT     :

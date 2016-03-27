@@ -16,6 +16,7 @@ declare -r AWQL_ADWORDS_DIR="${AWQL_ROOT_DIR}/adwords"
 declare -r AWQL_VIEWS_DIR_NAME="views"
 declare -r AWQL_VIEWS_DIR="${AWQL_ADWORDS_DIR}/${AWQL_VIEWS_DIR_NAME}"
 declare -r AWQL_USER_VIEWS_DIR="${AWQL_USER_DIR}/${AWQL_VIEWS_DIR_NAME}"
+declare -r AWQL_USER_CACHE_VIEWS_FILE="${AWQL_USER_VIEWS_DIR}/.cache"
 declare -r AWQL_HISTORY_FILE="${AWQL_USER_DIR}/history"
 declare -r AWQL_INC_DIR="${AWQL_ROOT_DIR}/core"
 declare -r AWQL_STATEMENT_DIR="${AWQL_INC_DIR}/statement"
@@ -71,9 +72,12 @@ declare -r AWQL_QUERY_ORDER="[Oo][Rr][Dd][Ee][Rr]"
 declare -r AWQL_QUERY_BY="[Bb][Yy]"
 declare -r AWQL_QUERY_ORDER_BY="${AWQL_QUERY_ORDER} ${AWQL_QUERY_BY}"
 declare -r AWQL_QUERY_LIMIT="[Ll][Ii][Mm][Ii][Tt]"
-declare -r AWQL_QUERY_HELP="[Hh][Ee][Ll][Pp]"
 declare -r AWQL_QUERY_OR="[Oo][Rr]"
 declare -r AWQL_QUERY_AND="[Aa][Nn][Dd]"
+declare -r AWQL_QUERY_CLEAR="[Cc][Ll][Ee][Aa][Rr]"
+declare -r AWQL_QUERY_EXIT="[Ee][Xx][Ii][Tt]"
+declare -r AWQL_QUERY_QUIT="[Qq][Uu][Ii][Tt]"
+declare -r AWQL_QUERY_HELP="[Hh][Ee][Ll][Pp]"
 
 # Request properties
 declare -r AWQL_REQUEST_QUERY="AWQL_QUERY"
@@ -143,9 +147,6 @@ declare -r AWQL_TEXT_COMMAND_CLEAR="clear"
 declare -r AWQL_TEXT_COMMAND_HELP="help"
 declare -r AWQL_TEXT_COMMAND_EXIT="exit"
 declare -r AWQL_TEXT_COMMAND_QUIT="quit"
-declare -r AWQL_QUERY_CLEAR="[Cc][Ll][Ee][Aa][Rr]"
-declare -r AWQL_QUERY_EXIT="[Ee][Xx][Ii][Tt]"
-declare -r AWQL_QUERY_QUIT="[Qq][Uu][Ii][Tt]"
 
 # Error message
 # > Internal errors
@@ -201,7 +202,7 @@ source "${AWQL_BASH_PACKAGES_DIR}/encoding/yaml.sh"
 source "${AWQL_CONF_DIR}/completion.sh"
 
 # AWQL reports
-declare -- AWQL_VIEWS AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS AWQL_KEYS AWQL_TABLES AWQL_TABLES_TYPE
+declare -- AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS AWQL_KEYS AWQL_TABLES AWQL_TABLES_TYPE
 
 ##
 # Get all fields names with for each, the type of data
@@ -316,25 +317,89 @@ function awqlTablesType ()
 }
 
 ##
+# Remove user file dedicated to cache list of views
+# @return void
+function awqlClearCacheViews ()
+{
+    if [[ -f "${AWQL_USER_CACHE_VIEWS_FILE}" ]]; then
+        rm -f "${AWQL_USER_CACHE_VIEWS_FILE}"
+    fi
+}
+
+##
 # Get all view names with for each, the list of their properties
 # @example ([CAMPAIGN_REPORT]="([origin]=\"SELECT AdGroupId...)
 # @return string
-# @returnStatus 1 If view yaml file does not exit
+# @returnStatus 2 If view yaml file is invalid
+# @returnStatus 1 If cache file for view can not be built
 function awqlViews ()
 {
-    if [[ -z "${AWQL_VIEWS}" ]]; then
+    if [[ ! -f "${AWQL_USER_CACHE_VIEWS_FILE}" ]]; then
+        # Awql views
         declare -A views
-
         local viewFile
-        for viewFile in $(scanDirectory "${AWQL_ADWORDS_DIR}/${AWQL_VIEWS_DIR_NAME}" 1); do
-            views[${viewFile/.yaml/}]=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${AWQL_VIEWS_DIR_NAME}/${viewFile}")
+        for viewFile in $(scanDirectory "${AWQL_VIEWS_DIR}" 1); do
+            views["${viewFile/.yaml/}"]="$(yamlFileDecode "${AWQL_VIEWS_DIR}/${viewFile}")"
             if [[ $? -ne 0 ]]; then
-                return 1
+                return 2
             fi
         done
-
-        AWQL_VIEWS="$(arrayToString "$(declare -p views)")"
+        # Local views
+        for viewFile in $(scanDirectory "${AWQL_USER_VIEWS_DIR}" 1); do
+            views["${viewFile/.yaml/}"]="$(yamlFileDecode "${AWQL_USER_VIEWS_DIR}/${viewFile}")"
+            if [[ $? -ne 0 ]]; then
+                return 2
+            fi
+        done
+        # Build cache file
+        arrayToString "$(declare -p views)" > "${AWQL_USER_CACHE_VIEWS_FILE}"
+        if [[ $? -ne 0 ]]; then
+            return 1
+        fi
     fi
 
-    echo -n "${AWQL_VIEWS}"
+    cat "${AWQL_USER_CACHE_VIEWS_FILE}"
+}
+
+##
+# Check if work is a awql or reserved word
+# @param string $1 Str
+# @returnStatus 0 In case of match
+# @returnStatus 1 If word is not an AWQL reserved word
+function awqlReservedWord ()
+{
+    local str="$1"
+    if [[ -z "$str" ]]; then
+        return 1
+    fi
+
+    case "$str" in
+        ${AWQL_QUERY_DESC}|${AWQL_QUERY_FULL})
+            # Desc
+            return 0
+            ;;
+        ${AWQL_QUERY_SHOW}|${AWQL_QUERY_TABLES}|${AWQL_QUERY_LIKE}|${AWQL_QUERY_WITH})
+            # Show
+            return 0
+            ;;
+        ${AWQL_QUERY_SELECT}|${AWQL_QUERY_FROM}|${AWQL_QUERY_WHERE}|${AWQL_QUERY_DURING}|${AWQL_QUERY_ORDER}|${AWQL_QUERY_BY}|${AWQL_QUERY_LIMIT})
+            # Select
+            return 0
+            ;;
+        ${AWQL_QUERY_CREATE}|${AWQL_QUERY_REPLACE}|${AWQL_QUERY_VIEW}|${AWQL_QUERY_AS})
+            # Views
+            return 0
+            ;;
+        ${AWQL_QUERY_AND}|${AWQL_QUERY_OR})
+            # Condition
+            return 0
+            ;;
+        ${AWQL_QUERY_CLEAR}|${AWQL_QUERY_EXIT}|${AWQL_QUERY_QUIT}|${AWQL_QUERY_HELP})
+            # Internal
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
