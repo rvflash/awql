@@ -51,9 +51,8 @@ function awqlCreate ()
         echo "${AWQL_INTERNAL_ERROR_CONFIG}"
         return 1
     fi
-
     local file="${AWQL_USER_VIEWS_DIR}/${request["${AWQL_REQUEST_VIEW}"]}.yaml"
-    if [[ -f "$file" && "${request["${AWQL_REQUEST_REPLACE}"]}" -eq 0 ]]; then
+    if [[ "${request["${AWQL_REQUEST_REPLACE}"]}" -eq 0 && -f "$file" ]]; then
         echo "${AWQL_QUERY_ERROR_VIEW_ALREADY_EXISTS}"
         return 2
     fi
@@ -72,17 +71,28 @@ function awqlCreate ()
     printRightPadding "${AWQL_VIEW_TABLE}" $((${pad}-${#AWQL_VIEW_TABLE})) >> "$file"
     echo -ne ": ${table["${AWQL_REQUEST_TABLE}"]}\n" >> "$file"
     # Where
-    printRightPadding "${AWQL_VIEW_WHERE}" $((${pad}-${#AWQL_VIEW_WHERE})) >> "$file"
-    echo -ne ": ${table["${AWQL_REQUEST_WHERE}"]}\n" >> "$file"
+    if [[ -n "${table["${AWQL_REQUEST_WHERE}"]}" ]]; then
+        printRightPadding "${AWQL_VIEW_WHERE}" $((${pad}-${#AWQL_VIEW_WHERE})) >> "$file"
+        echo -ne ": ${table["${AWQL_REQUEST_WHERE}"]}\n" >> "$file"
+    fi
     # During
-    printRightPadding "${AWQL_VIEW_DURING}" $((${pad}-${#AWQL_VIEW_DURING})) >> "$file"
-    echo -ne ": ${table["${AWQL_REQUEST_DURING}"]}\n" >> "$file"
+    if [[ -n "${table["${AWQL_REQUEST_DURING}"]}" ]]; then
+        printRightPadding "${AWQL_VIEW_DURING}" $((${pad}-${#AWQL_VIEW_DURING})) >> "$file"
+        echo -ne ": ${table["${AWQL_REQUEST_DURING}"]}\n" >> "$file"
+    fi
     # Order
-    printRightPadding "${AWQL_VIEW_ORDER}" $((${pad}-${#AWQL_VIEW_ORDER})) >> "$file"
-    echo -ne ": ${table["${AWQL_REQUEST_ORDER}"]}\n" >> "$file"
+    if [[ -n "${table["${AWQL_REQUEST_ORDER}"]}" ]]; then
+        printRightPadding "${AWQL_VIEW_ORDER}" $((${pad}-${#AWQL_VIEW_ORDER})) >> "$file"
+        echo -ne ": ${table["${AWQL_REQUEST_ORDER}"]}\n" >> "$file"
+    fi
     # Limit
-    printRightPadding "${AWQL_VIEW_LIMIT}" $((${pad}-${#AWQL_VIEW_LIMIT})) >> "$file"
-    echo -ne ": ${table["${AWQL_REQUEST_LIMIT}"]}\n" >> "$file"
+    if [[ -n "${table["${AWQL_REQUEST_LIMIT}"]}" ]]; then
+        printRightPadding "${AWQL_VIEW_LIMIT}" $((${pad}-${#AWQL_VIEW_LIMIT})) >> "$file"
+        echo -ne ": ${table["${AWQL_REQUEST_LIMIT}"]}\n" >> "$file"
+    fi
+
+    # Need to clear cache views to force reload
+    awqlClearCacheViews
 
     echo "()"
 }
