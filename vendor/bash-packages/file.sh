@@ -213,9 +213,9 @@ function scanDirectory ()
 
     local scanDir
     if [[ ${withFile} -eq 0 ]]; then
-        scanDir=$(ls -d "$srcDir"/*/)
+        scanDir=$(ls -d "$srcDir"/*/ 2>>/dev/null)
     else
-        scanDir=$(ls -d "$srcDir"/*)
+        scanDir=$(ls -d "$srcDir"/* 2>>/dev/null)
     fi
 
     if [[ ${completePath} -eq 0 ]]; then
