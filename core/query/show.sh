@@ -19,6 +19,7 @@ fi
 # > WITH            :
 # > VERTICAL_MODE   : 1
 # > QUERY           : SHOW TABLES LIKE "CAMPAIGN_%"
+# > API_VERSION     : v201601
 #
 # @param string $1 Query
 # @return arrayToString Query component
@@ -31,6 +32,11 @@ function awqlShowQuery ()
     local queryStr="$(trim "$1")"
     if [[ -z "$queryStr" ]]; then
         echo "${AWQL_INTERNAL_ERROR_QUERY}"
+        return 1
+    fi
+    local apiVersion="$2"
+    if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "${AWQL_INTERNAL_ERROR_API_VERSION}"
         return 1
     fi
 
@@ -129,6 +135,7 @@ function awqlShowQuery ()
 
     components["${AWQL_REQUEST_QUERY_SOURCE}"]="$queryStr"
     components["${AWQL_REQUEST_FULL}"]=${fullQuery}
+    components["${AWQL_REQUEST_VERSION}"]="$apiVersion"
     components["${AWQL_REQUEST_TYPE}"]="show"
 
     arrayToString "$(declare -p components)"

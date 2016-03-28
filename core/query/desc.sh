@@ -24,6 +24,7 @@ fi
 # > API_VERSION     : v201601
 #
 # @param string $1 Query
+# @param string $2 apiVersion
 # @return arrayToString Query component
 # @returnStatus 1 If query is malformed
 # @returnStatus 1 If api version is invalid

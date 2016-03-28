@@ -123,7 +123,7 @@ function awqlDesc ()
         fi
         echo "$body" >> "$file"
         if [[ $? -ne 0 ]]; then
-            echo "InternalError.WRITE_FILE_PERMISSION"
+            echo "${AWQL_INTERNAL_ERROR_WRITE_FILE}"
             return 1
         fi
     done

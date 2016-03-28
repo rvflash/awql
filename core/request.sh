@@ -81,7 +81,7 @@ function __queryToRequest ()
             awqlSelectQuery "$queryStr" "$apiVersion"
             ;;
         ${AWQL_QUERY_SHOW})
-            awqlShowQuery "$queryStr"
+            awqlShowQuery "$queryStr" "$apiVersion"
             ;;
         *)
             echo "${AWQL_QUERY_ERROR_METHOD}"
