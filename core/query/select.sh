@@ -49,8 +49,9 @@ function __queryOrderType ()
 # > DURING          :
 # > ORDER           : Clicks DESC
 # > LIMIT           : 5
-# > QUERY           : SELECT Id, Name, Status, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O ORDER BY Clicks DESC;
-# > AWQL_QUERY      : SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O;
+# > VIEW            : 0
+# > QUERY           : SELECT Id, Name, Status, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O ORDER BY Clicks DESC
+# > AWQL_QUERY      : SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O
 #
 # @param string $1 Query
 # @param string $2 Api version
@@ -273,7 +274,7 @@ function awqlSelectQuery ()
         fields+=("$field")
     done
     components["${AWQL_REQUEST_FIELDS}"]="${fields[@]}"
-    components["${AWQL_REQUEST_FIELD_NAME}"]="${fieldNames[@]}"
+    components["${AWQL_REQUEST_FIELD_NAMES}"]="${fieldNames[@]}"
 
     # During check
     local during="${components["${AWQL_REQUEST_DURING}"]}"
@@ -296,7 +297,7 @@ function awqlSelectQuery ()
             orderColumn+=-1
         else
             # Order by columnName
-            orderColumn=$(arraySearch "${order[0]}" "${components["${AWQL_REQUEST_FIELD_NAME}"]}")
+            orderColumn=$(arraySearch "${order[0]}" "${components["${AWQL_REQUEST_FIELD_NAMES}"]}")
             if [[ $? -ne 0 ]]; then
                 echo "${AWQL_QUERY_ERROR_ORDER}"
                 return 2
@@ -320,7 +321,7 @@ function awqlSelectQuery ()
     # SELECT...FROM...WHERE...DURING...
     declare -a awqlQuery
     awqlQuery+=("${components["${AWQL_REQUEST_STATEMENT}"]}")
-    awqlQuery+=("${components["${AWQL_REQUEST_FIELD_NAME}"]// /,}")
+    awqlQuery+=("${components["${AWQL_REQUEST_FIELD_NAMES}"]// /,}")
     awqlQuery+=("FROM ${components["${AWQL_REQUEST_TABLE}"]}")
     if [[ -n "${components["${AWQL_REQUEST_WHERE}"]}" ]]; then
         awqlQuery+=("${AWQL_REQUEST_WHERE} ${components["${AWQL_REQUEST_WHERE}"]}")
@@ -330,6 +331,7 @@ function awqlSelectQuery ()
     fi
     components["${AWQL_REQUEST_QUERY}"]="${awqlQuery[@]}"
     components["${AWQL_REQUEST_QUERY_SOURCE}"]="$queryStr"
+    components["${AWQL_REQUEST_VIEW}"]=${isView}
     components["${AWQL_REQUEST_TYPE}"]="select"
 
     arrayToString "$(declare -p components)"

@@ -19,6 +19,40 @@ declare -r TEST_ARRAY_MIXED_INDEX="([one]=\"1 one\" [two]=\"2 two\" [1]=\"1\")"
 declare -r TEST_ARRAY_MERGE_NUMERIC_INDEX="([0]=\"first\" [1]=\"second\" [2]=\"third\" [3]=\"fourth\" [4]=\"first\" [5]=\"second\" [6]=\"third\" [7]=\"fourth\")"
 declare -r TEST_ARRAY_MERGE_ASSOC_INDEX_WITH_MINUS="([four]=\"fourth\" [one]=\"first\" [two]=\"second\" [0]=\"first\" [1]=\"second\" [three]=\"third\" )"
 declare -r TEST_ARRAY_MERGE_ASSOCIATIVE_INDEX="([four]=\"fifth\" [three]=\"third\" )"
+declare -r TEST_ARRAY_COMBINE="([fourth]=\"fourth\" [third]=\"third\" [second]=\"second\" [first]=\"first\" )"
+
+
+readonly TEST_ARRAY_ARRAY_COMBINE="-01-11-01-11-01"
+
+function test_arrayCombine ()
+{
+    local test
+
+    # Check nothing
+    test=$(arrayCombine)
+    echo -n "-$?"
+    [[ "$test" == "()" ]] && echo -n 1
+
+    # Check with only first parameter
+    test=$(arrayCombine "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Check with arrays with same values
+    test=$(arrayCombine "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_SURROUND}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_COMBINE}" ]] && echo -n 1
+
+    # Check with associative array with number of elements for each array isn't equal
+    test=$(arrayCombine "${TEST_ARRAY_ASSOCIATIVE_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Check with indexed array for keys and associative array for values. Bug: the order is not respected
+    test=$(arrayCombine "${TEST_ARRAY_FROM_STRING_SURROUND}" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
+    echo -n "-$?"
+    [[ -n "$test" && "$test" != "()" && "$test" != "${TEST_ARRAY_COMBINE}" ]] && echo -n 1
+}
 
 
 readonly TEST_ARRAY_ARRAY_DIFF="-01-01-01-01-01"
@@ -268,6 +302,7 @@ function test_inArray ()
 
 
 # Launch all functional tests
+bashUnit "arrayCombine" "${TEST_ARRAY_ARRAY_COMBINE}" "$(test_arrayCombine)"
 bashUnit "arrayDiff" "${TEST_ARRAY_ARRAY_DIFF}" "$(test_arrayDiff)"
 bashUnit "arrayKeyExists" "${TEST_ARRAY_KEY_EXISTS}" "$(test_arrayKeyExists)"
 bashUnit "arrayMerge" "${TEST_ARRAY_ARRAY_MERGE}" "$(test_arrayMerge)"

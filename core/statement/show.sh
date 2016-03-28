@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
 # @includeBy /inc/awql.sh
+# Load configuration file if is not already loaded
+if [[ -z "${AWQL_ROOT_DIR}" ]]; then
+    declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "${AWQL_CUR_DIR}/../../conf/awql.sh"
+fi
+
 
 ##
 # Allow access to table listing and information

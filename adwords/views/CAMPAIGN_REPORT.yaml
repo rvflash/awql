@@ -1,5 +1,5 @@
 ORIGIN    : SELECT CampaignId,CampaignName,CampaignStatus,Impressions,Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O
-NAMES     : CampaignId CampaignName CampaignStatus Impressions Clicks
+NAMES     : Id Name Status Impressions Clicks
 FIELDS    : CampaignId CampaignName CampaignStatus Impressions Clicks
 TABLE     : CAMPAIGN_PERFORMANCE_REPORT
 WHERE     : Impressions > O

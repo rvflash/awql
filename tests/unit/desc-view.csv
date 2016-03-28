@@ -1,0 +1,6 @@
+Field,Type,Key
+Impressions,Long,
+Id,Long,
+Clicks,Long,
+Name,String,
+Status,CampaignStatus (UNKNOWN ENABLED PAUSED REMOVED),

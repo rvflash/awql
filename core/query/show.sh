@@ -18,7 +18,7 @@ fi
 # > LIKE            : CAMPAIGN_%
 # > WITH            :
 # > VERTICAL_MODE   : 1
-# > QUERY           : SHOW TABLES LIKE "CAMPAIGN_%"\g;
+# > QUERY           : SHOW TABLES LIKE "CAMPAIGN_%"
 #
 # @param string $1 Query
 # @return arrayToString Query component

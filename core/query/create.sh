@@ -172,10 +172,7 @@ function awqlCreateQuery ()
     # Already a AWQL view ?
     if [[ ${replace} -eq 0 ]]; then
         declare -A -r views="$(awqlViews)"
-        if [[ "${#views[@]}" -eq 0 ]]; then
-            echo "${AWQL_INTERNAL_ERROR_INVALID_TABLES}"
-            return 1
-        elif [[ ${views["${components["${AWQL_REQUEST_VIEW}"]}"]+rv} ]]; then
+        if [[ ${views["${components["${AWQL_REQUEST_VIEW}"]}"]+rv} ]]; then
             echo "${AWQL_QUERY_ERROR_VIEW_ALREADY_EXISTS}"
             return 2
         fi

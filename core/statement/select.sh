@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
 # @includeBy /inc/awql.sh
+# Load configuration file if is not already loaded
+if [[ -z "${AWQL_ROOT_DIR}" ]]; then
+    declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "${AWQL_CUR_DIR}/../../conf/awql.sh"
+fi
+
+source "${AWQL_AUTH_DIR}/auth.sh"
+
 
 ##
 # Send a curl request to Adwords API to get response for AWQL query
@@ -15,6 +23,17 @@
 # @returnStatus 1 If response is on error
 function awqlSelect ()
 {
+
+auth=$(auth "$accessToken" "$developerToken")
+        if [[ $? -gt 0 ]]; then
+            echo "$auth"
+            if [[ $? -eq 1 ]]; then
+                exit 1
+            elif [[ $? -gt 1 ]]; then
+                return 1
+            fi
+        fi
+
     local query="$1"
     local file="$2"
     local apiVersion="$3"

@@ -20,7 +20,8 @@ fi
 # > FIELD           : CampaignId
 # > VIEW            : 0
 # > VERTICAL_MODE   : 1
-# > QUERY           : DESC FULL CAMPAIGN_PERFORMANCE_REPORT CampaignId\g;
+# > QUERY           : DESC FULL CAMPAIGN_PERFORMANCE_REPORT CampaignId
+# > API_VERSION     : v201601
 #
 # @param string $1 Query
 # @return arrayToString Query component
@@ -85,7 +86,7 @@ function awqlDescQuery ()
         return 2
     fi
 
-    # Check if it is a valid report table or view
+    # Check if it is a valid report table or view name
     declare -i isView=0
     declare -A -r tables="$(awqlTables "$apiVersion")"
     if [[ "${#tables[@]}" -eq 0 ]]; then
@@ -94,14 +95,24 @@ function awqlDescQuery ()
     fi
     local tableNames="${!tables[@]}"
     if ! inArray "${components["${AWQL_REQUEST_TABLE}"]}" "$tableNames"; then
-        # Here also check for view
-        echo "${AWQL_QUERY_ERROR_UNKNOWN_TABLE}"
-        return 2
+        declare -A -r views="$(awqlViews)"
+        if [[ -z "${views["${components["${AWQL_REQUEST_TABLE}"]}"]}" ]]; then
+            echo "${AWQL_QUERY_ERROR_UNKNOWN_TABLE}"
+            return 2
+        else
+            isView=1
+        fi
     fi
 
-    # Table field
+    # Check if it is a valid report table or view field name
     if [[ -n "${components["${AWQL_REQUEST_FIELD}"]}" ]]; then
-        if ! inArray "${components["${AWQL_REQUEST_FIELD}"]}" "${tables["${components["${AWQL_REQUEST_TABLE}"]}"]}"; then
+        if [[ ${isView} -eq 1 ]]; then
+            declare -A -r view="${views["${components["${AWQL_REQUEST_TABLE}"]}"]}"
+            if ! inArray "${components["${AWQL_REQUEST_FIELD}"]}" "${view["${AWQL_VIEW_NAMES}"]}"; then
+                echo "${AWQL_QUERY_ERROR_UNKNOWN_FIELD}"
+                return 2
+            fi
+        elif ! inArray "${components["${AWQL_REQUEST_FIELD}"]}" "${tables["${components["${AWQL_REQUEST_TABLE}"]}"]}"; then
             echo "${AWQL_QUERY_ERROR_UNKNOWN_FIELD}"
             return 2
         fi
@@ -109,6 +120,8 @@ function awqlDescQuery ()
 
     components["${AWQL_REQUEST_QUERY_SOURCE}"]="$queryStr"
     components["${AWQL_REQUEST_FULL}"]=${fullQuery}
+    components["${AWQL_REQUEST_VIEW}"]=${isView}
+    components["${AWQL_REQUEST_VERSION}"]="$apiVersion"
     components["${AWQL_REQUEST_TYPE}"]="desc"
 
     arrayToString "$(declare -p components)"

@@ -38,7 +38,7 @@ elif [[ -z "$(grep "alias awql" ${bashFile})" ]]; then
 
     echo "# Added by AWQL makefile" >> "$bashFile"
     if isUserTimeTodoExceeded "${AWQL_AUTH_DIR}/custom/auth.sh" "0.100"; then
-        # Slow machine, do not load current environment on loading
+        # Slow machine, do not load current environment
         echo "alias awql='env -i bash ${rootDir}/awql.sh'" >> "$bashFile"
     else
         echo "alias awql='${rootDir}/awql.sh'" >> "$bashFile"

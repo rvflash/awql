@@ -15,7 +15,7 @@ source "${AWQL_QUERY_DIR}/show.sh"
 
 ##
 # Help
-function queryHelp ()
+function awqlHelpQuery ()
 {
     echo "The AWQL command line tool is developed by Hervé GOUCHET."
     echo "For developer information, visit:"
@@ -65,23 +65,23 @@ function __queryToRequest ()
             return 2
             ;;
         ${AWQL_QUERY_CREATE})
-            queryCreateComponents "$queryStr" "$apiVersion"
+            awqlCreateQuery "$queryStr" "$apiVersion"
             ;;
         ${AWQL_QUERY_DESC})
-            queryDescComponents "$queryStr" "$apiVersion"
+            awqlDescQuery "$queryStr" "$apiVersion"
             ;;
         ${AWQL_QUERY_EXIT}|${AWQL_QUERY_QUIT})
             echo "${AWQL_PROMPT_EXIT}"
             return 1
             ;;
         ${AWQL_QUERY_HELP})
-            queryHelp
+            awqlHelpQuery
             ;;
         ${AWQL_QUERY_SELECT})
-            querySelectComponents "$queryStr" "$apiVersion"
+            awqlSelectQuery "$queryStr" "$apiVersion"
             ;;
         ${AWQL_QUERY_SHOW})
-            queryShowComponents "$queryStr"
+            awqlShowQuery "$queryStr"
             ;;
         *)
             echo "${AWQL_QUERY_ERROR_METHOD}"
@@ -157,7 +157,7 @@ function __queryWithoutDisplayMode ()
 # @returnStatus 2 If query is not a valid AWQL method
 # @returnStatus 2 If query is not a report table
 # @returnStatus 1 If AdwordsId or apiVersion are invalids
-function query ()
+function awqlRequest ()
 {
     local adwordsId="$1"
     if [[ ! "$adwordsId" =~ ${AWQL_API_ID_REGEX} ]]; then

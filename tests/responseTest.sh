@@ -29,7 +29,7 @@ declare -r TEST_PRINT_ALL_LINE_CACHED_FILE="$(echo -e "$((${TEST_PRINT_FILE_SIZE
 declare -r TEST_PRINT_ALL_LINE_FILE="$(echo -e "$((${TEST_PRINT_FILE_SIZE}-1)) rows in set (${TEST_PRINT_DURATION} sec) @source ${TEST_PRINT_CSV_FILE}\n")"
 
 
-readonly TEST_PRINT_BUILD_DATA_FILE="-11-11-11-21-01-01-01-01-01-01"
+readonly TEST_PRINT_BUILD_DATA_FILE="-00-11-11-11-21-01-01-01-01-01-01"
 
 function test_buildDataFile ()
 {
@@ -38,7 +38,9 @@ function test_buildDataFile ()
     # Prepare workspace
     if [[ -n "${TEST_PRINT_TEST_DIR}" && -d "${TEST_PRINT_TEST_DIR}" ]]; then
         cp "${TEST_PRINT_HEADER_FILE}" "${TEST_PRINT_HEADER_AWQL_FILE}"
+        echo -n "-$?"
         cp "${TEST_PRINT_CSV_FILE}" "${TEST_PRINT_AWQL_FILE}"
+        echo -n "$?"
     fi
 
     #1 Check nothing

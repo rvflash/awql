@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit -o pipefail -o errtrace
 source ../vendor/bash-packages/testing.sh
-source ../core/query.sh
+source ../core/request.sh
 
 # Default entries
 declare -r TEST_QUERY_API_ID="123-456-7890"
@@ -70,87 +70,49 @@ declare -r TEST_QUERY_INCOMPLETE_DESC="DESC;"
 declare -r TEST_QUERY_STUPID_DESC="desc CAMPAIGN_PERFORMANCE_REPORT CampaignId CampaignName\\g"
 
 
-readonly TEST_QUERY_ORDER="-01-01-01-01-01-01"
+readonly TEST_QUERY_TO_REQUEST="-01-01-01-01-01-01-01-01"
 
-function test_queryOrder ()
+function test_queryToRequest ()
 {
     local test
 
     # Check nothing
-    test=$(__queryOrder)
-    echo -n "-$?"
-    [[ "$test" -eq 0 ]] && echo -n 1
-
-    # Check with ASC
-    test=$(__queryOrder "ASC")
-    echo -n "-$?"
-    [[ "$test" -eq 0 ]] && echo -n 1
-
-    # Check with asc
-    test=$(__queryOrder "asc")
-    echo -n "-$?"
-    [[ "$test" -eq 0 ]] && echo -n 1
-
-    # Check with anything
-    test=$(__queryOrder "rv")
-    echo -n "-$?"
-    [[ "$test" -eq 0 ]] && echo -n 1
-
-    # Check with DESC
-    test=$(__queryOrder "DESC")
-    echo -n "-$?"
-    [[ "$test" -eq 1 ]] && echo -n 1
-
-    # Check with desc
-    test=$(__queryOrder "desc")
-    echo -n "-$?"
-    [[ "$test" -eq 1 ]] && echo -n 1
-}
-
-
-readonly TEST_QUERY_ORDER_TYPE="-01-01-01-01-01-01-01-01"
-
-function test_queryOrderType ()
-{
-    local test
-
-    # Check nothing
-    test=$(__queryOrderType)
+    test=$(__queryToRequest)
     echo -n "-$?"
     [[ "$test" == "d" ]] && echo -n 1
 
     # Check with string
-    test=$(__queryOrderType "string")
+    test=$(__queryToRequest "string")
     echo -n "-$?"
     [[ "$test" == "d" ]] && echo -n 1
 
     # Check with Double
-    test=$(__queryOrderType "Double")
+    test=$(__queryToRequest "Double")
     echo -n "-$?"
     [[ "$test" == "n" ]] && echo -n 1
 
     # Check with Long
-    test=$(__queryOrderType "Long")
+    test=$(__queryToRequest "Long")
     echo -n "-$?"
     [[ "$test" == "n" ]] && echo -n 1
 
     # Check with Money
-    test=$(__queryOrderType "Money")
+    test=$(__queryToRequest "Money")
     echo -n "-$?"
     [[ "$test" == "n" ]] && echo -n 1
 
     # Check with Integer
-    test=$(__queryOrderType "Integer")
+    test=$(__queryToRequest "Integer")
     echo -n "-$?"
     [[ "$test" == "n" ]] && echo -n 1
 
     # Check with Byte
-    test=$(__queryOrderType "Byte")
+    test=$(__queryToRequest "Byte")
     echo -n "-$?"
     [[ "$test" == "n" ]] && echo -n 1
 
     # Check with int
-    test=$(__queryOrderType "int")
+    test=$(__queryToRequest "int")
     echo -n "-$?"
     [[ "$test" == "n" ]] && echo -n 1
 
@@ -189,248 +151,47 @@ function test_queryWithoutDisplayMode ()
 }
 
 
-readonly TEST_QUERY_DESC_COMPONENTS="-11-11-11-01-21-21-21-21-21-01-01-01-21"
+readonly TEST_HELP_QUERY="-01-01-01-01-01-01"
 
-function test_queryDescComponents ()
+function test_awqlHelpQuery ()
 {
     local test
 
-    #1 Check nothing
-    test=$(queryDescComponents)
+    # Check nothing
+    test=$(awqlHelpQuery)
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_QUERY}" ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
-    #2 Check with valid query but without api version
-    test=$(queryDescComponents "${TEST_QUERY_BASIC_DESC}")
+    # Check with ASC
+    test=$(awqlHelpQuery "ASC")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
-    #3 Check with valid query and invalid api version
-    test=$(queryDescComponents "${TEST_QUERY_BASIC_DESC}" "${TEST_QUERY_BAD_API_VERSION}")
+    # Check with asc
+    test=$(awqlHelpQuery "asc")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
-    #4 Check with valid query and api version
-    test=$(queryDescComponents "${TEST_QUERY_BASIC_DESC}" "${TEST_QUERY_API_VERSION}")
+    # Check with anything
+    test=$(awqlHelpQuery "rv")
     echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_BASIC_DESC_REQUEST}" ]] && echo -n 1
+    [[ "$test" -eq 0 ]] && echo -n 1
 
-    #5 Check with update query
-    test=$(queryDescComponents "${TEST_QUERY_INVALID_METHOD}" "${TEST_QUERY_API_VERSION}")
+    # Check with DESC
+    test=$(awqlHelpQuery "DESC")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_METHOD}" ]] && echo -n 1
+    [[ "$test" -eq 1 ]] && echo -n 1
 
-    #6 Check with incomplete query (without table name)
-    test=$(queryDescComponents "${TEST_QUERY_INCOMPLETE_DESC}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?$test"
-    [[ "$test" == "${AWQL_QUERY_ERROR_MISSING_TABLE}" ]] && echo -n 1
-
-    #7 Check with empty desc
-    test=$(queryDescComponents "${TEST_QUERY_EMPTY_DESC}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?$test"
-    [[ "$test" == "${AWQL_QUERY_ERROR_MISSING_TABLE}" ]] && echo -n 1
-
-    #8 Check with unknown table in select query
-    test=$(queryDescComponents "${TEST_QUERY_UNKNOWN_TABLE_DESC}" "${TEST_QUERY_API_VERSION}")
+    # Check with desc
+    test=$(awqlHelpQuery "desc")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_UNKNOWN_TABLE}" ]] && echo -n 1
-
-    #9 Check with known table but unknown field
-    test=$(queryDescComponents "${TEST_QUERY_UNKNOWN_FIELD_DESC}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_UNKNOWN_FIELD}" ]] && echo -n 1
-
-    #10 Check with full query on known table
-    test=$(queryDescComponents "${TEST_QUERY_FULL_DESC}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_FULL_DESC_REQUEST}" ]] && echo -n 1
-
-    #11 Check with full query on known table's field
-    test=$(queryDescComponents "${TEST_QUERY_FULL_DESC_COLUMN}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_FULL_DESC_COLUMN_REQUEST}" ]] && echo -n 1
-
-    #12 Check with query on known table's field with vertical mode
-    test=$(queryDescComponents "${TEST_QUERY_DESC_COLUMN}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_DESC_COLUMN_REQUEST}" ]] && echo -n 1
-
-    #13 Check with query on known table's field with vertical mode
-    test=$(queryDescComponents "${TEST_QUERY_STUPID_DESC}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_METHOD}" ]] && echo -n 1
+    [[ "$test" -eq 1 ]] && echo -n 1
 }
 
 
-readonly TEST_QUERY_SELECT_COMPONENTS="-11-11-11-01-21-21-21-21-01-01-01-01-01-01-01-21"
+readonly TEST_AWQL_REQUEST="-11-11-21-11-11-01-01-01-21-21-21-11-11-21-01"
 
-function test_querySelectComponents ()
-{
-    local test
-
-    #1 Check nothing
-    test=$(querySelectComponents)
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_QUERY}" ]] && echo -n 1
-
-    #2 Check with valid query but without api version
-    test=$(querySelectComponents "${TEST_QUERY_BASIC_SELECT}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
-
-    #3 Check with valid query and invalid api version
-    test=$(querySelectComponents "${TEST_QUERY_BASIC_SELECT}" "${TEST_QUERY_BAD_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
-
-    #4 Check with valid query and api version
-    test=$(querySelectComponents "${TEST_QUERY_BASIC_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_BASIC_REQUEST}" ]] && echo -n 1
-
-    #5 Check with update query
-    test=$(querySelectComponents "${TEST_QUERY_INVALID_METHOD}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_METHOD}" ]] && echo -n 1
-
-    #6 Check with incomplete select query
-    test=$(querySelectComponents "${TEST_QUERY_INCOMPLETE_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_SYNTAX}" ]] && echo -n 1
-
-    #7 Check with no table in select query
-    test=$(querySelectComponents "${TEST_QUERY_NO_TABLE_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_SYNTAX}" ]] && echo -n 1
-
-    #8 Check with unknown table in select query
-    test=$(querySelectComponents "${TEST_QUERY_UNKNOWN_TABLE_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_TABLE}" ]] && echo -n 1
-
-    #9 Check with with valid vertical query with flag in lower case
-    test=$(querySelectComponents "${TEST_QUERY_VERTICAL_LOWER_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_VERTICAL_REQUEST}" ]] && echo -n 1
-
-    #10 Check with with valid vertical query with flag in upper case
-    test=$(querySelectComponents "${TEST_QUERY_VERTICAL_UPPER_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_VERTICAL_REQUEST}" ]] && echo -n 1
-
-    #11 Check with with valid query with where clause
-    test=$(querySelectComponents "${TEST_QUERY_WHERE_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_WHERE_REQUEST}" ]] && echo -n 1
-
-    #12 Check with with valid query with during clause using dates
-    test=$(querySelectComponents "${TEST_QUERY_DURING_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_DURING_REQUEST}" ]] && echo -n 1
-
-    #13 Check with with valid query with where clause
-    test=$(querySelectComponents "${TEST_QUERY_LITERAL_DURING_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_LITERAL_DURING_REQUEST}" ]] && echo -n 1
-
-    #14 Check with with valid query with where and order clauses
-    test=$(querySelectComponents "${TEST_QUERY_COMPLEX_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_COMPLEX_REQUEST}" ]] && echo -n 1
-
-    #15 Check with with valid query with where, order and limit clauses
-    test=$(querySelectComponents "${TEST_QUERY_COMPLETE_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_COMPLETE_REQUEST}" ]] && echo -n 1
-
-    #16 Check with with valid query but multiple orders. Not supported yet
-    test=$(querySelectComponents "${TEST_QUERY_ORDERS_SELECT}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_MULTIPLE_ORDER}" ]] && echo -n 1
-}
-
-
-readonly TEST_QUERY_SHOW_COMPONENTS="-11-01-21-21-01-01-01-21-01-01-01-01-21-21"
-
-function test_queryShowComponents ()
-{
-    local test
-
-    #1 Check nothing
-    test=$(queryShowComponents)
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_QUERY}" ]] && echo -n 1
-
-    #2 Check with valid query
-    test=$(queryShowComponents "${TEST_QUERY_BASIC_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_BASIC_SHOW_REQUEST}" ]] && echo -n 1
-
-    #3 Check with update query
-    test=$(queryShowComponents "${TEST_QUERY_INVALID_METHOD}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_METHOD}" ]] && echo -n 1
-
-    #4 Check with incomplete show query
-    test=$(queryShowComponents "${TEST_QUERY_INCOMPLETE_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_SYNTAX}" ]] && echo -n 1
-
-    #5 Check with full query in lowercase
-    test=$(queryShowComponents "${TEST_QUERY_FULL_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_FULL_SHOW_REQUEST}" ]] && echo -n 1
-
-    #6 Check with full query like in uppercase
-    test=$(queryShowComponents "${TEST_QUERY_FULL_LIKE_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_FULL_LIKE_SHOW_REQUEST}" ]] && echo -n 1
-
-    #7 Check with query like in lowercase
-    test=$(queryShowComponents "${TEST_QUERY_LIKE_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_LIKE_SHOW_REQUEST}" ]] && echo -n 1
-
-    #8 Check with incomplete query like
-    test=$(queryShowComponents "${TEST_QUERY_INCOMPLETE_LIKE_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_SYNTAX}" ]] && echo -n 1
-
-    #9 Check with empty query like
-    test=$(queryShowComponents "${TEST_QUERY_EMPTY_LIKE_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_EMPTY_LIKE_SHOW_REQUEST}" ]] && echo -n 1
-
-    #10 Check with full query with and use upper or lower case
-    test=$(queryShowComponents "${TEST_QUERY_FULL_WITH_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_FULL_WITH_SHOW_REQUEST}" ]] && echo -n 1
-
-    #11 Check with query with in vertical display
-    test=$(queryShowComponents "${TEST_QUERY_WITH_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_WITH_SHOW_REQUEST}" ]] && echo -n 1
-
-    #12 Check with empty query with
-    test=$(queryShowComponents "${TEST_QUERY_EMPTY_WITH_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${TEST_QUERY_EMPTY_WITH_SHOW_REQUEST}" ]] && echo -n 1
-
-    #13 Check with incomplete query with
-    test=$(queryShowComponents "${TEST_QUERY_INCOMPLETE_WITH_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_SYNTAX}" ]] && echo -n 1
-
-    #14 Check with incomplete query with
-    test=$(queryShowComponents "${TEST_QUERY_STUPID_SHOW}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_SYNTAX}" ]] && echo -n 1
-}
-
-
-readonly TEST_QUERY="-11-11-21-11-11-01-01-01-21-21-21-11-11-21-01"
-
-function test_query ()
+function test_awqlRequest ()
 {
     local test
 
@@ -513,10 +274,7 @@ function test_query ()
 
 
 # Launch all functional tests
-bashUnit "__queryOrder" "${TEST_QUERY_ORDER}" "$(test_queryOrder)"
-bashUnit "__queryOrderType" "${TEST_QUERY_ORDER_TYPE}" "$(test_queryOrderType)"
+bashUnit "__queryToRequest" "${TEST_QUERY_TO_REQUEST}" "$(test_queryToRequest)"
 bashUnit "__queryWithoutDisplayMode" "${TEST_QUERY_WITHOUT_DISPLAY_MODE}" "$(test_queryWithoutDisplayMode)"
-bashUnit "queryDescComponents" "${TEST_QUERY_DESC_COMPONENTS}" "$(test_queryDescComponents)"
-bashUnit "querySelectComponents" "${TEST_QUERY_SELECT_COMPONENTS}" "$(test_querySelectComponents)"
-bashUnit "queryShowComponents" "${TEST_QUERY_SHOW_COMPONENTS}" "$(test_queryShowComponents)"
-bashUnit "query" "${TEST_QUERY}" "$(test_query)"
+bashUnit "awqlHelpQuery" "${TEST_HELP_QUERY}" "$(test_awqlHelpQuery)"
+bashUnit "awqlRequest" "${TEST_AWQL_REQUEST}" "$(test_awqlRequest)"

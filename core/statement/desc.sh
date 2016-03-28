@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
 # @includeBy /inc/awql.sh
+# Load configuration file if is not already loaded
+if [[ -z "${AWQL_ROOT_DIR}" ]]; then
+    declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "${AWQL_CUR_DIR}/../../conf/awql.sh"
+fi
+
 
 ##
 # Allow access to table structure
-# @param string $1 Awql query
+# @param string $1 Request
 # @param string $2 Output filepath
-# @param string $3 Api version
 # @return arrayToString Response
 # @returnStatus 2 If query uses a un-existing table
 # @returnStatus 2 If query is empty
@@ -15,96 +20,113 @@
 # @returnStatus 1 If response file does not exist
 function awqlDesc ()
 {
-    declare -i fullQuery=0
-    local queryStr="${1//\'/}"
-    if [[ "$queryStr" == ${AWQL_QUERY_DESC}[[:space:]]*${AWQL_QUERY_FULL}* ]]; then
-        fullQuery=1
-    fi
-    queryStr="$(echo "$queryStr" | sed -e "s/${AWQL_QUERY_DESC}[[:space:]]*${AWQL_QUERY_FULL}//g" -e "s/^${AWQL_QUERY_DESC}//g")"
-    local file="$2"
-    local apiVersion="$3"
-
-    declare -a query="($(trim "$queryStr"))"
-    local table="${query[0]}"
-    local column="${query[1]}"
-    if [[ -z "$query" ]]; then
-        echo "QueryError.EMPTY_QUERY"
-        return 2
-    elif [[ -z "$table" ]]; then
-        echo "QueryError.NO_TABLE"
-        return 2
-    elif [[ -z "$file" ]]; then
-        echo "InternalError.INVALID_RESPONSE_FILE_PATH"
+    if [[ -z "$1" || "$1" != "("*")" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
         return 1
-    elif [[ -z "$apiVersion" ]]; then
-        echo "QueryError.INVALID_API_VERSION"
+    fi
+    declare -A request="$1"
+    local file="$2"
+    if [[ -z "$file" || "$file" != *"${AWQL_FILE_EXT}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_DATA_FILE}"
         return 1
     fi
 
     # Load tables
-    declare -A -r awqlTables="$(awqlTables "$apiVersion")"
-    if [[ -z "$awqlTables" ]]; then
-        echo "InternalError.INVALID_AWQL_TABLES"
+    declare -A -r tables="$(awqlTables "${request["${AWQL_REQUEST_VERSION}"]}")"
+    if [[ "${#tables[@]}" -eq 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_INVALID_TABLES}"
         return 1
     fi
-    # Load table fields
-    local awqlTableFields="${awqlTables[$table]}"
-    if [[ -z "$awqlTableFields" ]]; then
-        echo "QueryError.UNKNOWN_TABLE"
-        return 2
+
+    # AWQL table or view
+    local table
+    if [[ "${request["${AWQL_REQUEST_VIEW}"]}" -eq 0 ]]; then
+        table="${request["${AWQL_REQUEST_TABLE}"]}"
+        declare -A -r tableFields="$(arrayCombine "${tables["$table"]}" "${tables["$table"]}")"
+        if [[ "${#tableFields[@]}" -eq 0 ]]; then
+            echo "${AWQL_QUERY_ERROR_UNKNOWN_TABLE}"
+            return 2
+        fi
+    else
+        declare -A -r views="$(awqlViews)"
+        if [[ "${#views[@]}" -eq 0 ]]; then
+            echo "${AWQL_INTERNAL_ERROR_INVALID_VIEWS}"
+            return 1
+        fi
+        declare -A -r view="${views["${request["${AWQL_REQUEST_TABLE}"]}"]}"
+        if [[ "${#view[@]}" -eq 0 ]]; then
+            echo "${AWQL_QUERY_ERROR_UNKNOWN_TABLE}"
+            return 2
+        fi
+        declare -A -r tableFields="$(arrayCombine "${view["${AWQL_VIEW_NAMES}"]}" "${view["${AWQL_VIEW_FIELDS}"]}")"
+        if [[ "${#tableFields[@]}" -eq 0 ]]; then
+            echo "${AWQL_INTERNAL_ERROR_INVALID_FIELDS}"
+            return 1
+        fi
+        table="${view["${AWQL_VIEW_TABLE}"]}"
     fi
-    # Load fields
-    declare -A awqlFields="$(awqlFields "$apiVersion")"
-    if [[ -z "$awqlFields" ]]; then
-        echo "InternalError.INVALID_AWQL_FIELDS"
+
+    # Load field properties
+    declare -A -r fields="$(awqlFields "${request["${AWQL_REQUEST_VERSION}"]}")"
+    if [[ "${#fields[@]}" -eq 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_INVALID_FIELDS}"
         return 1
     fi
     # Load key fields
-    declare -A awqlKeys="$(awqlKeys "$apiVersion")"
-    if [[ -z "$awqlKeys" ]]; then
-        echo "InternalError.INVALID_AWQL_KEYS"
+    declare -A -r keys="$(awqlKeys "${request["${AWQL_REQUEST_VERSION}"]}")"
+    if [[ "${#keys[@]}" -eq 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_INVALID_KEYS}"
         return 1
     fi
     # Load uncompatible fields
-    if [[ ${fullQuery} -eq 1 ]]; then
-        declare -A awqlUncompatibleFields="$(awqlUncompatibleFields "$table" "$apiVersion")"
-        if [[ -z "$awqlUncompatibleFields" ]]; then
-            echo "InternalError.INVALID_AWQL_UNCOMPATIBLE_FIELDS"
+    if [[ "${request["${AWQL_REQUEST_FULL}"]}" -eq 1 ]]; then
+        declare -A -r clash="$(awqlUncompatibleFields "$table" "${request["${AWQL_REQUEST_VERSION}"]}")"
+        if [[ "${#clash[@]}" -eq 0 ]]; then
+            echo "${AWQL_INTERNAL_ERROR_CLASH_FIELDS}"
             return 1
         fi
+    fi
+    # Columns to fetch
+    if [[ -z "${request["${AWQL_REQUEST_FIELD}"]}" ]]; then
+        declare -a -r columns="(${!tableFields[@]})"
+    else
+        declare -a -r columns="(${request["${AWQL_REQUEST_FIELD}"]})"
     fi
 
     # Header
     local header="${AWQL_TABLE_FIELD_NAME},${AWQL_TABLE_FIELD_TYPE},${AWQL_TABLE_FIELD_KEY}"
-    if [[ ${fullQuery} -eq 1 ]]; then
+    if [[ "${request["${AWQL_REQUEST_FULL}"]}" -eq 1 ]]; then
         header+=",${AWQL_TABLE_FIELD_UNCOMPATIBLES}"
     fi
     echo "$header" > "$file"
     if [[ $? -ne 0 ]]; then
-        echo "InternalError.WRITE_FILE_PERMISSION"
+        echo "${AWQL_INTERNAL_ERROR_WRITE_FILE}"
         return 1
     fi
 
-    # Give properties for each fields of this table
-    local body field fieldIsKey
-    for field in "${awqlTableFields[@]}"; do
-        if [[ -n "${awqlFields[$field]}" ]] && ([[ -z "$column" || "$column" == "$field" ]]); then
-            if inArray "$field" "${awqlKeys[$table]}"; then
-                fieldIsKey="${AWQL_FIELD_IS_KEY}"
-            else
-                fieldIsKey=""
-            fi
-            body="${field},${awqlFields[$field]},${fieldIsKey}"
-            if [[ ${fullQuery} -eq 1 ]]; then
-                body+=",${awqlUncompatibleFields[$field]}"
-            fi
-            echo "$body" >> "$file"
-            if [[ $? -ne 0 ]]; then
-                echo "InternalError.WRITE_FILE_PERMISSION"
-                return 1
-            fi
+    # Give properties for each columns
+    local body field awqlName fieldIsKey
+    for field in "${columns[@]}"; do
+        awqlName="${tableFields["$field"]}"
+        if [[ -z "${fields["$awqlName"]}" ]]; then
+            echo "${AWQL_INTERNAL_ERROR_INVALID_FIELDS}"
+            return 1
+        fi
+        if inArray "$awqlName" "${keys["$table"]}"; then
+            fieldIsKey="${AWQL_FIELD_IS_KEY}"
+        else
+            fieldIsKey=""
+        fi
+        body="${field},${fields["$awqlName"]},${fieldIsKey}"
+        if [[ "${request["${AWQL_REQUEST_FULL}"]}" -eq 1 ]]; then
+            body+=",${clash["$awqlName"]}"
+        fi
+        echo "$body" >> "$file"
+        if [[ $? -ne 0 ]]; then
+            echo "InternalError.WRITE_FILE_PERMISSION"
+            return 1
         fi
     done
 
-    echo -n "([FILE]=\"${file}\" [CACHED]=1)"
+    echo "(["${AWQL_RESPONSE_FILE}"]=\"${file}\" ["${AWQL_RESPONSE_CACHED}"]=1)"
 }

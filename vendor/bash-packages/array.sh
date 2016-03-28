@@ -48,6 +48,66 @@ function __arrayType ()
 }
 
 ##
+# Creates an array by using the values from the keys array as keys and the values from the values array as the corresponding values.
+#
+# Note : Associative arrays are stored in a 'hash' order. If you want ordering, you don't use associative arrays !
+#
+# @param arrayToString $1 Keys
+# @param arrayToString $2 Values
+# @return arrayToString
+# @returnStatus 1 If the number of elements for each array isn't equal
+function arrayCombine ()
+{
+    local haystack1="$1"
+    local type1="$(__arrayType "$haystack1")"
+    if [[ "$type1" == "${BP_ARRAY_DECLARED_INDEXED_TYPE}" ]]; then
+        declare -a arr1="$(arrayToString "$haystack1")"
+    elif [[ "$type1" == "${BP_ARRAY_DECLARED_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arr1="$(arrayToString "$haystack1")"
+    elif [[ "$type1" == "${BP_ARRAY_INDEXED_TYPE}" ]]; then
+        declare -a arr1="$haystack1"
+    elif [[ "$type1" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arr1="$haystack1"
+    else
+        local arr1
+        IFS=" " read -a arr1 <<<"$haystack1"
+    fi
+    declare -a keys="(${arr1[@]})"
+
+    local haystack2="$2"
+    local type2="$(__arrayType "$haystack2")"
+    if [[ "$type2" == "${BP_ARRAY_DECLARED_INDEXED_TYPE}" ]]; then
+        declare -a arr2="$(arrayToString "$haystack2")"
+    elif [[ "$type2" == "${BP_ARRAY_DECLARED_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arr2="$(arrayToString "$haystack2")"
+    elif [[ "$type2" == "${BP_ARRAY_INDEXED_TYPE}" ]]; then
+        declare -a arr2="$haystack2"
+    elif [[ "$type2" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arr2="$haystack2"
+    else
+        local arr2
+        IFS=" " read -a arr2 <<<"$haystack2"
+    fi
+    declare -a values="(${arr2[@]})"
+
+    if [[ "${#keys[@]}" -ne "${#values[@]}" ]]; then
+        return 1
+    elif [[ "${#keys[@]}" -eq 0 ]]; then
+        echo "()"
+        return 0
+    fi
+
+    declare -A combine=()
+    local key
+    for key in "${!keys[@]}"; do
+        combine["${keys[${key}]}"]="${values[${key}]}"
+        k+=1
+    done
+
+    arrayToString "$(declare -p combine)"
+}
+
+##
 # Computes the difference of arrays
 #
 # @example inputs "v1 v2 v3" "v1"
@@ -72,6 +132,7 @@ function arrayDiff ()
     elif [[ "$type1" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr1="$haystack1"
     else
+        local arr1
         IFS=" " read -a arr1 <<<"$haystack1"
     fi
     if [[ "${#arr1[@]}" -eq 0 ]]; then
@@ -90,6 +151,7 @@ function arrayDiff ()
     elif [[ "$type2" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr2="$haystack2"
     else
+        local arr2
         IFS=" " read -a arr2 <<<"$haystack2"
     fi
     if [[ "${#arr2[@]}" -eq 0 ]]; then
@@ -140,6 +202,7 @@ function arrayKeyExists ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="$haystack"
     else
+        local arr
         IFS=" " read -a arr <<<"$haystack"
     fi
 
@@ -184,6 +247,7 @@ function arrayMerge ()
     elif [[ "$type1" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr1="$haystack1"
     else
+        local arr1
         IFS=" " read -a arr1 <<<"$haystack1"
     fi
 
@@ -198,6 +262,7 @@ function arrayMerge ()
     elif [[ "$type2" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr2="$haystack2"
     else
+        local arr2
         IFS=" " read -a arr2 <<<"$haystack2"
     fi
     if [[ "${#arr1[@]}" -eq 0 && "${#arr2[@]}" -eq 0 ]]; then
@@ -278,6 +343,7 @@ function arraySearch ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="${haystack}"
     else
+        local arr
         IFS=" " read -a arr <<<"$haystack"
     fi
 
@@ -345,6 +411,7 @@ function count ()
     elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
         declare -A arr="$haystack"
     else
+        local arr
         IFS=" " read -a arr <<<"$haystack"
     fi
     count="${#arr[@]}"

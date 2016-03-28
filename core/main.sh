@@ -1,91 +1,89 @@
 #!/usr/bin/env bash
 
+# Load configuration file if is not already loaded
+if [[ -z "${AWQL_ROOT_DIR}" ]]; then
+    declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "${AWQL_CUR_DIR}/../conf/awql.sh"
+fi
+
+# > Packages
+source "${AWQL_INC_DIR}/request.sh"
+source "${AWQL_INC_DIR}/response.sh"
+
+# > Statements
+source "${AWQL_STATEMENT_DIR}/create.sh"
+source "${AWQL_STATEMENT_DIR}/desc.sh"
+source "${AWQL_STATEMENT_DIR}/select.sh"
+source "${AWQL_STATEMENT_DIR}/show.sh"
+
 ##
 # Get data from cache if available
 # @param string $1 FilePath
 # @param string $2 Caching enabled
 # @return string
 # @returnStatus 1 If data is not cached
-function getFromCache ()
+function __getDataFromCache ()
 {
     local file="$1"
     declare -i cache="$2"
 
     if [[ ${cache} -eq 0 ]]; then
-        echo "CacheError.DISABLED"
-        return 1
+        return 2
     elif [[ -z "$file" || ! -f "$file" ]]; then
-        echo "CacheError.UNKNOWN_KEY"
         return 1
     fi
 
-    echo -n "([FILE]=\"${file}\" [CACHED]=1)"
+    echo "(["${AWQL_RESPONSE_FILE}"]=\"${file}\" ["${AWQL_RESPONSE_CACHED}"]=${cache})"
 }
 
 ##
 # Fetch internal cache or send request to Adwords to get results
 # @param arrayToString $1 User request
-# @param arrayToString $2 Google authentification tokens
-# @param arrayToString $3 Google request properties
 # @param string
 # @returnStatus 2 If query is invalid
 # @returnStatus 1 If case of fatal error
-function get ()
+function __getData ()
 {
-    # In
-    declare -A request="$1"
-    local auth="$2"
-    local server="$3"
-
-    # Out
-    local file="${AWQL_WRK_DIR}/${request['CHECKSUM']}${AWQL_FILE_EXT}"
+    local request="$1"
+    if [[ -z "$request" || "$request" != "("*")" ]]; then
+        return 1
+    fi
+    declare -A get="$request"
 
     # Overload caching mode for local database AWQL methods
-    declare -i cache=${request['CACHING']}
-    if [[ "${request['METHOD']}" != ${AWQL_QUERY_SELECT} ]]; then
+    declare -i cache="${get["${AWQL_REQUEST_CACHED}"]}"
+    if [[ "${get["${AWQL_REQUEST_TYPE}"]}" != ${AWQL_QUERY_SELECT} ]]; then
         cache=1
     fi
-
     local response
-    response=$(getFromCache "$file" "$cache")
-    declare -i errType=$?
-    if [[ ${errType} -ne 0 ]]; then
-        case "${request['METHOD']}" in
-            ${AWQL_QUERY_SELECT})
-                includeOnce "${AWQL_INC_DIR}/awql_select.sh"
-                response=$(awqlSelect "${request['QUERY']}" "$file" "${request['API_VERSION']}" "${request['ADWORDS_ID']}" "$auth" "$server" "${request['VERBOSE']}")
-                errType=$?
-                ;;
-            ${AWQL_QUERY_DESC})
-                includeOnce "${AWQL_INC_DIR}/awql_desc.sh"
-                response=$(awqlDesc "${request['QUERY']}" "$file" "${request['API_VERSION']}")
-                errType=$?
-                ;;
-            ${AWQL_QUERY_SHOW})
-                includeOnce "${AWQL_INC_DIR}/awql_show.sh"
-                response=$(awqlShow "${request['QUERY']}" "$file" "${request['API_VERSION']}")
-                errType=$?
-                ;;
-            *)
-                response="QueryError.UNKNOWN_AWQL_METHOD"
-                errType=2
-                ;;
-        esac
+    local file="${AWQL_WRK_DIR}/${get["${AWQL_REQUEST_CHECKSUM}"]}${AWQL_FILE_EXT}"
 
-        # An error occured, remove cache file and return with error code
-        if [[ ${errType} -ne 0 ]]; then
-            # @see command protected by /dev/null exit
-            if [[ -z "$response" ]]; then
-                response="QueryError.AWQL_SYNTAX_ERROR"
-                errType=2
-            fi
-            rm -f "$file"
-        fi
+    # Try to get date from cache
+    response=$(__getDataFromCache "$file" ${cache})
+    if [[ $? -eq 0 ]]; then
+         echo "$response"
+         return 0
     fi
 
-    echo "$response"
-
-    return ${errType}
+    # Get data from Adwords to local database
+    case "${get["${AWQL_REQUEST_TYPE}"]}" in
+        ${AWQL_QUERY_CREATE})
+            awqlCreate "$request"
+            ;;
+        ${AWQL_QUERY_DESC})
+            awqlDesc "$request" "$file"
+            ;;
+        ${AWQL_QUERY_SELECT})
+            awqlSelect "$request" "$file"
+            ;;
+        ${AWQL_QUERY_SHOW})
+            awqlShow "$request" "$file"
+            ;;
+        *)
+            echo "${AWQL_QUERY_ERROR_UNKNOWN_METHOD}"
+            return 2
+            ;;
+    esac
 }
 
 ##
@@ -95,88 +93,49 @@ function get ()
 # @param string $3 Adwords ID
 # @param string $4 Google Access Token
 # @param string $5 Google Developer Token
-# @param arrayToString $6 Google request configuration
-# @param int $7 Caching mode
+# @param int $6 Caching mode
+# @param int $7 Verbose
+# @param int $8 Raw CSV mode
 # @param string
 # @returnStatus 1 If query is invalid
 function awql ()
 {
     local query="$1"
     local apiVersion="$2"
+    if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "${AWQL_INTERNAL_ERROR_API_VERSION}"
+        return 1
+    fi
     local adwordsId="$3"
     local accessToken="$4"
     local developerToken="$5"
-    local request="$6"
-    declare -i cache="$7"
-query "$adwordsId" "$query" "$apiVersion" "$verbose" "$cache"
-exit
+    declare -i cache="$6"
+    declare -i verbose="$7"
+    declare -i raw="$8"
+
     # Prepare and validate query, manage all extended behaviors to AWQL basics
-    query=$(query "$adwordsId" "$query" "$apiVersion" "$cache")
-    if [[ $? -gt 0 ]]; then
-        echo "$query"
+    local request
+    request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw})
+    if [[ $? -ne 0 ]]; then
+        echo "$request"
         if [[ $? -eq 1 ]]; then
             exit 1
-        elif [[ $? -gt 1 ]]; then
+        else
             return 1
         fi
     fi
 
-    # Retrieve Google tokens (only if HTTP call is needed)
-    local auth
-    if [[ "$query" == *"\"select\""* ]]; then
-        auth=$(auth "$accessToken" "$developerToken")
-        if [[ $? -gt 0 ]]; then
-            echo "$auth"
-            if [[ $? -eq 1 ]]; then
-                exit 1
-            elif [[ $? -gt 1 ]]; then
-                return 1
-            fi
-        fi
-    fi
-
-    # Send request to Adwords or local cache to get report
+    # Send request to Adwords or local database to get report
     local response
-    response=$(get "$query" "$auth" "$request")
-    if [[ $? -gt 0 ]]; then
+    response=$(__getData "$request")
+    if [[ $? -ne 0 ]]; then
         echo "$response"
         if [[ $? -eq 1 ]]; then
             exit 1
-        elif [[ $? -gt 1 ]]; then
+        else
             return 1
         fi
     fi
 
-    # Print response
-    print "$query" "$response"
-}
-
-##
-# Read user prompt to retrieve AWQL query.
-# Enable up and down arrow keys to navigate in history of queries.
-# @param string $1 Auto rehash for completion
-# @param string $2 Api version
-# @param string $3 Adwords ID
-# @param string $4 Google Access Token
-# @param string $5 Google Developer Token
-# @param arrayToString $6 Google request configuration
-# @param int $7 Caching mode
-# @param string
-# @returnStatus 1 If query is invalid
-function awqlRead ()
-{
-    declare -i autoRehash="$1"
-    local apiVersion="$2"
-    local adwordsId="$3"
-    local accessToken="$4"
-    local developerToken="$5"
-    local request="$6"
-    declare -i cache="$7"
-
-    # Open a prompt (with auto-completion ?)
-    local queryStr
-    reader queryStr "$autoRehash" "$apiVersion"
-
-    # Process query
-    awql "$queryStr" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" "$request" "$cache"
+    awqlResponse "$request" "$response"
 }
