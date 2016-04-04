@@ -115,7 +115,7 @@ function awql ()
 
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     local request
-    request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw})
+    request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw} "$accessToken" "$developerToken")
     if [[ $? -ne 0 ]]; then
         echo "$request"
         if [[ $? -eq 1 ]]; then

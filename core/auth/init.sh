@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Init auth environment by creating auth yaml file with defaut configuration
+# Init auth environment by creating auth Yaml file with default configuration
 #
 # @raw
 # AUTH_TYPE         : __AUTH_TYPE__
@@ -19,68 +19,42 @@
 # PATH              : __PATH__
 # PORT              : __PORT__
 
-# Envionnement
-SCRIPT=$(basename "${BASH_SOURCE[0]}")
-SCRIPT_PATH="$0"; while [[ -h "$SCRIPT_PATH" ]]; do SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"; done
-SCRIPT_ROOT=$(dirname "$SCRIPT_PATH")
+# Environment
+scriptPath="$0"; while [[ -h "$scriptPath" ]]; do scriptPath="$(readlink "$scriptPath")"; done
+rootDir=$(dirname "$scriptPath")
 
-# Requires
-source "${SCRIPT_ROOT}/../conf/awql.sh"
-source "${AWQL_INC_DIR}/common.sh"
+# Import
+source "${rootDir}/../../../conf/awql.sh"
+source "${AWQL_AUTH_DIR}/token.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/net.sh"
 
+
 # Workspace
-AUTH_TYPE=""
-CLIENT_ID=""
-CLIENT_SECRET=""
-REFRESH_TOKEN=""
-DEVELOPER_TOKEN=""
-URL=""
-VERBOSE=0
+declare -- authType=""
+declare -- clientId=""
+declare -- clientSecret=""
+declare -- refreshToken=""
+declare -- developerToken=""
+declare -- URL=""
+declare -i verbose=0
+declare -- auth=""
 
 # Help
 # @return string
 function usage ()
 {
-    echo "Usage: ${SCRIPT} -a authtype [-c clientid] [-s clientsecret] [-r refreshtoken] [-d developertoken] [-u url]"
-    echo "-a for authentification type [ ${AUTH_GOOGLE_TYPE} | ${AUTH_CUSTOM_TYPE} ]"
+    echo "usage: init.sh -a authType [-c clientId] [-s clientSecret] [-r refreshToken] [-d developerToken] [-u url]"
+    echo "-a for authentification type [ ${AWQL_AUTH_GOOGLE_TYPE} | ${AWQL_AUTH_CUSTOM_TYPE} ]"
     echo "-c for Google client ID"
     echo "-s for Google client secret"
     echo "-r for refresh token"
     echo "-d for developer token"
     echo "-u for url of custom web service"
-    echo "-v used to print more informations"
+    echo "-v used to print more information"
 
-    if [[ "$1" != "" ]]; then
-        echo "> Mandatory field: $1"
+    if [[ -n "$1" ]]; then
+        echo -e "\n> Mandatory field: $1"
     fi
-}
-
-##
-# Exit in case of error, if $1 is not equals to 0
-# @param string $1 return code of previous step
-# @param string $2 message to log
-# @param string $3 verbose mode
-# @return int
-# @exitStatus 1
-# @returnStatus 1 If previous error code is normal
-function exitOnError ()
-{
-    local ERR_CODE="$1"
-    local ERR_MSG="$2"
-    local ERR_LOG="$3"
-
-    if [[ "$ERR_CODE" -ne 0 ]]; then
-        if [[ -n "$ERR_MSG" && -n "$ERR_LOG" ]]; then
-            echo "$ERR_MSG"
-        fi
-        if [[ "$ERR_CODE" -eq 1 ]]; then
-            exit 1
-        fi
-        return 0
-    fi
-
-    return 1
 }
 
 # Script usage
@@ -93,13 +67,17 @@ fi
 # Use getopts vs getopt for MacOs portability
 while getopts "a::c::s::r::d::u:v" FLAG; do
     case "${FLAG}" in
-        a) if [[ "$OPTARG" == "$AUTH_GOOGLE_TYPE" ]] || [[ "$OPTARG" == "$AUTH_CUSTOM_TYPE" ]]; then AUTH_TYPE="$OPTARG"; fi ;;
-        c) CLIENT_ID="$OPTARG" ;;
-        s) CLIENT_SECRET="$OPTARG" ;;
-        r) REFRESH_TOKEN="$OPTARG" ;;
-        d) DEVELOPER_TOKEN="$OPTARG" ;;
-        u) URL="$OPTARG" ;;
-        v) VERBOSE=1 ;;
+        a)
+            if [[ "${AWQL_AUTH_GOOGLE_TYPE}" == "$OPTARG" || "${AWQL_AUTH_CUSTOM_TYPE}" == "$OPTARG" ]]; then
+                authType="$OPTARG"
+            fi
+            ;;
+        c) clientId="$OPTARG" ;;
+        s) clientSecret="$OPTARG" ;;
+        r) refreshToken="$OPTARG" ;;
+        d) developerToken="$OPTARG" ;;
+        u) url="$OPTARG" ;;
+        v) verbose=1 ;;
         *) usage; exit 1 ;;
         ?) exit 2 ;;
     esac
@@ -107,95 +85,107 @@ done
 shift $(( OPTIND - 1 ));
 
 # Mandatory options
-if [[ -z "$AUTH_TYPE" ]]; then
-    usage AUTH_TYPE
+if [[ -z "$authType" ]]; then
+    usage "authType"
     exit 1
-elif [[ -z "$DEVELOPER_TOKEN" ]]; then
-    usage DEVELOPER_TOKEN
+elif [[ -z "$developerToken" ]]; then
+    usage "developerToken"
     exit 1
-elif [[ "$AUTH_TYPE" == "$AUTH_GOOGLE_TYPE" ]]; then
-    if [[ -z "$CLIENT_ID" ]]; then
-        usage CLIENT_ID
+elif [[ "${AWQL_AUTH_GOOGLE_TYPE}" == "$authType" ]]; then
+    if [[ -z "$clientId" ]]; then
+        usage "clientId"
         exit 1
-    elif [[ -z "$CLIENT_SECRET" ]]; then
-        usage CLIENT_SECRET
+    elif [[ -z "$clientSecret" ]]; then
+        usage "clientSecret"
         exit 1
-    elif [[ -z "$REFRESH_TOKEN" ]]; then
-        usage REFRESH_TOKEN
+    elif [[ -z "$refreshToken" ]]; then
+        usage "refreshToken"
         exit 1
     fi
-elif [[ -z "$URL" ]]; then
-    usage URL
+elif [[ -z "$url" ]]; then
+    usage "url"
     exit 1
 fi
 
+
 ##
-# Build a authenfication file with parameters to use to refresh the access token of Google with a custom web service
+# Build a authentification file with parameters to use to refresh the access token of Google with a custom web service
 # @param string $1 Web service url
 # @param string $2 Google developer token
-# @param int $3 Verbose mode
 # @returnStatus 1 If auth file can not be saved
 # @returnStatus 1 If url is not wellformed
-function initCustom ()
+function authCustomToken ()
 {
-    local DEVELOPER_TOKEN="$2"
-    local VERBOSE="$3"
-
-    local URL
-    URL="$(parseUrl "$1")"
-    if exitOnError "$?" "AuthenticationError.INVALID_URL" "$VERBOSE"; then
+    local strUrl="$(parseUrl "$1")"
+    if [[ -z "$strUrl" ]]; then
+        echo "${AWQL_AUTH_ERROR_INVALID_URL}"
         return 1
     fi
+    local developerToken="$2"
+    if [[ -z "$developerToken" ]]; then
+        echo "${AWQL_AUTH_ERROR_INVALID_DEVELOPER_TOKEN}"
+        return 1
+    fi
+    declare -A -r url="$strUrl"
 
-    declare -A -r URL="$URL"
-    local PROTOCOL="${URL[SCHEME]}"
-    local HOSTNAME="${URL[HOST]}"
-    local URLPATH="${URL[PATH]}"
-    local PORT="${URL[PORT]}"
-
-    sed -e "s/__AUTH_TYPE__/${AUTH_CUSTOM_TYPE}/g" \
-        -e "s/__DEVELOPER_TOKEN__/${DEVELOPER_TOKEN//\//\\/}/g" \
-        -e "s/__PROTOCOL__/${PROTOCOL}/g" \
-        -e "s/__HOSTNAME__/${HOSTNAME}/g" \
-        -e "s/__PATH__/${URLPATH//\//\\/}/g" \
-        -e "s/__PORT__/${PORT}/g" \
+    sed -e "s/__${AWQL_AUTH_TYPE}__/${AUTH_CUSTOM_TYPE}/g" \
+        -e "s/__${AWQL_DEVELOPER_TOKEN}__/${developerToken//\//\\/}/g" \
+        -e "s/__${AWQL_AUTH_PROTOCOL}__/${url["SCHEME"]}/g" \
+        -e "s/__${AWQL_AUTH_HOSTNAME}__/${url["HOST"]}/g" \
+        -e "s/__${AWQL_AUTH_PATH}__/${url["PATH"]//\//\\/}/g" \
+        -e "s/__${AWQL_AUTH_PORT}__/${url["PORT"]}/g" \
         "${AWQL_AUTH_FILE/.yaml/-dist.yaml}" 1>"${AWQL_AUTH_FILE}" 2>/dev/null
 
-    if exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"; then
+    if [[ $? -ne 0 ]]; then
+        echo "${AWQL_AUTH_ERROR_BUILD_FILE}"
         return 1
     fi
 }
 
 ##
-# Build a authenfication file with parameters to use to refresh the access token with a Google refresh token
+# Build a authentification file with parameters to use to refresh the access token with a Google refresh token
 # @param string $1 Google client ID
 # @param string $2 Google client secret
 # @param string $3 Google refresh token
 # @param string $4 Google developer token
-# @param string $5 Verbose mode
 # @returnStatus 1 If auth file can not be saved
-function initGoogle ()
+function authGoogleToken ()
 {
-    local CLIENT_ID="$1"
-    local CLIENT_SECRET="$2"
-    local REFRESH_TOKEN="$3"
-    local DEVELOPER_TOKEN="$4"
-    local VERBOSE="$5"
+    local clientId="$1"
+    local clientSecret="$2"
+    local refreshToken="$3"
+    local developerToken="$4"
+    if [[ -z "$clientId" || -z "$clientSecret" || -z "$refreshToken" || -z "$developerToken" ]]; then
+        echo "${AWQL_AUTH_ERROR_BUILD_FILE}"
+        return 1
+    fi
 
-    sed -e "s/__AUTH_TYPE__/${AUTH_GOOGLE_TYPE}/g" \
-        -e "s/__DEVELOPER_TOKEN__/${DEVELOPER_TOKEN//\//\\/}/g" \
-        -e "s/__CLIENT_ID__/${CLIENT_ID//\//\\/}/g" \
-        -e "s/__CLIENT_SECRET__/${CLIENT_SECRET//\//\\/}/g" \
-        -e "s/__REFRESH_TOKEN__/${REFRESH_TOKEN//\//\\/}/g" \
+    sed -e "s/__${AWQL_AUTH_TYPE}__/${AUTH_GOOGLE_TYPE}/g" \
+        -e "s/__${AWQL_DEVELOPER_TOKEN}__/${developerToken//\//\\/}/g" \
+        -e "s/__${AWQL_AUTH_CLIENT_ID}__/${clientId//\//\\/}/g" \
+        -e "s/__${AWQL_AUTH_CLIENT_SECRET}__/${clientSecret//\//\\/}/g" \
+        -e "s/__${AWQL_REFRESH_TOKEN}__/${refreshToken//\//\\/}/g" \
         "${AWQL_AUTH_FILE/.yaml/-dist.yaml}" 1>"${AWQL_AUTH_FILE}" 2>/dev/null
 
-    if exitOnError "$?" "AuthenticationError.UNABLE_TO_BUILD_FILE" "$VERBOSE"; then
+    if [[ $? -ne 0 ]]; then
+        echo "${AWQL_AUTH_ERROR_BUILD_FILE}"
         return 1
     fi
 }
 
-if [[ "$AUTH_TYPE" == "$AUTH_GOOGLE_TYPE" ]]; then
-    initGoogle "$CLIENT_ID" "$CLIENT_SECRET" "$REFRESH_TOKEN" "$DEVELOPER_TOKEN" "$VERBOSE"
+# Create auth Yaml file
+if [[ "${AUTH_GOOGLE_TYPE}" == "$authType" ]]; then
+    auth="$(authGoogleToken "$clientId" "$clientSecret" "$refreshToken" "$developerToken")"
 else
-    initCustom "$URL" "$DEVELOPER_TOKEN" "$VERBOSE"
+    auth="$(authCustomToken "$url" "$developerToken")"
 fi
+
+# Output
+if [[ $? -ne 0 ]]; then
+    if [[ ${verbose} -eq 1 ]]; then
+        echo "$auth"
+    fi
+    return 1
+fi
+
+echo "$auth"

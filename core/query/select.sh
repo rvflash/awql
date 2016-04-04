@@ -74,8 +74,8 @@ function awqlSelectQuery ()
 
     # Query components
     declare -i queryLength=${#queryStr}
+    declare -a queryFields
     declare -A components
-    declare -a fieldNames
 
     # During literal dates
     local duringLiteral="${AWQL_COMPLETE_DURING[@]}"
@@ -113,12 +113,12 @@ function awqlSelectQuery ()
             ${AWQL_REQUEST_FIELDS})
                 if [[ "$part" == *[[:space:]]*${AWQL_QUERY_FROM} ]]; then
                     # Get rest of fields without from method
-                    fieldNames+=("${part%% *}")
+                    queryFields+=("${part%% *}")
                     part=""
                     name=${AWQL_REQUEST_TABLE}
                 elif [[ "$char" == "," ]]; then
                     if [[ -n "$part" ]]; then
-                        fieldNames+=("$part")
+                        queryFields+=("$part")
                         part=""
                     fi
                 elif [[ -n "$part" || "$char" != " " ]]; then
@@ -235,46 +235,103 @@ function awqlSelectQuery ()
     done
 
     # Empty query
-    declare -i fieldSize="${#fieldNames[@]}"
-    if [[ -z "${components["${AWQL_REQUEST_TABLE}"]}" || ${fieldSize} -eq 0 ]]; then
+    declare -i fieldsLength="${#queryFields[@]}"
+    if [[ -z "${components["${AWQL_REQUEST_TABLE}"]}" || ${fieldsLength} -eq 0 ]]; then
         echo "${AWQL_QUERY_ERROR_SYNTAX}"
         return 2
     fi
 
     # Check if it is a valid report table or view
     declare -i isView=0
+    declare -A -r views="$(awqlViews)"
     declare -A -r tables="$(awqlTables "$apiVersion")"
     if [[ "${#tables[@]}" -eq 0 ]]; then
         echo "${AWQL_INTERNAL_ERROR_INVALID_TABLES}"
         return 1
     fi
     local tableNames="${!tables[@]}"
-    if ! inArray "${components["${AWQL_REQUEST_TABLE}"]}" "$tableNames"; then
+    if inArray "${components["${AWQL_REQUEST_TABLE}"]}" "$tableNames"; then
+        declare -A -r tableFields="$(arrayFillKeys "${tables["${components["${AWQL_REQUEST_TABLE}"]}"]}" 1)"
+    else
         # Here also check for view
-        echo "${AWQL_QUERY_ERROR_TABLE}"
-        return 2
+        if [[ -z "${views["${components["${AWQL_REQUEST_TABLE}"]}"]}" ]]; then
+            echo "${AWQL_QUERY_ERROR_TABLE}"
+            return 2
+        fi
+        isView=1
+
+        declare -A -r view="${views["${components["${AWQL_REQUEST_TABLE}"]}"]}"
+        declare -A -r tableFields="$(arrayCombine "${view["${AWQL_VIEW_NAMES}"]}" "${view["${AWQL_VIEW_FIELDS}"]}")"
     fi
 
     # Awql fields
-    declare -a fields
-    for field in "${fieldNames[@]}"; do
-        if [[ ${isView} -eq 0 && "$field" == *"*"* ]]; then
-            # All fields query pattern not allowed on AWQL table
-            echo "${AWQL_QUERY_ERROR}"
+    if [[ ${fieldsLength} -eq 1 && "${queryFields[0]}" == "*" ]]; then
+        # All pattern only allowed on view
+        if [[ ${isView} -eq 0 ]]; then
+            echo "${AWQL_QUERY_ERROR_SELECT_ALL}"
             return 2
         fi
-        # Manage alias name (AS)
-
-        # Manage methods like SUM  or COUNT
-        if [[ "$field" == *[\(\)]* ]]; then
-            # Get only column name: SUM(Cost)
-            field="${field%%\(*}"
-            field="${field##*\)}"
+        queryFields=(${view["${components["${AWQL_VIEW_NAMES}"]}"]})
+    fi
+    # > Extract user name and Adwords column name for each field
+    declare -a fields fieldsAlias fieldsNames
+    local field fieldName fieldAlias func
+    for field in "${queryFields[@]}"; do
+        # Invalid pattern
+        if [[ "$field" == "*" ]]; then
+            echo "${AWQL_QUERY_ERROR_SYNTAX}"
+            return 2
         fi
+
+        # Manage alias name: CampaignId AS Id
+        if [[ "$field" == *\ ${AWQL_QUERY_AS}\ * ]]; then
+            fieldAlias="${field##*\ ${AWQL_QUERY_AS}\ }"
+            field="${field%%\ ${AWQL_QUERY_AS}\ *}"
+        else
+            fieldAlias=""
+        fi
+
+        # Manage query methods (SUM, COUNT, MAX, MIN, etc.)
+        if [[ "$field" == *[\(\)]* ]]; then
+            # Valid function ?
+            func="${field%%*\(}"
+            if ! awqlFunction "$func"; then
+                echo "${AWQL_QUERY_ERROR_FUNCTION} (${field%%*\(})"
+                return 2
+            fi
+            # Extract value between parentheses
+            fieldName="${field%%\(*}"
+            fieldName="${fieldName##*\)}"
+            # Also manage shortcut's keyword like COUNT(1) or COUNT(*)
+            if [[ "$fieldName" =~ [1-9\*]+ ]]; then
+                # Get the first column as field value
+                if [[ ${isView} -eq 0 ]]; then
+                    fieldName="${tables["${components["${AWQL_REQUEST_TABLE}"]}"]#* }"
+                else
+                    fieldName="${view["${components["${AWQL_VIEW_NAMES}"]}"]#* }"
+                fi
+            fi
+            field="${fieldName}|${func}"
+        else
+            fieldName="$field"
+        fi
+
+        # Validate field's name
+        if [[ -z "${tableFields["$fieldName"]}" ]]; then
+            echo "${AWQL_QUERY_ERROR_UNKNOWN_FIELD} ($fieldName)"
+            return 2
+        elif [[ ${isView} -eq 1 ]]; then
+            fieldName="${tableFields["$fieldName"]}"
+        fi
+        if [[ -z "$fieldAlias" ]]; then
+            fieldAlias="$field"
+        fi
+        fieldsAlias+=("$fieldAlias")
+        fieldsNames+=("$fieldName")
         fields+=("$field")
     done
     components["${AWQL_REQUEST_FIELDS}"]="${fields[@]}"
-    components["${AWQL_REQUEST_FIELD_NAMES}"]="${fieldNames[@]}"
+    components["${AWQL_REQUEST_FIELD_NAMES}"]="${fieldsAlias[@]}"
 
     # During check
     local during="${components["${AWQL_REQUEST_DURING}"]}"
@@ -290,7 +347,7 @@ function awqlSelectQuery ()
         if [[ "${order[0]}" =~ ^[0-9]+$ ]]; then
             # Order by 1
             orderColumn="${order[0]}"
-            if [[ ${orderColumn} -eq 0 || ${orderColumn} -gt ${fieldSize} ]]; then
+            if [[ ${orderColumn} -eq 0 || ${orderColumn} -gt ${fieldsLength} ]]; then
                 echo "${AWQL_QUERY_ERROR_ORDER}"
                 return 2
             fi
@@ -317,11 +374,11 @@ function awqlSelectQuery ()
         components["${AWQL_REQUEST_SORT_ORDER}"]="$(__queryOrderType "$type") $orderColumn $(__queryOrder "${order[1]}")"
     fi
 
-    # Build AWQL query
-    # SELECT...FROM...WHERE...DURING...
+    # Build AWQL query: SELECT...FROM...WHERE...DURING...
+    local queryFields="${fieldsNames[@]}"
     declare -a awqlQuery
     awqlQuery+=("${components["${AWQL_REQUEST_STATEMENT}"]}")
-    awqlQuery+=("${components["${AWQL_REQUEST_FIELD_NAMES}"]// /,}")
+    awqlQuery+=("${queryFields// /,}")
     awqlQuery+=("FROM ${components["${AWQL_REQUEST_TABLE}"]}")
     if [[ -n "${components["${AWQL_REQUEST_WHERE}"]}" ]]; then
         awqlQuery+=("${AWQL_REQUEST_WHERE} ${components["${AWQL_REQUEST_WHERE}"]}")

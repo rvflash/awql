@@ -152,6 +152,8 @@ function __queryWithoutDisplayMode ()
 # @param int $4 Caching
 # @param int $5 Verbose mode
 # @param int $6 Raw mode
+# @param string $7 Access token
+# @param string $8 Developer token
 # @return arrayToString Request
 # @returnStatus 2 If query is empty
 # @returnStatus 2 If query is not a valid AWQL method
@@ -176,6 +178,8 @@ function awqlRequest ()
     declare -i cache="$4"
     declare -i verbose="$5"
     declare -i raw="$6"
+    local accessToken="$7"
+    local developerToken="$8"
 
     # Manage vertical mode, also named G modifier
     declare -i verticalMode=0
@@ -200,6 +204,8 @@ function awqlRequest ()
     request["${AWQL_REQUEST_VERBOSE}"]=${verbose}
     request["${AWQL_REQUEST_RAW}"]=${raw}
     request["${AWQL_REQUEST_VERTICAL}"]=${verticalMode}
+    request["${AWQL_REQUEST_ACCESS_TOKEN}"]="$accessToken"
+    request["${AWQL_REQUEST_DEVELOPER_TOKEN}"]="$developerToken"
 
     # Calculate a unique identifier for the query
     request["${AWQL_REQUEST_CHECKSUM}"]="$(checksum "${request["${AWQL_REQUEST_ID}"]} ${request["${AWQL_REQUEST_QUERY}"]}")"

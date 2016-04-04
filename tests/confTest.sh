@@ -40,6 +40,11 @@ declare -r TEST_CONF_AWQL_QUERY_CLEAR="Clear"
 declare -r TEST_CONF_AWQL_QUERY_EXIT="EXIT"
 declare -r TEST_CONF_AWQL_QUERY_QUIT="QUIT"
 declare -r TEST_CONF_AWQL_QUERY_HELP="help"
+declare -r TEST_CONF_AWQL_FUNCTION_COUNT="COUNT"
+declare -r TEST_CONF_AWQL_FUNCTION_SUM="sum"
+declare -r TEST_CONF_AWQL_FUNCTION_MIN="MIN"
+declare -r TEST_CONF_AWQL_FUNCTION_MAX="max"
+declare -r TEST_CONF_AWQL_FUNCTION_DISTINCT="DISTINCT"
 
 
 readonly TEST_CONF_AWQL_FIELDS="-11-11-01"
@@ -51,12 +56,12 @@ function test_awqlFields ()
     #1 Check nothing
     test=$(awqlFields)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #2 Check with invalid api version
     test=$(awqlFields "${TEST_CONF_BAD_API_VERSION}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #3 Check with valid api version
     test=$(awqlFields "${TEST_CONF_API_VERSION}")
@@ -74,22 +79,22 @@ function test_awqlUncompatibleFields ()
     #1 Check nothing
     test=$(awqlUncompatibleFields)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #2 Check with only table name
     test=$(awqlUncompatibleFields "${TEST_CONF_TABLE}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #3 Check with valid table name and invalid api version
     test=$(awqlUncompatibleFields "${TEST_CONF_TABLE}" "${TEST_CONF_BAD_API_VERSION}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #4 Check with invalid table name and valid api version
     test=$(awqlUncompatibleFields "${TEST_CONF_BAD_TABLE}" "${TEST_CONF_API_VERSION}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #5 Check with valid table name and api version
     test=$(awqlUncompatibleFields "${TEST_CONF_TABLE}" "${TEST_CONF_API_VERSION}")
@@ -107,12 +112,12 @@ function test_awqlKeys ()
     #1 Check nothing
     test=$(awqlKeys)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #2 Check with invalid api version
     test=$(awqlKeys "${TEST_CONF_BAD_API_VERSION}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #3 Check with valid api version
     test=$(awqlKeys "${TEST_CONF_API_VERSION}")
@@ -130,12 +135,12 @@ function test_awqlTables ()
     #1 Check nothing
     test=$(awqlTables)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #2 Check with invalid api version
     test=$(awqlTables "${TEST_CONF_BAD_API_VERSION}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #3 Check with valid api version
     test=$(awqlTables "${TEST_CONF_API_VERSION}")
@@ -153,12 +158,12 @@ function test_awqlTablesType ()
     #1 Check nothing
     test=$(awqlTablesType)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #2 Check with invalid api version
     test=$(awqlTablesType "${TEST_CONF_BAD_API_VERSION}")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "()" ]] && echo -n 1
 
     #3 Check with valid api version
     test=$(awqlTablesType "${TEST_CONF_API_VERSION}")
@@ -203,7 +208,7 @@ function test_awqlClearCacheViews ()
 }
 
 
-readonly TEST_CONF_AWQL_RESERVED_WORD="-11-11-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01"
+readonly TEST_CONF_AWQL_RESERVED_WORD="-11-11-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01-01"
 
 function test_awqlReservedWord ()
 {
@@ -333,8 +338,75 @@ function test_awqlReservedWord ()
     test=$(awqlReservedWord "${TEST_CONF_AWQL_QUERY_HELP}")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
+
+    #26 Check with count keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_COUNT}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #27 Check with sum keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_SUM}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #28 Check with min keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_MIN}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #29 Check with max keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_MAX}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #30 Check with distinct keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_DISTINCT}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
 }
 
+
+readonly TEST_CONF_AWQL_FUNCTION="-11-11-01-01-01-01-01"
+
+function test_awqlFunction ()
+{
+    local test
+
+    #1 Check nothing
+    test=$(awqlReservedWord)
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #2 Check with lambda keyword
+    test=$(awqlReservedWord "rv")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #3 Check with count keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_COUNT}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #4 Check with sum keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_SUM}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #5 Check with min keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_MIN}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #6 Check with max keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_MAX}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #7 Check with distinct keyword
+    test=$(awqlReservedWord "${TEST_CONF_AWQL_FUNCTION_DISTINCT}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+}
 
 # Launch all functional tests
 bashUnit "awqlFields" "${TEST_CONF_AWQL_FIELDS}" "$(test_awqlFields)"
@@ -345,3 +417,4 @@ bashUnit "awqlTablesType" "${TEST_CONF_AWQL_TABLES_TYPE}" "$(test_awqlTablesType
 bashUnit "awqlViews" "${TEST_CONF_AWQL_VIEWS}" "$(test_awqlViews)"
 bashUnit "awqlClearCacheViews" "${TEST_CONF_AWQL_CLEAR_CACHE_VIEWS}" "$(test_awqlClearCacheViews)"
 bashUnit "awqlReservedWord" "${TEST_CONF_AWQL_RESERVED_WORD}" "$(test_awqlReservedWord)"
+bashUnit "awqlFunction" "${TEST_CONF_AWQL_FUNCTION}" "$(test_awqlFunction)"

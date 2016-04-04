@@ -179,6 +179,41 @@ function arrayDiff ()
 }
 
 ##
+# Fill an array with the same value, specifying keys
+# @param arrayToString $1 keys
+# @param string $2 Value [optional]
+function arrayFillKeys ()
+{
+    local haystack="$1"
+    local type="$(__arrayType "$haystack")"
+    if [[ "$type" == "${BP_ARRAY_DECLARED_INDEXED_TYPE}" ]]; then
+        declare -a arr="$(arrayToString "$haystack")"
+    elif [[ "$type" == "${BP_ARRAY_DECLARED_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arr="$(arrayToString "$haystack")"
+    elif [[ "$type" == "${BP_ARRAY_INDEXED_TYPE}" ]]; then
+        declare -a arr="$haystack"
+    elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arr="$haystack"
+    else
+        local arr
+        IFS=" " read -a arr <<<"$haystack"
+    fi
+    if [[ "${#arr[@]}" -eq 0 ]]; then
+        echo "()"
+        return 0
+    fi
+    local value="$2"
+
+    declare -A fill=()
+    local key
+    for key in "${arr[@]}"; do
+        fill["$key"]="$value"
+    done
+
+    arrayToString "$(declare -p fill)"
+}
+
+##
 # Checks if the given key or index exists in the array
 # @param string $1 Needle
 # @param arrayToString $2 Haystack

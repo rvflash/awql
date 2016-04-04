@@ -4,6 +4,7 @@
 
 * Function arrayCombine ( array keys, array values ) array `?>0 If the number of elements for each array isn't equal`
 * Function arrayDiff ( array haystack1, array haystack2 ) array `?=0`
+* Function arrayFillKeys ( array keys, string value) array `?=0`
 * Function arrayKeyExists ( string needle, array haystack1) void  `?=0 if needle exists as key in array, 1 otherwise`
 * Function arrayMerge ( array haystack1, array haystack2 ) array `?=0`
 * Function arraySearch ( string needle, array haystack ) mixed `?=0 if needle is found, 1 otherwise`

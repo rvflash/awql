@@ -63,7 +63,7 @@ if confirm "Use Google to get access tokens" "${AWQL_CONFIRM}"; then
     clientId="$(dialog "Your Google client ID" 1 "${AWQL_PROMPT_REQUIRED}")"
     clientSecret="$(dialog "Your Google client secret" 1 "${AWQL_PROMPT_REQUIRED}")"
     refreshToken="$(dialog "Your Google refresh token" 1 "${AWQL_PROMPT_REQUIRED}")"
-    ${AWQL_AUTH_INIT_FILE} -a "${AUTH_GOOGLE_TYPE}" -c "$clientId" -s "$clientSecret" -r "$refreshToken" -d "$developerToken"
+    ${AWQL_AUTH_INIT_FILE} -a "${AWQL_AUTH_GOOGLE_TYPE}" -c "$clientId" -s "$clientSecret" -r "$refreshToken" -d "$developerToken"
     if [[ $? -ne 0 ]]; then
         pError "Fail to get a valid access token from Google"
         error+=1
@@ -71,7 +71,7 @@ if confirm "Use Google to get access tokens" "${AWQL_CONFIRM}"; then
 else
     # Custom webservice as token provider
     url="$(dialog "Url of the web service to use to retrieve a Google access token" 1 "${AWQL_PROMPT_REQUIRED}")"
-    ${AWQL_AUTH_INIT_FILE} -a "${AUTH_CUSTOM_TYPE}" -u "$url" -d "$developerToken"
+    ${AWQL_AUTH_INIT_FILE} -a "${AWQL_AUTH_CUSTOM_TYPE}" -u "$url" -d "$developerToken"
     if [[ $? -ne 0 ]]; then
         pError "Fail to get a valid access token with the custom web service"
         error+=1

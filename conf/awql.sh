@@ -29,16 +29,13 @@ declare -r AWQL_FILE_EXT=".awql"
 declare -r AWQL_HTTP_RESPONSE_EXT=".rsp"
 declare -r AWQL_CSV_TOOL_FILE="${AWQL_ROOT_DIR}/vendor/shcsv/csv.sh"
 declare -r AWQL_BASH_PACKAGES_DIR="${AWQL_ROOT_DIR}/vendor/bash-packages"
-
-# Authentification
 declare -r AWQL_AUTH_FILE="${AWQL_AUTH_DIR}/auth.yaml"
 declare -r AWQL_AUTH_INIT_FILE="${AWQL_AUTH_DIR}/init.sh"
-declare -r AUTH_GOOGLE_TYPE="google"
-declare -r AUTH_CUSTOM_TYPE="custom"
 
 # Adwords API
 declare -r AWQL_API_ID_REGEX="^[[:digit:]]{3}-[[:digit:]]{3}-[[:digit:]]{4}$"
 declare -r AWQL_API_VERSION_REGEX="^v[[:digit:]]{6}$"
+declare -r AWQL_API_URL_REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 declare -r AWQL_API_LAST_VERSION="v201601"
 declare -r AWQL_API_DOC_EXTRA_FILE_NAME="extra.yaml"
 declare -r AWQL_API_DOC_FIELDS_FILE_NAME="fields.yaml"
@@ -78,6 +75,11 @@ declare -r AWQL_QUERY_CLEAR="[Cc][Ll][Ee][Aa][Rr]"
 declare -r AWQL_QUERY_EXIT="[Ee][Xx][Ii][Tt]"
 declare -r AWQL_QUERY_QUIT="[Qq][Uu][Ii][Tt]"
 declare -r AWQL_QUERY_HELP="[Hh][Ee][Ll][Pp]"
+declare -r AWQL_FUNCTION_COUNT="[Cc][Oo][Uu][Nn][Tt]"
+declare -r AWQL_FUNCTION_SUM="[Ss][Uu][Mm]"
+declare -r AWQL_FUNCTION_MAX="[Mm][Aa][Xx]"
+declare -r AWQL_FUNCTION_MIN="[Mm][Ii][Nn]"
+declare -r AWQL_FUNCTION_DISTINCT="[Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt]"
 
 # Request properties
 declare -r AWQL_REQUEST_QUERY="AWQL_QUERY"
@@ -106,6 +108,8 @@ declare -r AWQL_REQUEST_FULL="FULL"
 declare -r AWQL_REQUEST_VIEW="VIEW"
 declare -r AWQL_REQUEST_REPLACE="REPLACE"
 declare -r AWQL_REQUEST_DEFINITION="DEFINITION"
+declare -r AWQL_REQUEST_ACCESS="ACCESS_TOKEN"
+declare -r AWQL_REQUEST_DEV_TOKEN="DEVELOPER_TOKEN"
 
 # Response properties
 declare -r AWQL_RESPONSE_FILE="FILE"
@@ -122,6 +126,39 @@ declare -r AWQL_VIEW_WHERE="WHERE"
 declare -r AWQL_VIEW_DURING="DURING"
 declare -r AWQL_VIEW_ORDER="ORDER"
 declare -r AWQL_VIEW_LIMIT="LIMIT"
+
+# Token properties
+declare -r AWQL_TOKEN_TYPE_VALUE="Bearer"
+declare -r AWQL_AUTH_GOOGLE_TYPE="google"
+declare -r AWQL_AUTH_CUSTOM_TYPE="custom"
+declare -r AWQL_TOKEN_TYPE="TOKEN_TYPE"
+declare -r AWQL_ACCESS_TOKEN="ACCESS_TOKEN"
+declare -r AWQL_DEVELOPER_TOKEN="DEVELOPER_TOKEN"
+declare -r AWQL_REFRESH_TOKEN="REFRESH_TOKEN"
+declare -r AWQL_ERROR_TOKEN="ERROR"
+declare -r AWQL_TOKEN_EXPIRE_AT="EXPIRE_AT"
+declare -r AWQL_AUTH_TYPE="AUTH_TYPE"
+declare -r AWQL_AUTH_CLIENT_ID="CLIENT_ID"
+declare -r AWQL_AUTH_CLIENT_SECRET="CLIENT_SECRET"
+declare -r AWQL_AUTH_PROTOCOL="PROTOCOL"
+declare -r AWQL_AUTH_HOSTNAME="HOSTNAME"
+declare -r AWQL_AUTH_PATH="PATH"
+declare -r AWQL_AUTH_PORT="PORT"
+declare -r AWQL_GRANT_TYPE="GRANT_TYPE"
+declare -r AWQL_GRANT_REFRESH_TOKEN="GRANT_TYPE_RT"
+
+# Adwords API request
+declare -r AWQL_API_CONNECT_TO="CONNECT_TIME_OUT"
+declare -r AWQL_API_TO="TIME_OUT"
+declare -r AWQL_API_PROTOCOL="PROTOCOL"
+declare -r AWQL_API_HOST="HOSTNAME"
+declare -r AWQL_API_PATH="PATH"
+declare -r AWQL_API_METHOD="METHOD"
+declare -r AWQL_API_RESPONSE="RESPONSE_FORMAT"
+declare -r AWQL_API_QUERY="AWQL_QUERY"
+declare -r AWQL_API_AUTH="AUTHORIZATION"
+declare -r AWQL_API_TOKEN="DEVELOPER_TOKEN"
+declare -r AWQL_API_ID="ADWORDS_ID"
 
 # Prompt
 declare -r AWQL_PROMPT="awql> "
@@ -149,6 +186,7 @@ declare -r AWQL_TEXT_COMMAND_EXIT="exit"
 declare -r AWQL_TEXT_COMMAND_QUIT="quit"
 
 # Error message
+
 # > Internal errors
 declare -r AWQL_INTERNAL_ERROR_API_VERSION="InternalError.UNKNOWN_API_VERSION"
 declare -r AWQL_INTERNAL_ERROR_COLUMN_TYPE="InternalError.INVALID_AWQL_COLUMN"
@@ -165,6 +203,7 @@ declare -r AWQL_INTERNAL_ERROR_QUERY_CHECKSUM="InternalError.QUERY_CHECKSUM"
 declare -r AWQL_INTERNAL_ERROR_QUERY_COMPONENT="InternalError.QUERY_COMPONENT"
 declare -r AWQL_INTERNAL_ERROR_CONFIG="InternalError.INVALID_CONFIG_FOR_REQUEST"
 declare -r AWQL_INTERNAL_ERROR_INVALID_VIEWS="InternalError.INVALID_AWQL_VIEWS"
+
 # > Query errors
 declare -r AWQL_QUERY_ERROR_SYNTAX="QueryError.SYNTAX"
 declare -r AWQL_QUERY_ERROR="QueryError.INVALID"
@@ -176,6 +215,7 @@ declare -r AWQL_QUERY_ERROR_MISSING="QueryError.MISSING"
 declare -r AWQL_QUERY_ERROR_ORDER="QueryError.ORDER_BY"
 declare -r AWQL_QUERY_ERROR_TABLE="QueryError.TABLE_NAME"
 declare -r AWQL_QUERY_ERROR_VIEW="QueryError.VIEW_NAME"
+declare -r AWQL_QUERY_ERROR_SELECT_ALL="QueryError.ALL_COLUMNS_NOT_SUPPORTED"
 declare -r AWQL_QUERY_ERROR_UNKNOWN_TABLE="QueryError.UNKNOWN_TABLE_NAME"
 declare -r AWQL_QUERY_ERROR_UNKNOWN_FIELD="QueryError.UNKNOWN_TABLE_FIELD"
 declare -r AWQL_QUERY_ERROR_UNKNOWN_METHOD="QueryError.UNKNOWN_QUERY_METHOD"
@@ -183,7 +223,16 @@ declare -r AWQL_QUERY_ERROR_COLUMNS_NOT_MATCH="QueryError.COLUMNS_DO_NOT_MATCH"
 declare -r AWQL_QUERY_ERROR_SOURCE_IS_VIEW="QueryError.VIEW_IN_VIEW"
 declare -r AWQL_QUERY_ERROR_SOURCE="QueryError.QUERY_SOURCE"
 declare -r AWQL_QUERY_ERROR_VIEW_ALREADY_EXISTS="QueryError.VIEW_ALREADY_EXISTS"
+declare -r AWQL_QUERY_ERROR_FUNCTION="QueryError.UNKNOWN_FUNCTION"
 
+# > Response errors
+declare -r AWQL_AUTH_ERROR_INVALID_FILE="AuthenticationError.INVALID_FILE"
+declare -r AWQL_AUTH_ERROR_REQUEST_FAIL="AuthenticationError.CUSTOM_REQUEST_FAIL"
+declare -r AWQL_AUTH_ERROR_INVALID_URL="AuthenticationError.INVALID_URL"
+declare -r AWQL_AUTH_ERROR_INVALID_DEVELOPER_TOKEN="AuthenticationError.MISSING_DEVELOPER_TOKEN"
+declare -r AWQL_AUTH_ERROR_BUILD_FILE="AuthenticationError.UNABLE_TO_BUILD_FILE"
+declare -r AWQL_RESP_ERROR_NO_CONNEXION="ConnexionError.NOT_FOUND"
+declare -r AWQL_RESP_ERROR_CONNEXION="ConnexionError.SERVER"
 
 # Workspace
 if [[ -n "${AWQL_WRK_DIR}" && ! -d "${AWQL_WRK_DIR}" ]]; then
@@ -216,11 +265,13 @@ function awqlFields ()
 {
     local apiVersion="$1"
     if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "()"
         return 1
     fi
     if [[ -z "${AWQL_FIELDS}" ]]; then
         AWQL_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${apiVersion}/${AWQL_API_DOC_FIELDS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
+            echo "()"
             return 1
         fi
     fi
@@ -240,11 +291,13 @@ function awqlUncompatibleFields ()
     local table="$1"
     local apiVersion="$2"
     if [[ -z "$table" || "$table" == *"*"* || ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "()"
         return 1
     fi
     if [[ -z "${AWQL_UNCOMPATIBLE_FIELDS}" ]]; then
         AWQL_UNCOMPATIBLE_FIELDS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${apiVersion}/${AWQL_API_DOC_COMPATIBILITY_DIR_NAME}/${table}.yaml")
         if [[ $? -ne 0 ]]; then
+            echo "()"
             return 1
         fi
     fi
@@ -262,11 +315,13 @@ function awqlKeys ()
 {
     local apiVersion="$1"
     if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "()"
         return 1
     fi
     if [[ -z "${AWQL_KEYS}" ]]; then
         AWQL_KEYS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${apiVersion}/${AWQL_API_DOC_KEYS_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
+            echo "()"
             return 1
         fi
     fi
@@ -284,11 +339,13 @@ function awqlTables ()
 {
     local apiVersion="$1"
     if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "()"
         return 1
     fi
     if [[ -z "${AWQL_TABLES}" ]]; then
         AWQL_TABLES=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${apiVersion}/${AWQL_API_DOC_TABLES_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
+            echo "()"
             return 1
         fi
     fi
@@ -306,11 +363,13 @@ function awqlTablesType ()
 {
     local apiVersion="$1"
     if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "()"
         return 1
     fi
     if [[ -z "${AWQL_TABLES_TYPE}" ]]; then
         AWQL_TABLES_TYPE=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${apiVersion}/${AWQL_API_DOC_TABLES_TYPE_FILE_NAME}")
         if [[ $? -ne 0 ]]; then
+            echo "()"
             return 1
         fi
     fi
@@ -343,6 +402,7 @@ function awqlViews ()
         for viewFile in $(scanDirectory "${AWQL_VIEWS_DIR}" 1); do
             views["${viewFile/.yaml/}"]="$(yamlFileDecode "${AWQL_VIEWS_DIR}/${viewFile}")"
             if [[ $? -ne 0 ]]; then
+                echo "()"
                 return 2
             fi
         done
@@ -350,12 +410,14 @@ function awqlViews ()
         for viewFile in $(scanDirectory "${AWQL_USER_VIEWS_DIR}" 1); do
             views["${viewFile/.yaml/}"]="$(yamlFileDecode "${AWQL_USER_VIEWS_DIR}/${viewFile}")"
             if [[ $? -ne 0 ]]; then
+                echo "()"
                 return 2
             fi
         done
         # Build cache file
         arrayToString "$(declare -p views)" > "${AWQL_USER_CACHE_VIEWS_FILE}"
         if [[ $? -ne 0 ]]; then
+            echo "()"
             return 1
         fi
     fi
@@ -364,7 +426,30 @@ function awqlViews ()
 }
 
 ##
-# Check if work is a awql or reserved word
+# Check if word is known as an awql function
+# @param string $1 Str
+# @returnStatus 0 In case of match
+# @returnStatus 1 If word is not an AWQL reserved word
+function awqlFunction ()
+{
+    local str="$1"
+    if [[ -z "$str" ]]; then
+        return 1
+    fi
+
+    case "$str" in
+        ${AWQL_FUNCTION_COUNT}|${AWQL_FUNCTION_SUM}|${AWQL_FUNCTION_MIN}|${AWQL_FUNCTION_MAX}|${AWQL_FUNCTION_DISTINCT})
+            # Aggregate
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+##
+# Check if word is a awql or reserved word
 # @param string $1 Str
 # @returnStatus 0 In case of match
 # @returnStatus 1 If word is not an AWQL reserved word
@@ -373,6 +458,8 @@ function awqlReservedWord ()
     local str="$1"
     if [[ -z "$str" ]]; then
         return 1
+    elif awqlFunction "$str"; then
+        return 0
     fi
 
     case "$str" in

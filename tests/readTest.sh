@@ -11,7 +11,7 @@ function test_reader ()
     local test
 
     #1 Check nothing
-    #test=$(reader)
+    #to do test=$(reader)
     echo -n "-$?$test"
     [[ -z "$test" ]] && echo -n 1
 }

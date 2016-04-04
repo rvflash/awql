@@ -4,6 +4,7 @@ source ../testing.sh
 source ../array.sh
 
 # Default entries
+declare -r TEST_ARRAY_VALUE="third"
 declare -r TEST_ARRAY_FROM_STRING="first second third fourth"
 declare -r TEST_ARRAY_FROM_STRING_PLUS="first second third fourth fifth sixth seventh"
 declare -r TEST_ARRAY_FROM_STRING_MINUS="first second"
@@ -20,7 +21,8 @@ declare -r TEST_ARRAY_MERGE_NUMERIC_INDEX="([0]=\"first\" [1]=\"second\" [2]=\"t
 declare -r TEST_ARRAY_MERGE_ASSOC_INDEX_WITH_MINUS="([four]=\"fourth\" [one]=\"first\" [two]=\"second\" [0]=\"first\" [1]=\"second\" [three]=\"third\" )"
 declare -r TEST_ARRAY_MERGE_ASSOCIATIVE_INDEX="([four]=\"fifth\" [three]=\"third\" )"
 declare -r TEST_ARRAY_COMBINE="([fourth]=\"fourth\" [third]=\"third\" [second]=\"second\" [first]=\"first\" )"
-
+declare -r TEST_ARRAY_EMPTY_FILL_KEYS="([fourth]=\"\" [third]=\"\" [second]=\"\" [first]=\"\" )"
+declare -r TEST_ARRAY_WITH_FILL_KEYS="([fourth]=\"third\" [third]=\"third\" [second]=\"third\" [first]=\"third\" )"
 
 readonly TEST_ARRAY_ARRAY_COMBINE="-01-11-01-11-01"
 
@@ -85,6 +87,39 @@ function test_arrayDiff ()
     test=$(arrayDiff "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_FROM_STRING_MINUS}")
     echo -n "-$?"
     [[ "$test" == "${TEST_ARRAY_NUMERIC_INDEX_DIFF}" ]] && echo -n 1
+}
+
+
+readonly TEST_ARRAY_FILL_KEYS="-01-01-01-01-01"
+
+function test_arrayFillKeys ()
+{
+    local test
+
+    # Check nothing
+    test=$(arrayFillKeys)
+    echo -n "-$?"
+    [[ "$test" == "()" ]] && echo -n 1
+
+    # Check with no value as second parameter
+    test=$(arrayFillKeys "${TEST_ARRAY_FROM_STRING}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_EMPTY_FILL_KEYS}" ]] && echo -n 1
+
+    # Check with empty value as second parameter
+    test=$(arrayFillKeys "${TEST_ARRAY_FROM_STRING_SURROUND}" "")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_EMPTY_FILL_KEYS}" ]] && echo -n 1
+
+    # Check with indexed array
+    test=$(arrayFillKeys "${TEST_ARRAY_NUMERIC_INDEX}" "${TEST_ARRAY_VALUE}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_WITH_FILL_KEYS}" ]] && echo -n 1
+
+    # Check with associative array
+    test=$(arrayFillKeys "${TEST_ARRAY_ASSOCIATIVE_INDEX}" "${TEST_ARRAY_VALUE}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_WITH_FILL_KEYS}" ]] && echo -n 1
 }
 
 
@@ -171,22 +206,22 @@ function test_arraySearch ()
     [[ -z "$test" ]] && echo -n 1
 
     # Check with empty haystack
-    test=$(arraySearch "third" "")
+    test=$(arraySearch "${TEST_ARRAY_VALUE}" "")
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
     # Check in basic array
-    test=$(arraySearch "third" "${TEST_ARRAY_FROM_STRING}")
+    test=$(arraySearch "${TEST_ARRAY_VALUE}" "${TEST_ARRAY_FROM_STRING}")
     echo -n "-$?"
     [[ "$test" -eq 2 ]] && echo -n 1
 
     # Check in numeric indexed array
-    test=$(arraySearch "third" "${TEST_ARRAY_NUMERIC_INDEX}")
+    test=$(arraySearch "${TEST_ARRAY_VALUE}" "${TEST_ARRAY_NUMERIC_INDEX}")
     echo -n "-$?"
     [[ "$test" -eq 2 ]] && echo -n 1
 
     # Check in associative array
-    test=$(arraySearch "third" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
+    test=$(arraySearch "${TEST_ARRAY_VALUE}" "${TEST_ARRAY_ASSOCIATIVE_INDEX}")
     echo -n "-$?"
     [[ "$test" == "three" ]] && echo -n 1
 }
@@ -304,6 +339,7 @@ function test_inArray ()
 # Launch all functional tests
 bashUnit "arrayCombine" "${TEST_ARRAY_ARRAY_COMBINE}" "$(test_arrayCombine)"
 bashUnit "arrayDiff" "${TEST_ARRAY_ARRAY_DIFF}" "$(test_arrayDiff)"
+bashUnit "arrayFillKeys" "${TEST_ARRAY_FILL_KEYS}" "$(test_arrayFillKeys)"
 bashUnit "arrayKeyExists" "${TEST_ARRAY_KEY_EXISTS}" "$(test_arrayKeyExists)"
 bashUnit "arrayMerge" "${TEST_ARRAY_ARRAY_MERGE}" "$(test_arrayMerge)"
 bashUnit "arraySearch" "${TEST_ARRAY_ARRAY_SEARCH}" "$(test_arraySearch)"

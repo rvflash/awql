@@ -7,93 +7,166 @@ if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     source "${AWQL_CUR_DIR}/../../conf/awql.sh"
 fi
 
-source "${AWQL_AUTH_DIR}/auth.sh"
+# Import
+source "${AWQL_AUTH_DIR}/access.sh"
 
 
 ##
+# Retrieve an access token
+# @return arrayToString
+function __accessToken ()
+{
+    # Default configuration
+    declare -A access=()
+    declare -A -r auth="$(yamlFileDecode "${AWQL_AUTH_FILE}")"
+
+    local authFile="${AWQL_AUTH_DIR}/${auth["${AWQL_TOKEN_TYPE}"]}/auth.sh"
+    if [[ "${#auth[@]}" -gt 0 && -f "$authFile" ]]; then
+        if [[ "${AWQL_AUTH_GOOGLE_TYPE}" == "${auth["${AWQL_TOKEN_TYPE}"]}" ]]; then
+            access="$(${authFile} \
+                -c "${auth["${AWQL_AUTH_CLIENT_ID}"]}" \
+                -s "${auth["${AWQL_AUTH_CLIENT_SECRET}"]}" \
+                -r "${auth["${AWQL_REFRESH_TOKEN}"]}"
+            )"
+        elif [[ "${AWQL_AUTH_CUSTOM_TYPE}" == "${auth["${AWQL_TOKEN_TYPE}"]}" ]]; then
+            local url
+            url="${auth["${AWQL_AUTH_PROTOCOL}"]}://${auth["${AWQL_AUTH_HOSTNAME}"]}:${auth["${AWQL_AUTH_PORT}"]}"
+            url+="${auth["${AWQL_AUTH_PATH}"]}"
+            access="$(${authFile} "$url")"
+        fi
+        if [[ "${#access[@]}" -gt 0 && -z "${access["${AWQL_ERROR_TOKEN}"]}" ]]; then
+            access["${AWQL_DEVELOPER_TOKEN}"]="${auth["${AWQL_DEVELOPER_TOKEN}"]}"
+        fi
+    fi
+
+    echo "$(arrayToString "$(declare -p access)")"
+}
+
+##
+# Get authentification properties from Yaml file
+# @example ([ACCESS_TOKEN]="..." [DEVELOPER_TOKEN]="...")
+# @param string $1 Access token [optional]
+# @param string $2 Developer token [optional]
+# @return arrayToString
+# @returnStatus 1 If auth file can not be retrieved
+# @returnStatus 1 If auth file is not valid
+# @returnStatus 1 If configuration auth file does not exist
+function __oauth ()
+{
+    declare -A access=()
+
+    local accessToken="$1"
+    local developerToken="$2"
+    if [[ -n "$accessToken" && -n "$developerToken" ]]; then
+       # Inline mode
+        access["${AWQL_TOKEN_TYPE}"]="${AWQL_TOKEN_TYPE_VALUE}"
+        access["${AWQL_ACCESS_TOKEN}"]="$accessToken"
+        access["${AWQL_DEVELOPER_TOKEN}"]="$developerToken"
+    else
+        access="$(__accessToken)"
+    fi
+
+    echo "$(arrayToString "$(declare -p access)")"
+}
+
+##
 # Send a curl request to Adwords API to get response for AWQL query
-# @param string $1 Awql query
+# @param string $1 Request
 # @param string $2 Output filepath
-# @param string $3 Api version
-# @param string $4 Adwords ID
-# @param arrayToString $5 Google authentification tokens
-# @param arrayToString $6 Google request properties
-# @return arrayToString response
-# @returnStatus 2 If
+# @return arrayToString Response
 # @returnStatus 1 If response is on error
 function awqlSelect ()
 {
-
-auth=$(auth "$accessToken" "$developerToken")
-        if [[ $? -gt 0 ]]; then
-            echo "$auth"
-            if [[ $? -eq 1 ]]; then
-                exit 1
-            elif [[ $? -gt 1 ]]; then
-                return 1
-            fi
-        fi
-
-    local query="$1"
+    if [[ -z "$1" || "$1" != "("*")" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
+    fi
+    declare -A -r request="$1"
     local file="$2"
-    local apiVersion="$3"
-    local adwordsId="$4"
-    declare -A -r googleAuth="$5"
-    declare -A -r googleRequest="$6"
+    if [[ -z "$file" || "$file" != *"${AWQL_FILE_EXT}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_DATA_FILE}"
+        return 1
+    fi
+    declare -A -r auth="$(__oauth "${request["${AWQL_REQUEST_ACCESS}"]}" "${request["${AWQL_REQUEST_DEV_TOKEN}"]}")"
+    if [[ "${#auth[@]}" -eq 0 ]]; then
+        echo "${AWQL_AUTH_ERROR_INVALID_FILE}"
+        return 1
+    elif [[ -n "${auth["${AWQL_ERROR_TOKEN}"]}" ]]; then
+        echo "${auth["${AWQL_ERROR_TOKEN}"]}"
+        return 2
+    fi
+    declare -A -r api="$(yamlFileDecode "${AWQL_CONF_DIR}/${AWQL_REQUEST_FILE_NAME}")"
+    if [[ "${#api[@]}" -eq 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
+    fi
 
     # Define curl default properties
     local options="--silent"
-    if ! logIsMuted; then
+    if [[ "${request["${AWQL_REQUEST_VERBOSE}"]}" -eq 1 ]]; then
         options+=" --trace-ascii ${file}${AWQL_HTTP_RESPONSE_EXT}"
     fi
-    if [[ "${googleRequest["CONNECT_TIME_OUT"]}" -gt 0 ]]; then
-        options+=" --connect-timeout ${googleRequest["CONNECT_TIME_OU"T]}"
+    if [[ "${api["${AWQL_API_CONNECT_TO}"]}" -gt 0 ]]; then
+        options+=" --connect-timeout ${api["${AWQL_API_CONNECT_TO}"]}"
     fi
-    if [[ "${googleRequest["TIME_OUT"]}" -gt 0 ]]; then
-        options+=" --max-time ${googleRequest["TIME_OUT"]}"
+    if [[ "${api["${AWQL_API_TO}"]}" -gt 0 ]]; then
+        options+=" --max-time ${api["${AWQL_API_TO}"]}"
     fi
+
+    # Prepare and format response
+    local out
+    out+="[${AWQL_RESPONSE_FILE}]=\"${file}\" "
+    out+="[${AWQL_RESPONSE_CACHED}]=0 "
+    out+="[${AWQL_RESPONSE_HTTP_CODE}]=%{http_code} "
+    out+="[${AWQL_RESPONSE_TIME_DURATION}]=\"%{time_total}\" "
+    out="(${out})"
 
     # Send request to Google API Adwords
-    local googleUrl="${googleRequest["PROTOCOL"]}://${googleRequest["HOSTNAME"]}${googleRequest["PATH"]}"
-    local response=$(curl \
-        --request "${googleRequest["METHOD"]}" "${googleUrl}${apiVersion}" \
-        --data-urlencode "${googleRequest["RESPONSE_FORMAT"]}=CSV" \
-        --data-urlencode "${googleRequest["AWQL_QUERY"]}=${query}" \
-        --header "${googleRequest["AUTHORIZATION"]}:${googleAuth["TOKEN_TYPE"]} ${googleAuth["ACCESS_TOKEN"]}" \
-        --header "${googleRequest["DEVELOPER_TOKEN"]}:${googleAuth["DEVELOPER_TOKEN"]}" \
-        --header "${googleRequest["ADWORDS_ID"]}:${adwordsId}" \
-        --output "$file" \
-        --write-out "([FILE]=\"${file}\" [CACHED]=0 [HTTP_CODE]=%{http_code} [TIME_DURATION]='%{time_total}')" ${options}
-    )
+    local url="${api["${AWQL_API_PROTOCOL}"]}://${api["${AWQL_API_HOST}"]}${api["${AWQL_API_PATH}"]}"
+    local response="$(curl \
+        --request "${api["${AWQL_API_METHOD}"]}" "${url}${request["${AWQL_REQUEST_VERSION}"]}" \
+        --data-urlencode "${api["${AWQL_API_RESPONSE}"]}=CSV" \
+        --data-urlencode "${api["${AWQL_API_QUERY}"]}=${request["${AWQL_REQUEST_QUERY}"]}" \
+        --header "${api["${AWQL_API_AUTH}"]}:${auth["${AWQL_TOKEN_TYPE}"]} ${auth["${AWQL_ACCESS_TOKEN}"]}" \
+        --header "${api["${AWQL_API_TOKEN}"]}:${auth["${AWQL_DEVELOPER_TOKEN}"]}" \
+        --header "${api["${AWQL_API_ID}"]}:${request["${AWQL_REQUEST_ID}"]}" \
+        --output "$file" --write-out "$out" ${options}
+    )"
 
-    declare -A -r responseInfo="$response"
-    if [[ ${responseInfo["HTTP_CODE"]} -eq 0 || ${responseInfo["HTTP_CODE"]} -gt 400 ]]; then
-        # A connexion error occured
-        local errMsg="ConnexionError.NOT_FOUND with API ${apiVersion}"
-        if ! logIsMuted; then
-            errMsg+=" @source $FILE"
+    declare -A -r resp="$response"
+    if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -eq 0 || ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 400 ]]; then
+        # No connexion
+        local errMsg
+        if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 400 ]]; then
+            errMsg="${AWQL_RESP_ERROR_CONNEXION}"
+        else
+            errMsg="${AWQL_RESP_ERROR_NO_CONNEXION}"
+        fi
+        errMsg+=" with API ${request["${AWQL_REQUEST_VERSION}"]}"
+        if [[ "${request["${AWQL_REQUEST_VERBOSE}"]}" -eq 1 ]]; then
+            errMsg+=" @source ${file}"
         fi
         echo "$errMsg"
         return 1
-    elif [[ ${responseInfo["HTTP_CODE"]} -gt 300 ]]; then
+    elif [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 300 ]]; then
         # A server error occured, extract type and others information from XML response
-        local errType=$(awk -F 'type>|<\/type' '{print $2}' "$file")
-        local errField=$(awk -F 'fieldPath>|<\/fieldPath' '{print $2}' "$file")
+        local errMsg="$(awk -F 'type>|<\/type' '{print $2}' "$file")"
+        local errField="$(awk -F 'fieldPath>|<\/fieldPath' '{print $2}' "$file")"
         if [[ -n "$errField" ]]; then
-            echo "${errType} regarding field(s) named ${errField}"
+            echo "${errMsg} regarding field(s) named ${errField}"
         else
-            echo "${errType} with API ${apiVersion}"
+            echo "${errMsg} with API ${request["${AWQL_REQUEST_VERSION}"]}"
         fi
         # Except for authentification errors, does not exit on each error, just notice it
-        if [[ "$errType"  == "AuthenticationError"* ]]; then
+        if [[ "$errMsg" == "AuthenticationError"* ]]; then
             return 1
         fi
         return 2
     else
         # Format CSV in order to improve re-using by removing first and last line
         # Do not use -i option for MacOs portability
-        sed -e '$d; 1d' "$file" > "${file}-e" && mv "${file}-e" "${file}"
-    fi
+        sed -e '$d; 1d' "$file" > "${file}-e" && mv "${file}-e" "$file"
 
-    echo "$response"
+        echo "$response"
+    fi
 }

@@ -14,7 +14,7 @@ rootDir=$(dirname "$scriptPath")
 
 # Import
 source "${rootDir}/conf/awql.sh"
-source "${AWQL_INC_DIR}/main.sh"
+source "${AWQL_AUTH_DIR}/main.sh"
 
 # Default values
 declare -- adwordsId=""
