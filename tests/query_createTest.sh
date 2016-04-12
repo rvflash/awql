@@ -111,7 +111,6 @@ function test_awqlCreateQuery ()
     test=$(awqlCreateQuery "${TEST_QUERY_RESERVED_KEYWORD_CREATE}" "${TEST_QUERY_API_VERSION}")
     echo -n "-$?"
     [[ "$test" == "${AWQL_QUERY_ERROR_VIEW}" ]] && echo -n 1
-
 }
 
 
