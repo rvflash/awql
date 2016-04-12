@@ -13,6 +13,7 @@ declare -r -i TEST_TIME_BAD_TIMESTAMP=123
 declare -r TEST_TIME_BAD_TYPE_TIMESTAMP="12s"
 declare -r -i TEST_TIME_VALID_TIMESTAMP=1453512051
 declare -r TEST_TIME_VALID_DATETIME="2016-01-23T02:20:51+0100"
+declare -r TEST_TIME_VALID_UTC_DATETIME="2016-01-23T02:20:51+01:00"
 
 
 readonly TEST_TIME_TIMESTAMP="-01"
@@ -136,7 +137,7 @@ function test_utcDateTimeFromTimestamp ()
 }
 
 
-readonly TEST_TIME_TIMESTAMP_FROM_UTC_DATE_TIME="-11-11-01"
+readonly TEST_TIME_TIMESTAMP_FROM_UTC_DATE_TIME="-11-11-01-01"
 
 function test_timestampFromUtcDateTime ()
 {
@@ -152,8 +153,13 @@ function test_timestampFromUtcDateTime ()
     echo -n "-$?"
     [[ -z "$test" ]] && echo -n 1
 
-     # Check valid timestamp
+    # Check valid datetime
     test=$(timestampFromUtcDateTime "${TEST_TIME_VALID_DATETIME}")
+    echo -n "-$?"
+    [[ "$test" == "$TEST_TIME_VALID_TIMESTAMP" ]] && echo -n 1
+
+    # Check valid utc
+    test=$(timestampFromUtcDateTime "${TEST_TIME_VALID_UTC_DATETIME}")
     echo -n "-$?"
     [[ "$test" == "$TEST_TIME_VALID_TIMESTAMP" ]] && echo -n 1
 }

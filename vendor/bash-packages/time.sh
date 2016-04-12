@@ -153,7 +153,7 @@ function utcDateTimeFromTimestamp ()
 
 ##
 # Convert a UTC datetime to Timestamp
-# @example 1450485413 => 2015-12-19T01:28:58+01:00
+# @example 1450485413 => 2015-12-19T01:28:58+0100
 # @param string $1 utcDatetime
 # @return int
 # @returnStatus 1 If parameter named utcDatetime is invalid
@@ -167,7 +167,11 @@ function timestampFromUtcDateTime ()
     if [[ -z "$utcDatetime" || ! "$utcDatetime" == *"T"* ]]; then
         return 1
     fi
-
+    # Manage 2015-12-19T01:28:58+01:00 as 2015-12-19T01:28:58+0100
+    if [[ "$utcDatetime" == *"+"*":"* ]]; then
+        local z="${utcDatetime%:*}"
+        utcDatetime="${utcDatetime%:*}${utcDatetime: -2}"
+    fi
     # MacOs portability
     if [[ "${BP_OS}" == 'Darwin' ]]; then
         ts=$(date -j -f "${BP_UTC_DATE_FORMAT}" "$utcDatetime" "+%s" 2>/dev/null)
