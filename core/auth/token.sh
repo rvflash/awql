@@ -9,6 +9,35 @@ fi
 
 
 ##
+# Extract part from a JSON token
+#
+# @param string $1 Element to extract
+# @param string $2 Json
+# @return string
+function __extractDataFromJson ()
+{
+    local extract="$1"
+    local json="$(echo "$2" | tr "\n" " " | tr -d " ")"
+    if [[ -z "$extract" || -z "$json" || "$json" != "{"*"}" ]]; then
+        return 0
+    fi
+
+    # Set the option for extended regexp for MacOs portability
+    local options="-r"
+    if [[ "${AWQL_OS}" == 'Darwin' ]]; then
+       options="-E"
+    fi
+
+    local data="$(echo "$json" | sed ${options} "s/.*\"${extract}\":\"([^\"]+)\".*/\1/")"
+    if [[ "$data" == "$json" ]]; then
+        # Data not found
+        return 0
+    fi
+
+    echo "$data"
+}
+
+##
 # Parse a JSON Google token to extract ACCESS_token, EXPIRES_IN, etc.
 # ExpiresIn from Google token was converted in ExpireAt by this tool to manage expire date
 # 
@@ -39,16 +68,15 @@ function tokenFromFile ()
     if [[ "${AWQL_OS}" == 'Darwin' ]]; then
        options="-E"
     fi
-    local token
-    token=$(cat "$file" | tr "\n" " " | tr -d " ")
-    if [[ $? -ne 0 || "$token" != *"token_type"* || "$token" != *"access_token"* || "$token" != *"expire_at"* ]]; then
+    local token="$(cat "$file")"
+    if [[ "$token" != *"${AWQL_JSON_TOKEN_TYPE}"* || "$token" != *"${AWQL_JSON_ACCESS_TOKEN}"* || "$token" != *"${AWQL_JSON_EXPIRE_AT}"* ]]; then
         echo "()"
         return 2
     fi
 
-    local type="$(echo "$token" | sed ${options} "s/.*\"token_type\":\"([^\"]+)\".*/\1/")"
-    local access="$(echo "$token" | sed ${options} "s/.*\"access_token\":\"([^\"]+)\".*/\1/")"
-    local expire="$(echo "$token" | sed ${options} "s/.*\"expire_at\":\"([^\"]+)\".*/\1/")"
+    local type="$(__extractDataFromJson "${AWQL_JSON_TOKEN_TYPE}" "$token" )"
+    local access="$(__extractDataFromJson "${AWQL_JSON_ACCESS_TOKEN}" "$token" )"
+    local expire="$(__extractDataFromJson "${AWQL_JSON_EXPIRE_AT}" "$token" )"
 
-    echo "([${AWQL_ACCESS_TOKEN}]=\"${access}\" [${AWQL_TOKEN_TYPE}]=\"${type}\" [${AWQL_TOKEN_EXPIRE_AT}]=\"${expire}\")"
+    echo "([${AWQL_ACCESS_TOKEN}]=\"${access}\" [${AWQL_TOKEN_EXPIRE_AT}]=\"${expire}\" [${AWQL_TOKEN_TYPE}]=\"${type}\" )"
 }

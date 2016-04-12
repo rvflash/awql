@@ -14,9 +14,10 @@ rootDir=$(dirname "$scriptPath")
 
 # Import
 source "${rootDir}/conf/awql.sh"
-source "${AWQL_AUTH_DIR}/main.sh"
+source "${AWQL_INC_DIR}/main.sh"
 
 # Default values
+declare -- apiVersion="${AWQL_API_LAST_VERSION}"
 declare -- adwordsId=""
 declare -- accessToken=""
 declare -- developerToken=""
@@ -24,8 +25,7 @@ declare -- query=""
 declare -i cache=0
 declare -i autoRehash=1
 declare -i verbose=0
-declare -- apiVersion="${AWQL_API_LAST_VERSION}"
-
+declare -i batch=0
 
 ##
 # Returns list of API versions supported
@@ -69,6 +69,7 @@ function usage ()
     echo "-v used to print more information"
     echo "-A Disable automatic rehashing. This option is on by default, which enables table and column name completion"
     echo "-V Google API version, by default '${AWQL_API_LAST_VERSION}'"
+    echo "-B to print results using comma as the column separator"
 
     if [[ "$error" == "curl" ]]; then
         echo -e "\n> CURL in command line is required"
@@ -90,7 +91,7 @@ fi
 
 # Read the options
 # Use getopts vs getopt for MacOs portability
-while getopts "i::a::d::s:e::V:cvA" FLAG; do
+while getopts "i::a::d::s:e::V:cvAB" FLAG; do
     case "${FLAG}" in
         i) adwordsId="$OPTARG" ;;
         a) accessToken="$OPTARG" ;;
@@ -99,6 +100,7 @@ while getopts "i::a::d::s:e::V:cvA" FLAG; do
         c) cache=1 ;;
         v) verbose=0 ;;
         A) autoRehash=0 ;;
+        B) batch=1 ;;
         V) apiVersion="$OPTARG" ;;
         *) usage; exit 1 ;;
         ?) exit  ;;
@@ -128,5 +130,5 @@ if [[ -z "$query" ]]; then
         awql "$query" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" ${cache} ${verbose}
     done
 else
-    awql "$query" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" ${cache} ${verbose} 1
+    awql "$query" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" ${cache} ${verbose} ${batch}
 fi

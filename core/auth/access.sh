@@ -45,7 +45,7 @@ function __customRefresh ()
     )"
 
     if [[ ${httpCode} -eq 0 || ${httpCode} -gt 400 ]]; then
-        rm "$file"
+        rm -f "$file"
         return 2
     fi
 }
@@ -54,18 +54,27 @@ function __customRefresh ()
 # Send authentification request to Google API Account
 #
 # Get refresh token :
-# https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=${CLIENT_ID}
-#   &scope=https://www.googleapis.com/auth/adwords&response_type=code&redirect_uri=urn:ietf:wg:oauth:2.0:oob
-#   &approval_prompt=force
+# https://accounts.google.com/o/oauth2/auth?client_id={CLIENT_ID}&response_type=code
+#   &scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fadwords
+#   &redirect_uri=urn:ietf:wg:oauth:2.0:oob&access_type=offline&approval_prompt=auto
+#
+# Enable authorization code :
+# curl \
+#  -d code=YOUR_AUTHORIZATION_CODE \
+#  -d client_id=YOUR_CLIENT_ID \
+#  -d client_secret=YOUR_CLIENT_SECRET \
+#  -d redirect_uri=urn:ietf:wg:oauth:2.0:oob \
+#  -d grant_type=authorization_code https://accounts.google.com/o/oauth2/token
 #
 # @param string $1 Client ID
 # @param string $2 Client secret
 # @param string $3 Refresh token
-# @param string $5 File
+# @param string $4 File
 # @return void
 # @returnStatus 1 If request can not be performed
 # @returnStatus 2 If request fails
-# @returnStatus 3 If case of response in error
+# @returnStatus 3 In case of response in error
+# @returnStatus 4 In case of invalid expiration date
 function __googleRefresh ()
 {
     local clientId="$1"
@@ -77,11 +86,10 @@ function __googleRefresh ()
     fi
 
     # Google refresh token properties
-    declare -A -r request="$(yamlFileDecode "${AWQL_AUTH_DIR}/${AUTH_GOOGLE_TYPE}/${AWQL_REQUEST_FILE_NAME}")"
+    declare -A -r request="$(yamlFileDecode "${AWQL_AUTH_FILE/.yaml/-request.yaml}")"
     if [[ "${#request[@]}" -eq 0 ]]; then
         return 1
     fi
-
     # Define curl default properties
     local options="--silent"
     if [[ "${request["${AWQL_API_CONNECT_TO}"]}" -gt 0 ]]; then
@@ -95,19 +103,19 @@ function __googleRefresh ()
     local url="${request["${AWQL_API_PROTOCOL}"]}://${request["${AWQL_API_HOST}"]}${request["${AWQL_API_PATH}"]}"
     declare -i httpCode="$(curl \
         --request "${request["${AWQL_API_METHOD}"]}" "$url" \
-        --data "${request["${AWQL_AUTH_CLIENT_ID}"]}=${CLIENT_ID}" \
-        --data "${request["${AWQL_AUTH_CLIENT_SECRET}"]}=${CLIENT_SECRET}" \
-        --data "${request["${AWQL_REFRESH_TOKEN}"]}=${REFRESH_TOKEN}" \
+        --data "${request["${AWQL_AUTH_CLIENT_ID}"]}=${clientId}" \
+        --data "${request["${AWQL_AUTH_CLIENT_SECRET}"]}=${clientSecret}" \
+        --data "${request["${AWQL_REFRESH_TOKEN}"]}=${refreshToken}" \
         --data "${request["${AWQL_GRANT_TYPE}"]}=${request["${AWQL_GRANT_REFRESH_TOKEN}"]}" \
         --output "$file" \
         --write-out "%{http_code}" ${options}
     )"
 
     if [[ ${httpCode} -eq 0 || ${httpCode} -gt 400 ]]; then
-        rm "$file"
+        rm -f "$file"
         return 2
-    elif [[ "$(grep "error" "$file" | wc -l)" -eq 1 ]]; then
-        rm "$file"
+    elif [[ "$(grep "error" "$file" | wc -l)" -ne 0 ]]; then
+        rm -f "$file"
         return 3
     fi
 
@@ -115,9 +123,19 @@ function __googleRefresh ()
     declare -i curTs="$(timestamp)"
     local utc
     utc="$(utcDateTimeFromTimestamp "$((${curTs}+3600))")"
-    if [[ $? -eq 0 ]]; then
-        sed -e "s/\"expires_in\":3600/\"expire_at\":\"${utc}\"/g" "$file" > "${file}-e" && mv "${file}-e" "$file"
+    if [[ $? -ne 0 ]]; then
+        rm "$file"
+        return 4
     fi
+    local token="$(cat "$file")"
+    local type="$(__extractDataFromJson "${AWQL_JSON_TOKEN_TYPE}" "$token")"
+    local access="$(__extractDataFromJson "${AWQL_JSON_ACCESS_TOKEN}" "$token")"
+
+    echo "{" > "$file"
+    echo "  \"${AWQL_JSON_ACCESS_TOKEN}\" : \"${access}\"," >> "$file"
+    echo "  \"${AWQL_JSON_TOKEN_TYPE}\" : \"${type}\"," >> "$file"
+    echo "  \"${AWQL_JSON_EXPIRE_AT}\" : \"${utc}\"" >> "$file"
+    echo "}" >> "$file"
 }
 
 ##
@@ -125,12 +143,8 @@ function __googleRefresh ()
 # @return arrayToString
 function __token ()
 {
-    local file="$1"
-    if [[ -z "$file" ]]; then
-        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_INVALID_FILE}\" )"
-        return 1
-    fi
-    local auth="$(tokenFromFile "$file")"
+    local auth
+    auth="$(tokenFromFile "$1")"
     if [[ $? -ne 0 ]]; then
         echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_INVALID_FILE}\" )"
         return 1
@@ -149,11 +163,10 @@ function __tokenCached ()
     if [[ -z "$file" ]]; then
         return 1
     fi
-echo "v${file}v"
+
     # Check if valid token exists in cache
     if [[ -f "$file" ]]; then
         declare -A token="$(tokenFromFile "$file")"
-        echo "r${#token[@]}v"
         if [[ "${#token[@]}" -gt 0 ]]; then
             declare -i ts="$(timestampFromUtcDateTime "${token["${AWQL_TOKEN_EXPIRE_AT}"]}")"
             if [[ ${ts} -gt 0 ]]; then
@@ -178,7 +191,7 @@ function authCustomToken ()
 {
     local url="$1"
     if [[ -z "$url" || ! "$url" =~ ${AWQL_API_URL_REGEX} ]]; then
-        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_REQUEST_FAIL}\" )"
+        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_INVALID_URL}\" )"
         return 1
     fi
     local file="${AWQL_WRK_DIR}/${AWQL_TOKEN_FILE_NAME}"
@@ -191,7 +204,7 @@ function authCustomToken ()
     # Try to retrieve a fresh token
     __customRefresh "$url" "$file"
     if [[ $? -ne 0 ]]; then
-        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_REQUEST_FAIL}\" )"
+        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR}\" )"
         return 1
     fi
 
@@ -207,7 +220,7 @@ function authGoogleToken ()
     local clientSecret="$2"
     local refreshToken="$3"
     if [[ -z "$clientId" || -z "$clientSecret" || -z "$refreshToken" ]]; then
-        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_REQUEST_FAIL}\" )"
+        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_INVALID_CLIENT}\" )"
         return 1
     fi
     local file="${AWQL_WRK_DIR}/${AWQL_TOKEN_FILE_NAME}"
@@ -220,7 +233,7 @@ function authGoogleToken ()
     # Try to retrieve a fresh token
     __googleRefresh "$clientId" "$clientSecret" "$refreshToken" "$file"
     if [[ $? -ne 0 ]]; then
-        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR_REQUEST_FAIL}\" )"
+        echo "([${AWQL_ERROR_TOKEN}]=\"${AWQL_AUTH_ERROR}\" )"
         return 1
     fi
 

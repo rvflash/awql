@@ -49,6 +49,10 @@ function __getData ()
         return 1
     fi
     declare -A get="$request"
+    if [[ -z "${get["${AWQL_REQUEST_CHECKSUM}"]}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_QUERY_CHECKSUM}"
+        return 1
+    fi
 
     # Overload caching mode for local database AWQL methods
     declare -i cache="${get["${AWQL_REQUEST_CACHED}"]}"
@@ -102,10 +106,6 @@ function awql ()
 {
     local query="$1"
     local apiVersion="$2"
-    if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
-        echo "${AWQL_INTERNAL_ERROR_API_VERSION}"
-        return 1
-    fi
     local adwordsId="$3"
     local accessToken="$4"
     local developerToken="$5"
@@ -116,25 +116,23 @@ function awql ()
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     local request
     request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw} "$accessToken" "$developerToken")
-    if [[ $? -ne 0 ]]; then
+    if [[ $? -gt 1 ]]; then
         echo "$request"
-        if [[ $? -eq 1 ]]; then
-            exit 1
-        else
-            return 1
-        fi
+        return 2
+    elif [[ $? -eq 1 ]]; then
+        echo "$request"
+        exit 1
     fi
 
     # Send request to Adwords or local database to get report
     local response
     response=$(__getData "$request")
-    if [[ $? -ne 0 ]]; then
+    if [[ $? -gt 1 ]]; then
         echo "$response"
-        if [[ $? -eq 1 ]]; then
-            exit 1
-        else
-            return 1
-        fi
+        return 2
+    elif [[ $? -eq 1 ]]; then
+        echo "$response"
+        exit 1
     fi
 
     awqlResponse "$request" "$response"

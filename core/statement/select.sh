@@ -82,6 +82,10 @@ function awqlSelect ()
         return 1
     fi
     declare -A -r request="$1"
+    if [[ -z "${request["${AWQL_REQUEST_ID}"]}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_ID}"
+        return 1
+    fi
     local file="$2"
     if [[ -z "$file" || "$file" != *"${AWQL_FILE_EXT}" ]]; then
         echo "${AWQL_INTERNAL_ERROR_DATA_FILE}"

@@ -29,7 +29,7 @@ declare -r AWQL_FILE_EXT=".awql"
 declare -r AWQL_HTTP_RESPONSE_EXT=".rsp"
 declare -r AWQL_CSV_TOOL_FILE="${AWQL_ROOT_DIR}/vendor/shcsv/csv.sh"
 declare -r AWQL_BASH_PACKAGES_DIR="${AWQL_ROOT_DIR}/vendor/bash-packages"
-declare -r AWQL_AUTH_FILE="${AWQL_AUTH_DIR}/auth.yaml"
+declare -r AWQL_AUTH_FILE="${AWQL_CONF_DIR}/auth.yaml"
 declare -r AWQL_AUTH_INIT_FILE="${AWQL_AUTH_DIR}/init.sh"
 
 # Adwords API
@@ -146,6 +146,10 @@ declare -r AWQL_AUTH_PATH="PATH"
 declare -r AWQL_AUTH_PORT="PORT"
 declare -r AWQL_GRANT_TYPE="GRANT_TYPE"
 declare -r AWQL_GRANT_REFRESH_TOKEN="GRANT_TYPE_RT"
+declare -r AWQL_JSON_TOKEN_TYPE="token_type"
+declare -r AWQL_JSON_ACCESS_TOKEN="access_token"
+declare -r AWQL_JSON_EXPIRE_AT="expire_at"
+declare -r AWQL_JSON_EXPIRE_IN="expire_in"
 
 # Adwords API request
 declare -r AWQL_API_CONNECT_TO="CONNECT_TIME_OUT"
@@ -192,7 +196,7 @@ declare -r AWQL_INTERNAL_ERROR_API_VERSION="InternalError.UNKNOWN_API_VERSION"
 declare -r AWQL_INTERNAL_ERROR_COLUMN_TYPE="InternalError.INVALID_AWQL_COLUMN"
 declare -r AWQL_INTERNAL_ERROR_DATA_FILE="InternalError.UNKNOWN_DATA_FILE"
 declare -r AWQL_INTERNAL_ERROR_WRITE_FILE="InternalError.WRITE_FILE_PERMISSION"
-declare -r AWQL_INTERNAL_ERROR_ID="InternalError.UNKNOWN_ADWORDS_ID"
+declare -r AWQL_INTERNAL_ERROR_ID="InternalError.INVALID_ADWORDS_ID"
 declare -r AWQL_INTERNAL_ERROR_INVALID_TABLES="InternalError.INVALID_AWQL_TABLES"
 declare -r AWQL_INTERNAL_ERROR_INVALID_FIELDS="InternalError.INVALID_AWQL_FIELDS"
 declare -r AWQL_INTERNAL_ERROR_INVALID_TYPES="InternalError.INVALID_AWQL_TABLE_TYPES"
@@ -227,12 +231,13 @@ declare -r AWQL_QUERY_ERROR_FUNCTION="QueryError.UNKNOWN_FUNCTION"
 
 # > Response errors
 declare -r AWQL_AUTH_ERROR_INVALID_FILE="AuthenticationError.INVALID_FILE"
-declare -r AWQL_AUTH_ERROR_REQUEST_FAIL="AuthenticationError.CUSTOM_REQUEST_FAIL"
 declare -r AWQL_AUTH_ERROR_INVALID_URL="AuthenticationError.INVALID_URL"
+declare -r AWQL_AUTH_ERROR_INVALID_CLIENT="AuthenticationError.INVALID_CLIENT"
 declare -r AWQL_AUTH_ERROR_INVALID_DEVELOPER_TOKEN="AuthenticationError.MISSING_DEVELOPER_TOKEN"
 declare -r AWQL_AUTH_ERROR_BUILD_FILE="AuthenticationError.UNABLE_TO_BUILD_FILE"
 declare -r AWQL_RESP_ERROR_NO_CONNEXION="ConnexionError.NOT_FOUND"
 declare -r AWQL_RESP_ERROR_CONNEXION="ConnexionError.SERVER"
+declare -r AWQL_AUTH_ERROR="AuthenticationError.FAIL"
 
 # Workspace
 if [[ -n "${AWQL_WRK_DIR}" && ! -d "${AWQL_WRK_DIR}" ]]; then

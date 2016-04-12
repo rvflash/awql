@@ -204,8 +204,8 @@ function awqlRequest ()
     request["${AWQL_REQUEST_VERBOSE}"]=${verbose}
     request["${AWQL_REQUEST_RAW}"]=${raw}
     request["${AWQL_REQUEST_VERTICAL}"]=${verticalMode}
-    request["${AWQL_REQUEST_ACCESS_TOKEN}"]="$accessToken"
-    request["${AWQL_REQUEST_DEVELOPER_TOKEN}"]="$developerToken"
+    request["${AWQL_REQUEST_ACCESS}"]="$accessToken"
+    request["${AWQL_REQUEST_DEV_TOKEN}"]="$developerToken"
 
     # Calculate a unique identifier for the query
     request["${AWQL_REQUEST_CHECKSUM}"]="$(checksum "${request["${AWQL_REQUEST_ID}"]} ${request["${AWQL_REQUEST_QUERY}"]}")"
