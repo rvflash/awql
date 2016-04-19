@@ -43,10 +43,10 @@ function awqlRead ()
     # History file
     declare -i historyIndex historySize
     declare -a history=()
-    local historyFile="${AWQL_HISTORY_FILE}"
-    if [[ -n "$historyFile" ]]; then
-        if [[ -f "$historyFile" ]]; then
-            mapfile -t history < "$historyFile"
+    local file="${AWQL_HISTORY_FILE}"
+    if [[ -n "$file" ]]; then
+        if [[ -f "$file" ]]; then
+            mapfile -t history < "$file"
         fi
         historySize=${#history[@]}
         historyIndex=${historySize}
@@ -90,7 +90,7 @@ function awqlRead ()
             # Move the cursor
             echo -ne "\r\033[$((${charIndex}+${#prompt}))C"
         elif [[ "$char" == $'\x1b[A' || "$char" == $'\x1b[B' ]]; then
-            if [[ -n "$historyFile" ]]; then
+            if [[ -n "$file" ]]; then
                 # Navigate in history with up and down arrow keys
                 if [[ "$char" == $'\x1b[A' && ${historyIndex} -gt 0 ]];then
                     # Up
@@ -186,13 +186,13 @@ function awqlRead ()
                 break
             elif [[ "$reply" == *";" || "$reply" == *"\\"[gG] ]]; then
                 # Query ending
-                if [[ -n "$historyFile" ]]; then
+                if [[ -n "$file" ]]; then
                     # Add line in history
                     if [[ "${historyIndex}" -lt "$historySize" ]]; then
                         # Remove the old position in historic in order to put this line as the last command played
-                        sed -i -e $((${historyIndex} + 1))d "$historyFile"
+                        sed -e $((${historyIndex} + 1))d "$file" > "${file}-e" && mv "${file}-e" "$file"
                     fi
-                    echo "$reply" >> "$historyFile"
+                    echo "$reply" >> "$file"
                 fi
                 # Go to new line to display response
                 echo

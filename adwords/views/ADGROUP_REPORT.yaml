@@ -1,0 +1,7 @@
+ORIGIN    : SELECT Device,AdGroupId,CampaignId,AdGroupName,AdGroupStatus,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,SearchImpressionShare FROM ADGROUP_PERFORMANCE_REPORT WHERE Impressions > O DURUNG TODAY ORDER BY Clicks ASC
+NAMES     : Device Id CampaignId Name Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
+FIELDS    : Device AdGroupId CampaignId AdGroupName AdGroupStatus Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
+TABLE     : ADGROUP_PERFORMANCE_REPORT
+WHERE     : Impressions > O
+DURING    : TODAY
+ORDER     : Clicks ASC

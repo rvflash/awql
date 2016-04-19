@@ -191,8 +191,8 @@ function awqlRequest ()
     # Management by query method
     local queryComponents
     queryComponents="$(__queryToRequest "$queryStr" "$apiVersion")"
-    if [[ $? -ne 0 ]]; then
-        declare -i errCode=$?
+    declare -i errCode=$?
+    if [[ ${errCode} -ne 0 ]]; then
         echo "$queryComponents"
         return ${errCode}
     fi
@@ -208,7 +208,7 @@ function awqlRequest ()
     request["${AWQL_REQUEST_DEV_TOKEN}"]="$developerToken"
 
     # Calculate a unique identifier for the query
-    request["${AWQL_REQUEST_CHECKSUM}"]="$(checksum "${request["${AWQL_REQUEST_ID}"]} ${request["${AWQL_REQUEST_QUERY}"]}")"
+    request["${AWQL_REQUEST_CHECKSUM}"]="$(checksum "${request["${AWQL_REQUEST_ID}"]} ${request["${AWQL_REQUEST_QUERY_SOURCE}"]}")"
     if [[ $? -ne 0 ]]; then
         echo "${AWQL_INTERNAL_ERROR_QUERY_CHECKSUM}"
         return 1

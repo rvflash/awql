@@ -1,0 +1,16 @@
+ConversionCategoryName   : AverageCost AverageCpc AverageCpm AverageCpv AveragePosition Clicks Cost Ctr Impressions InteractionRate Interactions VideoViewRate VideoViews
+ConversionTrackerId      : AverageCost AverageCpc AverageCpm AverageCpv AveragePosition Clicks Cost Ctr Impressions InteractionRate Interactions VideoViewRate VideoViews
+ConversionTypeName       : AverageCost AverageCpc AverageCpm AverageCpv AveragePosition Clicks Cost Ctr Impressions InteractionRate Interactions VideoViewRate VideoViews
+AverageCost              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Ctr                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViewRate            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Interactions             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Cost                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Impressions              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionRate          : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Clicks                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViews               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpc               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpm               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpv               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AveragePosition          : ConversionCategoryName ConversionTrackerId ConversionTypeName

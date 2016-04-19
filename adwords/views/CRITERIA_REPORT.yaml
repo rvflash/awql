@@ -1,0 +1,6 @@
+ORIGIN    : SELECT AdGroupId,Id,CampaignId,Status,Criteria,CriteriaDestinationUrl,FinalUrls,FinalMobileUrls,TrackingUrlTemplate,UrlCustomParameters,CpcBid,TopOfPageCpc,IsNegative FROM CRITERIA_PERFORMANCE_REPORT ORDER BY AdGroupId ASC
+NAMES     : AdGroupId Id CampaignId Status Criteria CriteriaDestinationUrl FinalUrls FinalMobileUrls TrackingUrlTemplate UrlCustomParameters CpcBid TopOfPageCpc IsNegative
+FIELDS    : AdGroupId Id CampaignId Status Criteria CriteriaDestinationUrl FinalUrls FinalMobileUrls TrackingUrlTemplate UrlCustomParameters CpcBid TopOfPageCpc IsNegative
+TABLE     : CRITERIA_PERFORMANCE_REPORT
+DURING    : TODAY
+ORDER     : AdGroupId ASC

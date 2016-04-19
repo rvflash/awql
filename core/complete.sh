@@ -8,15 +8,13 @@ if [[ -z "${AWQL_ROOT_DIR}" ]]; then
 fi
 
 # Clean history, only keep the last N queries
-if [[ -f "${AWQL_HISTORY_FILE}" && "$(wc -l < "${AWQL_HISTORY_FILE}")" -gt ${AWQL_HISTORY_SIZE} ]]; then
-    tail -n ${AWQL_HISTORY_SIZE} "${AWQL_HISTORY_FILE}" > "${AWQL_HISTORY_FILE}-e"
-    if [[ $? -eq 0 ]]; then
-        mv "${AWQL_HISTORY_FILE}-e" "${AWQL_HISTORY_FILE}"
-    else
-        rm -f "${AWQL_HISTORY_FILE}-e"
-    fi
+declare -- historyFile="${AWQL_HISTORY_FILE}"
+declare -i historySize="$(wc -l < "$historyFile")"
+if [[ -f "$historyFile" && ${historySize} -gt ${AWQL_HISTORY_SIZE} ]]; then
+    tail -n ${AWQL_HISTORY_SIZE} "$historyFile" > "${historyFile}-e" && mv "${historyFile}-e" "$historyFile"
 fi
 
+# Constants
 declare -i -r COMPLETION_DISABLED=0
 declare -i -r COMPLETION_MODE_TABLES=1
 declare -i -r COMPLETION_MODE_FIELDS=2

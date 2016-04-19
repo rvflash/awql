@@ -109,7 +109,7 @@ function awqlDesc ()
     for field in "${columns[@]}"; do
         awqlName="${tableFields["$field"]}"
         if [[ -z "${fields["$awqlName"]}" ]]; then
-            echo "${AWQL_INTERNAL_ERROR_INVALID_FIELDS}"
+            echo "${AWQL_INTERNAL_ERROR_INVALID_FIELDS} $awqlName"
             return 1
         fi
         if inArray "$awqlName" "${keys["$table"]}"; then
@@ -128,5 +128,5 @@ function awqlDesc ()
         fi
     done
 
-    echo "(["${AWQL_RESPONSE_FILE}"]=\"${file}\" ["${AWQL_RESPONSE_CACHED}"]=1)"
+    echo "(["${AWQL_RESPONSE_FILE}"]=\"${file}\" ["${AWQL_RESPONSE_CACHED}"]=0)"
 }

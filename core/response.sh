@@ -115,7 +115,7 @@ function __printContext ()
         fi
     fi
 
-    printf "%s (%s sec) %s\n" "$size" "$duration" "$source"
+    printf "%s (%s sec) %s\n\n" "$size" "$duration" "$source"
 }
 
 ##
@@ -166,8 +166,6 @@ function awqlResponse ()
             return 1
         fi
         fileSize=$(wc -l < "$file")
-        # With header line
-        fileSize+=1
     fi
 
     # Add context (file size, time duration, etc.)

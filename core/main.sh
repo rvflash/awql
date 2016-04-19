@@ -53,16 +53,11 @@ function __getData ()
         echo "${AWQL_INTERNAL_ERROR_QUERY_CHECKSUM}"
         return 1
     fi
-
-    # Overload caching mode for local database AWQL methods
-    declare -i cache="${get["${AWQL_REQUEST_CACHED}"]}"
-    if [[ "${get["${AWQL_REQUEST_TYPE}"]}" != ${AWQL_QUERY_SELECT} ]]; then
-        cache=1
-    fi
-    local response
     local file="${AWQL_WRK_DIR}/${get["${AWQL_REQUEST_CHECKSUM}"]}${AWQL_FILE_EXT}"
 
     # Try to get date from cache
+    declare -i cache="${get["${AWQL_REQUEST_CACHED}"]}"
+    local response
     response=$(__getDataFromCache "$file" ${cache})
     if [[ $? -eq 0 ]]; then
          echo "$response"
@@ -116,23 +111,27 @@ function awql ()
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     local request
     request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw} "$accessToken" "$developerToken")
-    if [[ $? -gt 1 ]]; then
+    declare -i errCode=$?
+    if [[ ${errCode} -ne 0 ]]; then
         echo "$request"
-        return 2
-    elif [[ $? -eq 1 ]]; then
-        echo "$request"
-        exit 1
+        if [[ ${errCode} -gt 1 ]]; then
+            return 1
+        else
+            exit 1
+        fi
     fi
 
     # Send request to Adwords or local database to get report
     local response
     response=$(__getData "$request")
-    if [[ $? -gt 1 ]]; then
+    errCode=$?
+    if [[ ${errCode} -ne 0 ]]; then
         echo "$response"
-        return 2
-    elif [[ $? -eq 1 ]]; then
-        echo "$response"
-        exit 1
+        if [[ ${errCode} -gt 1 ]]; then
+            return 1
+        else
+            exit 1
+        fi
     fi
 
     awqlResponse "$request" "$response"

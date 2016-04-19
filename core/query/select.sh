@@ -271,7 +271,7 @@ function awqlSelectQuery ()
             echo "${AWQL_QUERY_ERROR_SELECT_ALL}"
             return 2
         fi
-        queryFields=(${view["${components["${AWQL_VIEW_NAMES}"]}"]})
+        queryFields=(${view["${AWQL_VIEW_NAMES}"]})
     fi
     # > Extract user name and Adwords column name for each field
     declare -a fields fieldsAlias fieldsNames

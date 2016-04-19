@@ -114,5 +114,5 @@ function awqlShow ()
         echo -e "$res" | sort -t, -k+1 -d >> "$file"
     fi
 
-    echo "(["${AWQL_RESPONSE_FILE}"]=\"${file}\" ["${AWQL_RESPONSE_CACHED}"]=1)"
+    echo "(["${AWQL_RESPONSE_FILE}"]=\"${file}\" ["${AWQL_RESPONSE_CACHED}"]=0)"
 }
