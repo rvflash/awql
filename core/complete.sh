@@ -76,6 +76,7 @@ function __completeOptions ()
 # @param string Word to complete
 # @param string Completion reply
 # @return string
+# @returnStatus 1 If there is no completion
 function __completeWord ()
 {
     local str="$1"
@@ -83,7 +84,7 @@ function __completeWord ()
     local replyStr="$2"
     if [[ ${pos} -eq 0 || -z "$replyStr" ]]; then
         echo "$replyStr"
-        return 0
+        return 1
     fi
 
     declare -a compReply
@@ -122,6 +123,7 @@ function __completeWord ()
 # @return string
 # @returnStatus 1 If word to complete is empty
 # @returnStatus 1 If api version is invalid
+# @returnStatus 1 If there is no completion
 function awqlComplete ()
 {
     local str="$1"
@@ -236,7 +238,7 @@ function awqlComplete ()
     fi
     local replyStr="${compReply[@]}"
     if [[ "${#compReply[@]}" -eq 0 ]] || ([[ "${#compReply[@]}" -eq 1 && "$replyStr" == "$curStr" ]]); then
-        return 0
+        return 1
     fi
 
     __completeWord "$curStr" "$replyStr"

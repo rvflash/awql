@@ -101,12 +101,12 @@ function awqlRead ()
                 fi
                 if [[ ${historyIndex} -ne ${historySize} && ${readIndex} -eq 0 ]]; then
                     # Remove current line and replace it by this from historic
-                    read[${readIndex}]=${history[${historyIndex}]}
-                    readLength=${#read[${readIndex}]}
+                    read["${readIndex}"]=${history[${historyIndex}]}
+                    readLength=${#read["${readIndex}"]}
                     charIndex=${readLength}
                     # Reset prompt and display historic reply
                     echo -ne "\r\033[K${prompt}"
-                    echo -n "${read[${readIndex}]}"
+                    echo -n "${read["${readIndex}"]}"
                 fi
             fi
         elif [[ "$char" == $'\x1b[C' || "$char" == $'\x1b[D' ]]; then
@@ -124,15 +124,15 @@ function awqlRead ()
             # Backspace / Delete
             if [[ ${charIndex} -gt 0 ]]; then
                 if [[ ${charIndex} -eq ${readLength} ]]; then
-                    read[${readIndex}]="${read[${readIndex}]%?}"
+                    read["${readIndex}"]="${read["${readIndex}"]%?}"
                 else
-                    read[${readIndex}]="${read[${readIndex}]::$((${charIndex}-1))}${read[${readIndex}]:${charIndex}}"
+                    read["${readIndex}"]="${read["${readIndex}"]::$((${charIndex}-1))}${read["${readIndex}"]:${charIndex}}"
                 fi
                 readLength+=-1
                 charIndex+=-1
                 # Remove the char as requested
                 echo -ne "\r\033[K${prompt}"
-                echo -n "${read[${readIndex}]}"
+                echo -n "${read["${readIndex}"]}"
                 # Reposition the cursor
                 echo -ne "\r\033[$((${charIndex}+${#prompt}))C"
             fi
@@ -141,40 +141,48 @@ function awqlRead ()
             if [[ ${autoRehash} -eq 1 ]]; then
                 reply="${read[@]}"
                 reply="${reply:0:${charIndex}}"
-
                 compReply=$(awqlComplete "$reply" "$apiVersion")
-                if [[ $? -eq 0 ]]; then
-                    IFS=' ' read -a compReply <<< "$compReply"
-                    declare -i compReplyLength=${#compReply[@]}
-                    if [[ ${compReplyLength} -eq 1 ]]; then
-                        # A completed word was found
-                        read[${readIndex}]+="${compReply[0]}"
-                        readLength+=${#compReply[0]}
-                        charIndex+=${#compReply[0]}
-                    else
-                        # Various completed words were found
-                        # Go to new line to display propositions
-                        echo
-                        local displayAllCompletions="$(printf "${AWQL_COMPLETION_CONFIRM}" "${compReplyLength}")"
-                        if confirm "$displayAllCompletions" "${AWQL_CONFIRM}"; then
-                            # Display in columns
-                            declare -i columnSize=50
-                            declare -i columnNb="$((${windowWidth}/${columnSize}))"
-                            declare -i compReplyIndex
-                            for ((compReplyIndex=0; I < ${compReplyLength}; I++)); do
-                                if [[ $(( ${compReplyIndex}%${columnNb} )) == 0 ]]; then
-                                    echo
-                                fi
-                                printLeftPadding "${compReply[${compReplyIndex}]}" ${columnSize}
-                            done
+                if [[ $? -ne 0 ]]; then
+                    continue
+                fi
+
+                IFS=' ' read -a compReply <<< "$compReply"
+                declare -i compReplyLength="${#compReply[@]}"
+                if [[ ${compReplyLength} -eq 1 ]]; then
+                    # A completed word was found
+                    read["${readIndex}"]="${read["${readIndex}"]::$charIndex}${compReply[0]}${read["${readIndex}"]:$charIndex}"
+                    readLength+=${#compReply[0]}
+                    charIndex+=${#compReply[0]}
+                else
+                    # Various completed words were found, go to new line to display it
+                    echo
+                    local displayAllCompletions="$(printf "${AWQL_COMPLETION_CONFIRM}" "${compReplyLength}")"
+                    if confirm "$displayAllCompletions" "${AWQL_CONFIRM}"; then
+                        # Display in columns
+                        local column=""
+                        declare -i columnSize=50
+                        declare -i columnNb="$(( ${windowWidth}/${columnSize} ))"
+                        declare -i columnPos=0
+                        declare -i withNewLine=0
+                        for columnPos in "${!compReply[@]}"; do
+                            column="${compReply["${columnPos}"]}"
+                            printRightPadding "$column" $((${columnSize}-${#column}))
+                            if [[ $(( ${columnPos}%${columnNb} )) -eq $(( ${columnNb}-1 )) ]]; then
+                                withNewLine+=1
+                                echo
+                            fi
+                        done
+                        # Go to line after displaying propositions (prevent reset prompt)
+                        if [[ ${withNewLine} -eq 0 ]]; then
+                            echo
                         fi
                     fi
-                    # Reset prompt and display line with new char
-                    echo -ne "\r\033[K${prompt}"
-                    echo -n "${read[$readIndex]}"
-                    # Move the cursor
-                    echo -ne "\r\033[$((${charIndex}+${#prompt}))C"
                 fi
+                # Reset prompt and display line with new char
+                echo -ne "\r\033[K${prompt}"
+                echo -n "${read["${readIndex}"]}"
+                # Move the cursor
+                echo -ne "\r\033[$((${charIndex}+${#prompt}))C"
             fi
         elif [[ -z "$char" ]]; then
             # Enter
@@ -228,14 +236,14 @@ function awqlRead ()
             fi
             # Write only printable chars
             if [[ ${charIndex} -eq ${readLength} ]]; then
-                read[${readIndex}]+="$char"
+                read["${readIndex}"]+="$char"
                 # Add this char ...
                 echo -n "$char"
             else
-                read[${readIndex}]="${read[$readIndex]::$charIndex}${char}${read[$readIndex]:$charIndex}"
+                read["${readIndex}"]="${read["${readIndex}"]::$charIndex}${char}${read["${readIndex}"]:$charIndex}"
                 # Reset prompt and display line with new char
                 echo -ne "\r\033[K${prompt}"
-                echo -n "${read[$readIndex]}"
+                echo -n "${read["${readIndex}"]}"
                 # Reposition the cursor
                 echo -ne "\r\033[$((${charIndex}+${#prompt}+1))C"
             fi

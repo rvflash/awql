@@ -7,6 +7,7 @@ if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     source "${AWQL_CUR_DIR}/../../conf/awql.sh"
 fi
 
+# Source select query builder if is not already loaded
 if [[ -z "$(type -t querySelectComponents)" ]]; then
     source "${AWQL_QUERY_DIR}/select.sh"
 fi
@@ -77,16 +78,16 @@ function awqlCreateQuery ()
             ${AWQL_REQUEST_STATEMENT})
                 if [[ "$char" == " " && -n "$part" ]]; then
                     if [[ "$part" == ${AWQL_QUERY_CREATE} && -z "${components["$name"]}" ]]; then
-                        components["$name"]="$part"
+                        components["$name"]="CREATE"
                         part=""
                     elif [[ -n "${components["$name"]}" ]]; then
                         if [[ "$part" == ${AWQL_QUERY_OR} && "${components["$name"]}" != *" "${AWQL_QUERY_OR} ]]; then
-                            components["$name"]+=" $part"
+                            components["$name"]+=" OR"
                         elif [[ "$part" == ${AWQL_QUERY_REPLACE} && ${replace} -eq 0 ]]; then
-                            components["$name"]+=" $part"
+                            components["$name"]+=" REPLACE"
                             replace=1
                         elif [[ "$part" == ${AWQL_QUERY_VIEW} ]]; then
-                            components["$name"]+=" $part"
+                            components["$name"]+=" VIEW"
                             name="${AWQL_REQUEST_VIEW}"
                         else
                             echo "${AWQL_QUERY_ERROR_METHOD}"
@@ -202,6 +203,17 @@ function awqlCreateQuery ()
         components["${AWQL_REQUEST_FIELD_NAMES}"]="${fieldNames[@]}"
     else
         components["${AWQL_REQUEST_FIELD_NAMES}"]="${queryFieldNames[@]}"
+    fi
+
+    components["${AWQL_REQUEST_QUERY}"]="${components["${AWQL_REQUEST_STATEMENT}"]}"
+    if [[ -n "${components["${AWQL_REQUEST_VIEW}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" ${components["${AWQL_REQUEST_VIEW}"]}"
+    fi
+    if [[ -n "${components["${AWQL_REQUEST_FIELD_NAMES}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" (${components["${AWQL_REQUEST_FIELD_NAMES}"]})"
+    fi
+    if [[ -n "${components["${AWQL_REQUEST_QUERY_SOURCE}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" AS ${components["${AWQL_REQUEST_QUERY_SOURCE}"]}"
     fi
     components["${AWQL_REQUEST_QUERY_SOURCE}"]="$queryStr"
     components["${AWQL_REQUEST_REPLACE}"]=${replace}

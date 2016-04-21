@@ -197,7 +197,10 @@ function awqlRequest ()
         return ${errCode}
     fi
     declare -A request="$queryComponents"
-
+    if [[ -z "${request["${AWQL_REQUEST_QUERY}"]}" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
+        return 1
+    fi
     request["${AWQL_REQUEST_ID}"]="$adwordsId"
     request["${AWQL_REQUEST_VERSION}"]="$apiVersion"
     request["${AWQL_REQUEST_CACHED}"]=${cache}
@@ -208,7 +211,7 @@ function awqlRequest ()
     request["${AWQL_REQUEST_DEV_TOKEN}"]="$developerToken"
 
     # Calculate a unique identifier for the query
-    request["${AWQL_REQUEST_CHECKSUM}"]="$(checksum "${request["${AWQL_REQUEST_ID}"]} ${request["${AWQL_REQUEST_QUERY_SOURCE}"]}")"
+    request["${AWQL_REQUEST_CHECKSUM}"]="$(checksum "${request["${AWQL_REQUEST_ID}"]} ${request["${AWQL_REQUEST_QUERY}"]}")"
     if [[ $? -ne 0 ]]; then
         echo "${AWQL_INTERNAL_ERROR_QUERY_CHECKSUM}"
         return 1

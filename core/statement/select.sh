@@ -7,7 +7,7 @@ if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     source "${AWQL_CUR_DIR}/../../conf/awql.sh"
 fi
 
-# Import
+# Import methods to get access token
 source "${AWQL_AUTH_DIR}/access.sh"
 
 
@@ -16,27 +16,18 @@ source "${AWQL_AUTH_DIR}/access.sh"
 # @return arrayToString
 function __accessToken ()
 {
-    # Default configuration
-    declare -A access=()
     declare -A -r auth="$(yamlFileDecode "${AWQL_AUTH_FILE}")"
+    if [[ "${AWQL_AUTH_GOOGLE_TYPE}" == "${auth["${AWQL_AUTH_TYPE}"]}" ]]; then
+        declare -A access="$(authGoogleToken "${auth["${AWQL_AUTH_CLIENT_ID}"]}" "${auth["${AWQL_AUTH_CLIENT_SECRET}"]}" "${auth["${AWQL_REFRESH_TOKEN}"]}")"
+    elif [[ "${AWQL_AUTH_CUSTOM_TYPE}" == "${auth["${AWQL_AUTH_TYPE}"]}" ]]; then
+        local url="${auth["${AWQL_AUTH_PROTOCOL}"]}://${auth["${AWQL_AUTH_HOSTNAME}"]}:${auth["${AWQL_AUTH_PORT}"]}${auth["${AWQL_AUTH_PATH}"]}"
+        declare -A access="$(authCustomToken "$url")"
+    else
+        declare -A access="(["${AWQL_ERROR_TOKEN}"]=\"${AWQL_AUTH_ERROR_INVALID_TYPE}\" )"
+    fi
 
-    local authFile="${AWQL_AUTH_DIR}/${auth["${AWQL_TOKEN_TYPE}"]}/auth.sh"
-    if [[ "${#auth[@]}" -gt 0 && -f "$authFile" ]]; then
-        if [[ "${AWQL_AUTH_GOOGLE_TYPE}" == "${auth["${AWQL_TOKEN_TYPE}"]}" ]]; then
-            access="$(${authFile} \
-                -c "${auth["${AWQL_AUTH_CLIENT_ID}"]}" \
-                -s "${auth["${AWQL_AUTH_CLIENT_SECRET}"]}" \
-                -r "${auth["${AWQL_REFRESH_TOKEN}"]}"
-            )"
-        elif [[ "${AWQL_AUTH_CUSTOM_TYPE}" == "${auth["${AWQL_TOKEN_TYPE}"]}" ]]; then
-            local url
-            url="${auth["${AWQL_AUTH_PROTOCOL}"]}://${auth["${AWQL_AUTH_HOSTNAME}"]}:${auth["${AWQL_AUTH_PORT}"]}"
-            url+="${auth["${AWQL_AUTH_PATH}"]}"
-            access="$(${authFile} "$url")"
-        fi
-        if [[ "${#access[@]}" -gt 0 && -z "${access["${AWQL_ERROR_TOKEN}"]}" ]]; then
-            access["${AWQL_DEVELOPER_TOKEN}"]="${auth["${AWQL_DEVELOPER_TOKEN}"]}"
-        fi
+    if [[ -z "${access["${AWQL_ERROR_TOKEN}"]}" ]]; then
+        access["${AWQL_DEVELOPER_TOKEN}"]="${auth["${AWQL_DEVELOPER_TOKEN}"]}"
     fi
 
     echo "$(arrayToString "$(declare -p access)")"
@@ -53,18 +44,18 @@ function __accessToken ()
 # @returnStatus 1 If configuration auth file does not exist
 function __oauth ()
 {
-    declare -A access=()
-
     local accessToken="$1"
     local developerToken="$2"
-    if [[ -n "$accessToken" && -n "$developerToken" ]]; then
-       # Inline mode
-        access["${AWQL_TOKEN_TYPE}"]="${AWQL_TOKEN_TYPE_VALUE}"
-        access["${AWQL_ACCESS_TOKEN}"]="$accessToken"
-        access["${AWQL_DEVELOPER_TOKEN}"]="$developerToken"
-    else
-        access="$(__accessToken)"
+    if [[ -z "$accessToken" || -z "$developerToken" ]]; then
+        __accessToken
+        return 0
     fi
+
+    # Inline mode
+    declare -A access=()
+    access["${AWQL_TOKEN_TYPE}"]="${AWQL_TOKEN_TYPE_VALUE}"
+    access["${AWQL_ACCESS_TOKEN}"]="$accessToken"
+    access["${AWQL_DEVELOPER_TOKEN}"]="$developerToken"
 
     echo "$(arrayToString "$(declare -p access)")"
 }
@@ -91,14 +82,18 @@ function awqlSelect ()
         echo "${AWQL_INTERNAL_ERROR_DATA_FILE}"
         return 1
     fi
-    declare -A -r auth="$(__oauth "${request["${AWQL_REQUEST_ACCESS}"]}" "${request["${AWQL_REQUEST_DEV_TOKEN}"]}")"
-    if [[ "${#auth[@]}" -eq 0 ]]; then
+
+    # Get a valid access token
+    declare -A -r token="$(__oauth "${request["${AWQL_REQUEST_ACCESS}"]}" "${request["${AWQL_REQUEST_DEV_TOKEN}"]}")"
+    if [[ "${#token[@]}" -eq 0 ]]; then
         echo "${AWQL_AUTH_ERROR_INVALID_FILE}"
         return 1
-    elif [[ -n "${auth["${AWQL_ERROR_TOKEN}"]}" ]]; then
-        echo "${auth["${AWQL_ERROR_TOKEN}"]}"
+    elif [[ -n "${token["${AWQL_ERROR_TOKEN}"]}" ]]; then
+        echo "${token["${AWQL_ERROR_TOKEN}"]}"
         return 2
     fi
+
+    # Get properties about Google Adwords APi
     declare -A -r api="$(yamlFileDecode "${AWQL_CONF_DIR}/${AWQL_REQUEST_FILE_NAME}")"
     if [[ "${#api[@]}" -eq 0 ]]; then
         echo "${AWQL_INTERNAL_ERROR_CONFIG}"
@@ -117,7 +112,7 @@ function awqlSelect ()
         options+=" --max-time ${api["${AWQL_API_TO}"]}"
     fi
 
-    # Prepare and format response
+    # Prepare and format the response
     local out
     out+="[${AWQL_RESPONSE_FILE}]=\"${file}\" "
     out+="[${AWQL_RESPONSE_CACHED}]=0 "
@@ -131,8 +126,8 @@ function awqlSelect ()
         --request "${api["${AWQL_API_METHOD}"]}" "${url}${request["${AWQL_REQUEST_VERSION}"]}" \
         --data-urlencode "${api["${AWQL_API_RESPONSE}"]}=CSV" \
         --data-urlencode "${api["${AWQL_API_QUERY}"]}=${request["${AWQL_REQUEST_QUERY}"]}" \
-        --header "${api["${AWQL_API_AUTH}"]}:${auth["${AWQL_TOKEN_TYPE}"]} ${auth["${AWQL_ACCESS_TOKEN}"]}" \
-        --header "${api["${AWQL_API_TOKEN}"]}:${auth["${AWQL_DEVELOPER_TOKEN}"]}" \
+        --header "${api["${AWQL_API_AUTH}"]}:${token["${AWQL_TOKEN_TYPE}"]} ${token["${AWQL_ACCESS_TOKEN}"]}" \
+        --header "${api["${AWQL_API_TOKEN}"]}:${token["${AWQL_DEVELOPER_TOKEN}"]}" \
         --header "${api["${AWQL_API_ID}"]}:${request["${AWQL_REQUEST_ID}"]}" \
         --output "$file" --write-out "$out" ${options}
     )"

@@ -64,14 +64,14 @@ function awqlShowQuery ()
             ${AWQL_REQUEST_STATEMENT})
                 if [[ "$char" == " " && -n "$part" ]]; then
                     if [[ "$part" == ${AWQL_QUERY_SHOW} && -z "${components["$name"]}" ]]; then
-                        components["$name"]="$part"
+                        components["$name"]="SHOW"
                         part=""
                     elif [[ "$part" == ${AWQL_QUERY_FULL} && ${components["$name"]} == ${AWQL_QUERY_SHOW} ]]; then
-                        components["$name"]+=" $part"
+                        components["$name"]+=" FULL"
                         fullQuery=1
                         part=""
                     elif [[ "$part" == ${AWQL_QUERY_TABLES} && ${components["$name"]} == ${AWQL_QUERY_SHOW}* ]]; then
-                        components["$name"]+=" $part"
+                        components["$name"]+=" TABLES"
                         part=""
                         name="${AWQL_REQUEST_LIKE}"
                     else
@@ -133,6 +133,12 @@ function awqlShowQuery ()
         return 2
     fi
 
+    components["${AWQL_REQUEST_QUERY}"]="${components["${AWQL_REQUEST_STATEMENT}"]}"
+    if [[ -n "${components["${AWQL_REQUEST_LIKE}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" LIKE '${components["${AWQL_REQUEST_LIKE}"]}'"
+    elif [[ -n "${components["${AWQL_REQUEST_WITH}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" WITH '${components["${AWQL_REQUEST_WITH}"]}'"
+    fi
     components["${AWQL_REQUEST_QUERY_SOURCE}"]="$queryStr"
     components["${AWQL_REQUEST_FULL}"]=${fullQuery}
     components["${AWQL_REQUEST_VERSION}"]="$apiVersion"

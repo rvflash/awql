@@ -32,6 +32,7 @@ declare -r BP_MYSQL_INSERT="[Ii][Nn][Ss][Ee][Rr][Tt]"
 declare -r BP_MYSQL_UPDATE="[Uu][Pp][Dd][Aa][Tt][Ee]"
 declare -r BP_MYSQL_REPLACE="[Rr][Ee][Pp][Ll][Aa][Cc][Ee]"
 declare -r BP_MYSQL_DELETE="[Dd][Ee][Ll][Ee][Tt][Ee]"
+declare -r BP_MYSQL_CALL="[Cc][Aa][Ll][Ll]"
 declare -r BP_MYSQL_AFFECTED_ROW_COUNT=";SELECT ROW_COUNT();"
 
 # Constants
@@ -66,13 +67,13 @@ function __mysql_is_affecting_method ()
 
 ##
 # @param string $1 Query
-# @returnStatus 1 If query method is not SELECT, SHOW, DESCRIBE or EXPLAIN
+# @returnStatus 1 If query method is not CALL, SELECT, SHOW, DESCRIBE or EXPLAIN
 function __mysql_is_selecting_method ()
 {
     local query="$1"
 
     if [[ "$query" == ${BP_MYSQL_SELECT}* || "$query" == ${BP_MYSQL_SHOW}* || \
-          "$query" == ${BP_MYSQL_DESC}* || "$query" == ${BP_MYSQL_EXPLAIN}* \
+          "$query" == ${BP_MYSQL_DESC}* || "$query" == ${BP_MYSQL_EXPLAIN}* || "$query" == ${BP_MYSQL_CALL}* \
     ]]; then
         return 0
     fi
@@ -599,11 +600,11 @@ function mysqlOption ()
     case "${option}" in
         ${BP_MYSQL_TO})
             declare -i timeOut="$3"
-            sed -i -e $((${BP_MYSQL_TO}+1))'s/.*/'${timeOut}'/' "$connectFile"
+            sed -e $((${BP_MYSQL_TO}+1))'s/.*/'${timeOut}'/' "$connectFile" > "${connectFile}-e" && mv "${connectFile}-e" "$connectFile"
             ;;
         ${BP_MYSQL_CACHED})
             declare -i cached="$3"
-            sed -i -e $((${BP_MYSQL_CACHED}+1))'s/.*/'${cached}'/' "$connectFile"
+            sed -e $((${BP_MYSQL_CACHED}+1))'s/.*/'${cached}'/' "$connectFile" > "${connectFile}-e" && mv "${connectFile}-e" "$connectFile"
             ;;
         *) return 1 ;;
     esac

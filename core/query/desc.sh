@@ -55,10 +55,10 @@ function awqlDescQuery ()
     for part in "${parts[@]}"; do
         if [[ "${AWQL_REQUEST_STATEMENT}" == "$name" ]]; then
             if [[ "$part" == ${AWQL_QUERY_DESC} && -z "${components["$name"]}" ]]; then
-                components["$name"]="$part"
+                components["$name"]="DESC"
                 continue
             elif [[ "$part" == ${AWQL_QUERY_FULL} && -n "${components["$name"]}" ]]; then
-                components["$name"]+=" $part"
+                components["$name"]+=" FULL"
                 fullQuery=1
                 continue
             elif [[ -n "${components["$name"]}" ]]; then
@@ -83,7 +83,7 @@ function awqlDescQuery ()
 
     # No table name
     if [[ -z "${components["${AWQL_REQUEST_TABLE}"]}" ]]; then
-        echo "${AWQL_QUERY_ERROR_MISSING_TABLE}"
+        echo "${AWQL_QUERY_ERROR_SYNTAX}"
         return 2
     fi
 
@@ -119,6 +119,13 @@ function awqlDescQuery ()
         fi
     fi
 
+    components["${AWQL_REQUEST_QUERY}"]="${components["${AWQL_REQUEST_STATEMENT}"]}"
+    if [[ -n "${components["${AWQL_REQUEST_TABLE}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" ${components["${AWQL_REQUEST_TABLE}"]}"
+    fi
+    if [[ -n "${components["${AWQL_REQUEST_FIELD}"]}" ]]; then
+        components["${AWQL_REQUEST_QUERY}"]+=" ${components["${AWQL_REQUEST_FIELD}"]}"
+    fi
     components["${AWQL_REQUEST_QUERY_SOURCE}"]="$queryStr"
     components["${AWQL_REQUEST_FULL}"]=${fullQuery}
     components["${AWQL_REQUEST_VIEW}"]=${isView}

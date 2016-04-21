@@ -46,6 +46,7 @@ function __getData ()
 {
     local request="$1"
     if [[ -z "$request" || "$request" != "("*")" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
         return 1
     fi
     declare -A get="$request"
@@ -79,7 +80,7 @@ function __getData ()
             awqlShow "$request" "$file"
             ;;
         *)
-            echo "${AWQL_QUERY_ERROR_UNKNOWN_METHOD}"
+            echo "${AWQL_QUERY_ERROR_METHOD}"
             return 2
             ;;
     esac
@@ -113,7 +114,9 @@ function awql ()
     request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw} "$accessToken" "$developerToken")
     declare -i errCode=$?
     if [[ ${errCode} -ne 0 ]]; then
-        echo "$request"
+        if [[ -n "$request" ]]; then
+            echo "$request"
+        fi
         if [[ ${errCode} -gt 1 ]]; then
             return 1
         else
