@@ -98,7 +98,7 @@ while getopts "i::a::d::s:e::V:cvAB" FLAG; do
         d) developerToken="$OPTARG" ;;
         e) query="$OPTARG" ;;
         c) cache=1 ;;
-        v) verbose=0 ;;
+        v) verbose=1 ;;
         A) autoRehash=0 ;;
         B) batch=1 ;;
         V) apiVersion="$OPTARG" ;;
