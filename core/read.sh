@@ -160,20 +160,20 @@ function awqlRead ()
                     if confirm "$displayAllCompletions" "${AWQL_CONFIRM}"; then
                         # Display in columns
                         local column=""
-                        declare -i columnSize=50
+                        declare -i columnSize=55
                         declare -i columnNb="$(( ${windowWidth}/${columnSize} ))"
-                        declare -i columnPos=0
-                        declare -i withNewLine=0
+                        declare -i columnPos goToLine
                         for columnPos in "${!compReply[@]}"; do
+                            goToLine=1
                             column="${compReply["${columnPos}"]}"
                             printRightPadding "$column" $((${columnSize}-${#column}))
                             if [[ $(( ${columnPos}%${columnNb} )) -eq $(( ${columnNb}-1 )) ]]; then
-                                withNewLine+=1
+                                goToLine=0
                                 echo
                             fi
                         done
                         # Go to line after displaying propositions (prevent reset prompt)
-                        if [[ ${withNewLine} -eq 0 ]]; then
+                        if [[ ${goToLine} -eq 1 ]]; then
                             echo
                         fi
                     fi
