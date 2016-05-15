@@ -29,10 +29,10 @@ function include ()
     fi
 
     declare -i ONCE="$2"
-    if [[ -z "${BP_INCLUDE_FILE[$filePath]}" ]]; then
-        BP_INCLUDE_FILE[$filePath]=1
+    if [[ -z "${BP_INCLUDE_FILE["$filePath"]}" ]]; then
+        BP_INCLUDE_FILE["$filePath"]=1
     elif [[ "$ONCE" -eq 0 ]]; then
-        BP_INCLUDE_FILE[$filePath]+=1
+        BP_INCLUDE_FILE["$filePath"]+=1
     else
         return 0
     fi
@@ -68,7 +68,7 @@ function import ()
 
     local filePath
     for filePath in "$@"; do
-        includeOnce "${filePath}"
+        includeOnce "$filePath"
         if [[ $? -ne 0 ]]; then
             return 1
         fi
@@ -213,9 +213,9 @@ function scanDirectory ()
 
     local scanDir
     if [[ ${withFile} -eq 0 ]]; then
-        scanDir=$(ls -d "$srcDir"/*/ 2>>/dev/null)
+        scanDir=$(ls -d "$srcDir"/*/ 2>/dev/null)
     else
-        scanDir=$(ls -d "$srcDir"/* 2>>/dev/null)
+        scanDir=$(ls -d "$srcDir"/* 2>/dev/null)
     fi
 
     if [[ ${completePath} -eq 0 ]]; then

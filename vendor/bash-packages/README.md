@@ -12,7 +12,6 @@
 * Function count ( mixed value ) int `?=0`
 * Function inArray ( string needle, array haystack ) void `?=0 if needle is found, 1 otherwise`
 
-
 ## Package database/mysql
 
 > The mysql command is mandatory for this package
@@ -107,16 +106,24 @@ You can also add your own prefix by using the method named `logUsePrefix`.
 
 > The bc command is not mandatory for this package, but used if exists
 
+* Function add ( mixed var1, mixed var2, int scale ) float|int `?>0 In case of error`
+* Function ceil ( float value ) int `?>0 In case of error`
 * Function decimal ( mixed value ) int `?>0 In case of error`
+* Function divide ( mixed var1, mixed var2, int scale ) float|int `?>0 In case of error`
+* Function floor ( float value ) int `?>0 If value is not a number`
 * Function int ( mixed value ) int `?>0 In case of error`
 * Function isFloat ( mixed value ) void `?=0 if it is a float value, 1 otherwise`
 * Function isInt ( mixed value ) void `?=0 if it is a integer value, 1 otherwise`
 * Function isNumeric ( mixed value ) void `?=0 if it is a numeric value, 1 otherwise`
 * Function isFloatGreaterThan ( float var1, mixed var2 ) void `?=0 if var 1 is lower, 1 otherwise`
 * Function isFloatLowerThan ( float var1, mixed var2 ) void `?=0 if var 1 is greater, 1 otherwise`
-* Function floor ( float value ) int `?>0 If value is not a number`
+* Function math ( string operator, mixed var1, mixed var2, int scale ) float|int `?>0 In case of error`
+* Function modulo ( int var1, int var2, int scale ) int `?>0 In case of error`
+* Function multiply ( mixed var1, mixed var2, int scale ) float|int `?>0 In case of error`
 * Function numericType ( mixed Str ) string[ "integer", "float", "unknown" ] `?=0`
 * Function rand ( ) int `?=0`
+* Function round ( float value [, int scale] ) float|int `?=0`
+* Function subtract ( mixed var1, mixed var2, int scale ) float|int `?>0 In case of error`
 
 
 ## Package net
