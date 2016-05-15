@@ -36,15 +36,25 @@ function __customRefresh ()
         return 1
     fi
 
-    # Connexion to Google Account
-    declare -i httpCode="$(curl \
-        --silent --connect-timeout 1 --max-time 2000 \
-        --request "GET" "$url" \
-        --output "$file" \
-        --write-out "%{http_code}"
-    )"
+     # Retry the connexion to custom web service
+    declare -i httpCode
+    declare -i retry=0
+    while [[ ${retry} -lt ${AWQL_API_RETRY_NB} ]]; do
+        httpCode="$(curl \
+            --silent --connect-timeout 1 --max-time 2000 \
+            --request "GET" "$url" \
+            --output "$file" \
+            --write-out "%{http_code}"
+        )"
+        if [[ ${httpCode} -gt 0 && ${httpCode} -lt 500 ]]; then
+            retry=${AWQL_API_RETRY_NB}
+        else
+            sleep ${retry}
+            retry+=1
+        fi
+    done
 
-    if [[ ${httpCode} -eq 0 || ${httpCode} -gt 400 ]]; then
+    if [[ ${httpCode} -eq 0 || ${httpCode} -ge 400 ]]; then
         rm -f "$file"
         return 2
     fi
@@ -99,18 +109,29 @@ function __googleRefresh ()
         options+=" --max-time ${request["${AWQL_API_TO}"]}"
     fi
 
-    # Connexion to Google Account
-    local url="${request["${AWQL_API_PROTOCOL}"]}://${request["${AWQL_API_HOST}"]}${request["${AWQL_API_PATH}"]}"
-    declare -i httpCode="$(curl \
-        --request "${request["${AWQL_API_METHOD}"]}" "$url" \
-        --data "${request["${AWQL_AUTH_CLIENT_ID}"]}=${clientId}" \
-        --data "${request["${AWQL_AUTH_CLIENT_SECRET}"]}=${clientSecret}" \
-        --data "${request["${AWQL_REFRESH_TOKEN}"]}=${refreshToken}" \
-        --data "${request["${AWQL_GRANT_TYPE}"]}=${request["${AWQL_GRANT_REFRESH_TOKEN}"]}" \
-        --output "$file" \
-        --write-out "%{http_code}" ${options}
-    )"
+    # Retry the connexion to Google Account
+    declare -i httpCode
+    declare -i retry=0
+    while [[ ${retry} -lt ${AWQL_API_RETRY_NB} ]]; do
+        local url="${request["${AWQL_API_PROTOCOL}"]}://${request["${AWQL_API_HOST}"]}${request["${AWQL_API_PATH}"]}"
+        httpCode="$(curl \
+            --request "${request["${AWQL_API_METHOD}"]}" "$url" \
+            --data "${request["${AWQL_AUTH_CLIENT_ID}"]}=${clientId}" \
+            --data "${request["${AWQL_AUTH_CLIENT_SECRET}"]}=${clientSecret}" \
+            --data "${request["${AWQL_REFRESH_TOKEN}"]}=${refreshToken}" \
+            --data "${request["${AWQL_GRANT_TYPE}"]}=${request["${AWQL_GRANT_REFRESH_TOKEN}"]}" \
+            --output "$file" \
+            --write-out "%{http_code}" ${options}
+        )"
+        if [[ ${httpCode} -gt 0 && ${httpCode} -lt 500 ]]; then
+            retry=${AWQL_API_RETRY_NB}
+        else
+            sleep ${retry}
+            retry+=1
+        fi
+    done
 
+    # An error occured with HTTP call
     if [[ ${httpCode} -eq 0 || ${httpCode} -gt 400 ]]; then
         rm -f "$file"
         return 2
