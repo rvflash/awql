@@ -65,7 +65,8 @@ function __oauth ()
 # @param string $1 Request
 # @param string $2 Output filepath
 # @return arrayToString Response
-# @returnStatus 1 If response is on error
+# @returnStatus 1 In case of fatal error
+# @returnStatus 2 In case of error
 function awqlSelect ()
 {
     if [[ -z "$1" || "$1" != "("*")" ]]; then
@@ -120,52 +121,60 @@ function awqlSelect ()
     out+="[${AWQL_RESPONSE_TIME_DURATION}]=\"%{time_total}\" "
     out="(${out})"
 
-    # Send request to Google API Adwords
-    local url="${api["${AWQL_API_PROTOCOL}"]}://${api["${AWQL_API_HOST}"]}${api["${AWQL_API_PATH}"]}"
-    local response="$(curl \
-        --request "${api["${AWQL_API_METHOD}"]}" "${url}${request["${AWQL_REQUEST_VERSION}"]}" \
-        --data-urlencode "${api["${AWQL_API_RESPONSE}"]}=CSV" \
-        --data-urlencode "${api["${AWQL_API_QUERY}"]}=${request["${AWQL_REQUEST_QUERY}"]}" \
-        --header "${api["${AWQL_API_AUTH}"]}:${token["${AWQL_TOKEN_TYPE}"]} ${token["${AWQL_ACCESS_TOKEN}"]}" \
-        --header "${api["${AWQL_API_TOKEN}"]}:${token["${AWQL_DEVELOPER_TOKEN}"]}" \
-        --header "${api["${AWQL_API_ID}"]}:${request["${AWQL_REQUEST_ID}"]}" \
-        --output "$file" --write-out "$out" ${options}
-    )"
+    # Retry the connexion to Adwords ?
+    local response
+    declare -i retry=0
+    while [[ ${retry} -lt ${AWQL_API_RETRY_NB} ]]; do
+        # Send request to Google API Adwords
+        local url="${api["${AWQL_API_PROTOCOL}"]}://${api["${AWQL_API_HOST}"]}${api["${AWQL_API_PATH}"]}"
+        response="$(curl \
+            --request "${api["${AWQL_API_METHOD}"]}" "${url}${request["${AWQL_REQUEST_VERSION}"]}" \
+            --data-urlencode "${api["${AWQL_API_RESPONSE}"]}=CSV" \
+            --data-urlencode "${api["${AWQL_API_QUERY}"]}=${request["${AWQL_REQUEST_QUERY}"]}" \
+            --header "${api["${AWQL_API_AUTH}"]}:${token["${AWQL_TOKEN_TYPE}"]} ${token["${AWQL_ACCESS_TOKEN}"]}" \
+            --header "${api["${AWQL_API_TOKEN}"]}:${token["${AWQL_DEVELOPER_TOKEN}"]}" \
+            --header "${api["${AWQL_API_ID}"]}:${request["${AWQL_REQUEST_ID}"]}" \
+            --output "$file" --write-out "$out" ${options}
+        )"
+        declare -A resp="$response"
+        if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 0 && ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -lt 500 ]]; then
+            retry=${AWQL_API_RETRY_NB}
+        else
+            sleep ${retry}
+            retry+=1
+        fi
+    done
 
-    declare -A -r resp="$response"
-    if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -eq 0 || ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 400 ]]; then
-        # No connexion
+    # An error occured with HTTP call
+    if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -ne 200 ]]; then
         local errMsg
-        if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 400 ]]; then
-            errMsg="${AWQL_RESP_ERROR_CONNEXION}"
-        else
+        declare -i error=2
+        if [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -eq 0 ]]; then
+            # No connexion / timeout
             errMsg="${AWQL_RESP_ERROR_NO_CONNEXION}"
-        fi
-        errMsg+=" with API ${request["${AWQL_REQUEST_VERSION}"]}"
-        if [[ "${request["${AWQL_REQUEST_VERBOSE}"]}" -eq 1 ]]; then
-            errMsg+=" @source ${file}"
-        fi
-        echo "$errMsg"
-        return 1
-    elif [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -gt 300 ]]; then
-        # A server error occured, extract type and others information from XML response
-        local errMsg="$(awk -F 'type>|<\/type' '{print $2}' "$file")"
-        local errField="$(awk -F 'fieldPath>|<\/fieldPath' '{print $2}' "$file")"
-        if [[ -n "$errField" ]]; then
-            echo "${errMsg} regarding field(s) named ${errField}"
+        elif [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -eq 400 ]]; then
+            # API error: check for any issues in the XML
+            errMsg="$(awk -F 'type>|<\/type' '{print $2}' "$file")"
+            local errField="$(awk -F 'fieldPath>|<\/fieldPath' '{print $2}' "$file")"
+            if [[ -n "$errField" ]]; then
+                errMsg+=" regarding field(s) named ${errField}"
+            fi
+            # Except for authentification errors, does not exit on each error, just notice it
+            if [[ "$errMsg" == "AuthenticationError"* ]]; then
+                error=1
+            fi
         else
-            echo "${errMsg} with API ${request["${AWQL_REQUEST_VERSION}"]}"
+            # Temporary problem with the server
+            errMsg="${AWQL_RESP_ERROR_CONNEXION}"
         fi
-        # Except for authentification errors, does not exit on each error, just notice it
-        if [[ "$errMsg" == "AuthenticationError"* ]]; then
-            return 1
-        fi
-        return 2
-    else
-        # Format CSV in order to improve re-using by removing first and last line
-        # Do not use -i option for MacOs portability
-        sed -e '$d; 1d' "$file" > "${file}-e" && mv "${file}-e" "$file"
-
-        echo "$response"
+        # Force cache cleaning
+        rm  -f "$file"
+        echo "$errMsg"
+        return ${error}
     fi
+
+    # Format CSV in order to improve re-using by removing first and last line
+    # Do not use -i option for MacOs portability
+    sed -e '$d; 1d' "$file" > "${file}-e" && mv "${file}-e" "$file"
+    echo "$response"
 }

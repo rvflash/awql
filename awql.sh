@@ -122,6 +122,7 @@ if [[ -z "$query" ]]; then
     if [[ ${autoRehash} -eq 1 ]]; then
         source "${AWQL_INC_DIR}/complete.sh"
     fi
+    source "${AWQL_BASH_PACKAGES_DIR}/math.sh"
     source "${AWQL_INC_DIR}/read.sh"
     welcome "$apiVersion"
 
