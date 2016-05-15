@@ -12,12 +12,15 @@ fi
 # Get query sort order
 # @param string $1 Requested sort order
 # @return int 1 for DESC, 0 for ASC
+# @returnStatus 1 if sort order is not ASC or DESC
 function __queryOrder ()
 {
     if [[ "$1" == ${AWQL_QUERY_DESC} ]]; then
         echo "${AWQL_SORT_ORDER_DESC}"
-    else
+    elif [[ "$1" == ${AWQL_QUERY_ASC} ]]; then
         echo "${AWQL_SORT_ORDER_ASC}"
+    else
+        return 1
     fi
 }
 
@@ -291,7 +294,7 @@ function awqlSelectQuery ()
             fieldAlias=""
         fi
 
-        # Manage query methods (SUM, COUNT, MAX, MIN, etc.)
+        # Manage query methods (SUM, COUNT, MAX, MIN, AVG, DISTINCT)
         if [[ "$field" == *[\(\)]* ]]; then
             # Valid function ?
             func="${field%%*\(}"
@@ -367,11 +370,17 @@ function awqlSelectQuery ()
             return 1
         fi
         orderColumn+=1
+        declare -i sortOrder
+        sortOrder=$(__queryOrder "${order[1]}")
+        if [[ $? -ne 0 ]]; then
+            echo "${AWQL_QUERY_ERROR_ORDER}"
+            return 2
+        fi
 
         # @fields CampaignId, CampaignName
         # @orderBy CampaignName ASC
         # @example d 2 0
-        components["${AWQL_REQUEST_SORT_ORDER}"]="$(__queryOrderType "$type") $orderColumn $(__queryOrder "${order[1]}")"
+        components["${AWQL_REQUEST_SORT_ORDER}"]="$(__queryOrderType "$type") $orderColumn $sortOrder"
     fi
 
     # Build AWQL query: SELECT...FROM...WHERE...DURING...
