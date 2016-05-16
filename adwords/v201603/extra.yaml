@@ -50,6 +50,7 @@ HourOfDay                                              : The hour of day as a nu
 Impressions                                            : Count of how often your ad has appeared on a search results page or website on the Google Network.
 InteractionRate                                        : How often people interact with your ad after it is shown to them. This is the number of interactions divided by the number of times your ad is shown. Percentage returned as "x.xx%".
 Interactions                                           : The number of interactions. An interaction is the main user action associated with an ad format—clicks for text and shopping ads, views for video ads, and so on.
+InteractionTypes                                       : The types of interactions that are reflected in the Interactions, InteractionRate, and AverageCost columns.
 InvalidClickRate                                       : The percentage ("x.xx%") of clicks filtered out of your total number of clicks (filtered + non-filtered clicks) during the reporting period.
 InvalidClicks                                          : Number of clicks Google considers illegitimate and doesn't charge you for.
 IsAutoTaggingEnabled                                   : Indicates if auto tagging is enabled on the account.
@@ -110,7 +111,7 @@ CpcSignificance                                        : Statistical significanc
 CpmSignificance                                        : Statistical significance of the experiment's change in CPM.
 CreativeApprovalStatus                                 : Approval status of the ad.
 CreativeDestinationUrl                                 : Destination URL of the ad.
-CreativeFinalAppUrls                                   : List of final app URLs of the ad.
+CreativeFinalAppUrls                                   : List of final app URLs of the ad. List entries will start with one of: a) "android-app:" (for Android apps) or b) "os-app:" (for iOS apps).
 CreativeFinalMobileUrls                                : List of final mobile URLs of the ad.
 CreativeFinalUrls                                      : List of final URLs of the ad.
 CreativeTrackingUrlTemplate                            : Tracking template of the ad.
@@ -161,6 +162,7 @@ NumOfflineInteractions                                 : Number of offline phone
 OfflineInteractionRate                                 : Number of phone calls received (NumOfflineInteractions) divided by the number of times your phone number is shown (NumOfflineImpressions).
 RelativeCtr                                            : Your clickthrough rate (Ctr) divided by the average clickthrough rate of all advertisers on the websites that show your ads. Measures how your ads perform on Display Network sites compared to other ads on the same sites.
 TargetCpa                                              : The average CPA target set on the Target CPA bidding strategy.
+TargetCpaBidSource                                     : The level at which the target CPA bid was set. This is applicable only at the ad group level.
 TrackingUrlTemplate                                    : Tracking template of the main object of this row.
 UrlCustomParameters                                    : Custom URL parameters of the main object of this row.
 BidModifier                                            : The bid modifier. To filter by this field, use values greater than 0 and less than or equal to 1. Percentage returned as "x.xx%".
@@ -168,7 +170,7 @@ CpcBidSource                                           : Source of the CPC bid.
 CpmBidSource                                           : Source of the CPM bid.
 Criteria                                               : Descriptive string for the Criterion.
 CriteriaDestinationUrl                                 : Destination URL of the criterion that triggered ads.
-FinalAppUrls                                           : List of final app URLs of the main object of this row.
+FinalAppUrls                                           : List of final app URLs of the main object of this row. List entries will start with one of: a) "android-app:" (for Android apps) or b) "os-app:" (for iOS apps).
 FinalMobileUrls                                        : List of final mobile URLs of the main object of this row.
 FinalUrls                                              : List of final URLs of the main object of this row.
 IsRestrict                                             : A value of 'true' indicates that the criterion type is used for bidding and restricting targeting. A value of 'false' indicates that the criterion type is used only for bidding. This will have the opposite value from that of targetAll for the criteria's corresponding AdGroup.TargetingSettingDetail. For example, if the TargetingSettingDetail for criterionTypeGroup = PLACEMENT has targetAll = true, then the IsRestrict field will be false for Placement criteria.
@@ -230,6 +232,7 @@ KeywordMatchType                                       : The match type for the 
 AdvertisingChannelSubType                              : Optional refinement of the campaign's AdvertisingChannelType.
 AdvertisingChannelType                                 : Primary serving target for ads in the campaign.
 AverageFrequency                                       : Average number of times a unique cookie was exposed to your ad over a given time period. Imported from Google Analytics.
+CampaignMobileBidModifier                              : Mobile bid modifier of the campaign. To filter by this field, use values greater than 0 and less than or equal to 1. Percentage returned as "x.xx%".
 CampaignTrialType                                      : The type of campaign. This shows if the campaign is a trial campaign or not.
 EndDate                                                : The end date of the campaign, formatted as yyyy-MM-dd.
 ImpressionReach                                        : Number of unique cookies that were exposed to your ad over a given time period, or the special value "
@@ -314,6 +317,7 @@ BenchmarkCtr                                           : Indicates how other adv
 ParentCriterionId                                      : Criterion ID of the product partition's parent.
 PartitionType                                          : The partition type of the ProductPartition criterion.
 ProductGroup                                           : Path to the ProductPartition, including all of its parent partitions.
+SearchClickShare                                       : The number of clicks you've received on the Search Network divided by the estimated number of clicks you were eligible to receive. A percentage returned as "xx.xx%", or the special value "Double can be used only with the following operators in predicates: LESS_THAN or GREATER_THAN. This is also true for AWQL: Only the operators < and > are allowed in the WHERE clause.
 DestinationUrl                                         : Destination URL for the impression.
 FinalUrl                                               : Final URL of the impressions.
 QueryMatchTypeWithVariant                              : Match type of the keyword that triggered the ad, including variants. See https://support.google.com/adwords/answer/2472708 for an explanation of close variants.

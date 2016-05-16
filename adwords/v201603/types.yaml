@@ -30,6 +30,7 @@ KEYWORDLESS_QUERY_REPORT                         :
 KEYWORDS_PERFORMANCE_REPORT                      : ANALYTICS SINGLE_ATTRIBUTION
 LABEL_REPORT                                     : STRUCTURE
 PAID_ORGANIC_QUERY_REPORT                        : 
+PARENTAL_STATUS_PERFORMANCE_REPORT               : MULTIPLE_ATTRIBUTION
 PLACEHOLDER_FEED_ITEM_REPORT                     : EXTENSIONS
 PLACEHOLDER_REPORT                               : EXTENSIONS
 PLACEMENT_PERFORMANCE_REPORT                     : MULTIPLE_ATTRIBUTION
@@ -40,4 +41,5 @@ SHARED_SET_REPORT                                :
 SHOPPING_PERFORMANCE_REPORT                      : SHOPPING
 URL_PERFORMANCE_REPORT                           : MULTIPLE_ATTRIBUTION
 USER_AD_DISTANCE_REPORT                          : MULTIPLE_ATTRIBUTION
+TOP_CONTENT_PERFORMANCE_REPORT                   : 
 VIDEO_PERFORMANCE_REPORT                         : 

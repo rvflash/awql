@@ -50,6 +50,7 @@ HourOfDay                                              : Integer
 Impressions                                            : Long
 InteractionRate                                        : Double
 Interactions                                           : Long
+InteractionTypes                                       : EnumSet
 InvalidClickRate                                       : Double
 InvalidClicks                                          : Long
 IsAutoTaggingEnabled                                   : Enum (TRUE FALSE)
@@ -161,6 +162,7 @@ NumOfflineInteractions                                 : Long
 OfflineInteractionRate                                 : Double
 RelativeCtr                                            : Double
 TargetCpa                                              : Money
+TargetCpaBidSource                                     : BidSource (ADGROUP CRITERION ADGROUP_BIDDING_STRATEGY CAMPAIGN_BIDDING_STRATEGY)
 TrackingUrlTemplate                                    : String
 UrlCustomParameters                                    : CustomParameters
 BidModifier                                            : Double
@@ -230,6 +232,7 @@ KeywordMatchType                                       : KeywordMatchType (EXACT
 AdvertisingChannelSubType                              : AdvertisingChannelSubType (UNKNOWN SEARCH_MOBILE_APP DISPLAY_MOBILE_APP SEARCH_EXPRESS DISPLAY_EXPRESS UNIVERSAL_APP_CAMPAIGN)
 AdvertisingChannelType                                 : AdvertisingChannelType (UNKNOWN SEARCH DISPLAY SHOPPING VIDEO MULTI_CHANNEL)
 AverageFrequency                                       : Double
+CampaignMobileBidModifier                              : Double
 CampaignTrialType                                      : CampaignTrialType (UNKNOWN BASE DRAFT TRIAL)
 EndDate                                                : Date
 ImpressionReach                                        : Long
@@ -314,6 +317,7 @@ BenchmarkCtr                                           : Double
 ParentCriterionId                                      : Long
 PartitionType                                          : ProductPartitionType (UNKNOWN SUBDIVISION UNIT)
 ProductGroup                                           : String
+SearchClickShare                                       : Double
 DestinationUrl                                         : String
 FinalUrl                                               : String
 QueryMatchTypeWithVariant                              : QueryMatchTypeWithVariant (AUTO BROAD EXACT EXPANDED PHRASE NEAR_EXACT NEAR_PHRASE)

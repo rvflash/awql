@@ -30,6 +30,7 @@ KEYWORDLESS_QUERY_REPORT                         : ConversionCategoryName Conver
 KEYWORDS_PERFORMANCE_REPORT                      : AdNetworkType1 AdNetworkType2 AdvertiserExperimentSegmentationBin ClickType ConversionCategoryName ConversionTrackerId Date DayOfWeek Device Month MonthOfYear Quarter Slot Week Year
 LABEL_REPORT                                     : 
 PAID_ORGANIC_QUERY_REPORT                        : Date DayOfWeek Month MonthOfYear Quarter QueryMatchType SerpType Week Year
+PARENTAL_STATUS_PERFORMANCE_REPORT               : AdNetworkType1 AdNetworkType2 ClickType ConversionCategoryName Date DayOfWeek Device Month MonthOfYear Quarter Week Year
 PLACEHOLDER_FEED_ITEM_REPORT                     : AdGroupId AdGroupName AdGroupStatus AdNetworkType1 AdNetworkType2 CampaignId CampaignName CampaignStatus ClickType ConversionCategoryName ConversionTrackerId Date DayOfWeek Device Month MonthOfYear Quarter Slot Week Year
 PLACEHOLDER_REPORT                               : AdNetworkType1 AdNetworkType2 ClickType ConversionCategoryName ConversionTrackerId Date DayOfWeek Device Month MonthOfYear Quarter Slot Week Year
 PLACEMENT_PERFORMANCE_REPORT                     : AdNetworkType1 AdNetworkType2 ClickType ConversionCategoryName ConversionTrackerId Date DayOfWeek Device Month MonthOfYear Quarter Week Year
@@ -40,4 +41,5 @@ SHARED_SET_REPORT                                :
 SHOPPING_PERFORMANCE_REPORT                      : AdGroupStatus CampaignStatus Channel ChannelExclusivity ClickType ConversionCategoryName ConversionTrackerId Date DayOfWeek Device Month ProductCondition Quarter Week Year
 URL_PERFORMANCE_REPORT                           : AdFormat AdNetworkType1 AdNetworkType2 ConversionCategoryName ConversionTrackerId Date DayOfWeek IsAutoOptimized Month MonthOfYear Quarter Week Year
 USER_AD_DISTANCE_REPORT                          : AdNetworkType1 AdNetworkType2 ConversionCategoryName Date DayOfWeek Device Month MonthOfYear Quarter Week Year
+TOP_CONTENT_PERFORMANCE_REPORT                   : Date
 VIDEO_PERFORMANCE_REPORT                         : AdNetworkType1 AdNetworkType2 ClickType ConversionCategoryName Date DayOfWeek Device Month MonthOfYear Quarter Week Year
