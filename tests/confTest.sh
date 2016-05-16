@@ -4,7 +4,7 @@ source ../vendor/bash-packages/testing.sh
 source ../conf/awql.sh
 
 # Default entries
-declare -r TEST_CONF_API_VERSION="v201601"
+declare -r TEST_CONF_API_VERSION="v201603"
 declare -r TEST_CONF_BAD_API_VERSION="v0883"
 declare -r TEST_CONF_TABLE="CAMPAIGN_PERFORMANCE_REPORT"
 declare -r TEST_CONF_VIEW="CAMPAIGN_REPORT"
@@ -13,9 +13,9 @@ declare -r TEST_CONF_TEST_DIR="${PWD}/unit"
 declare -r TEST_CONF_AWQL_FIELDS_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-fields.txt"
 declare -r TEST_CONF_AWQL_UNCOMPATIBLE_FIELDS_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-uncompatible-fields.txt"
 declare -r TEST_CONF_AWQL_KEYS_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-keys.txt"
+declare -r TEST_CONF_AWQL_PRIMARY_KEYS_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-primary-keys.txt"
 declare -r TEST_CONF_AWQL_TABLES_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-tables.txt"
 declare -r TEST_CONF_AWQL_TABLES_TYPE_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-tables-type.txt"
-declare -r TEST_CONF_AWQL_BLACKLISTED_FIELDS_FILE="${TEST_CONF_TEST_DIR}/${TEST_CONF_API_VERSION}-uncompatiblefields.txt"
 declare -r TEST_CONF_AWQL_VIEWS_FILE="${TEST_CONF_TEST_DIR}/fields.txt"
 declare -r TEST_CONF_AWQL_QUERY_SELECT="SELECT"
 declare -r TEST_CONF_AWQL_QUERY_CREATE="create"
@@ -123,6 +123,29 @@ function test_awqlKeys ()
     test=$(awqlKeys "${TEST_CONF_API_VERSION}")
     echo -n "-$?"
     [[ -n "$test" && -f "${TEST_CONF_AWQL_KEYS_FILE}" && -z "$(diff -b "${TEST_CONF_AWQL_KEYS_FILE}" <(echo "$test"))" ]] && echo -n 1
+}
+
+
+readonly TEST_CONF_AWQL_PRIMARY_KEYS="-11-11-01"
+
+function test_awqlPrimaryKeys ()
+{
+    local test
+
+    #1 Check nothing
+    test=$(awqlPrimaryKeys)
+    echo -n "-$?"
+    [[ "$test" == "()" ]] && echo -n 1
+
+    #2 Check with invalid api version
+    test=$(awqlPrimaryKeys "${TEST_CONF_BAD_API_VERSION}")
+    echo -n "-$?"
+    [[ "$test" == "()" ]] && echo -n 1
+
+    #3 Check with valid api version
+    test=$(awqlPrimaryKeys "${TEST_CONF_API_VERSION}")
+    echo -n "-$?"
+    [[ -n "$test" && -f "${TEST_CONF_AWQL_PRIMARY_KEYS_FILE}" && -z "$(diff -b "${TEST_CONF_AWQL_PRIMARY_KEYS_FILE}" <(echo "$test"))" ]] && echo -n 1
 }
 
 
@@ -412,6 +435,7 @@ function test_awqlFunction ()
 bashUnit "awqlFields" "${TEST_CONF_AWQL_FIELDS}" "$(test_awqlFields)"
 bashUnit "awqlUncompatibleFields" "${TEST_CONF_AWQL_UNCOMPATIBLE_FIELDS}" "$(test_awqlUncompatibleFields)"
 bashUnit "awqlKeys" "${TEST_CONF_AWQL_KEYS}" "$(test_awqlKeys)"
+bashUnit "awqlPrimaryKeys" "${TEST_CONF_AWQL_PRIMARY_KEYS}" "$(test_awqlPrimaryKeys)"
 bashUnit "awqlTables" "${TEST_CONF_AWQL_TABLES}" "$(test_awqlTables)"
 bashUnit "awqlTablesType" "${TEST_CONF_AWQL_TABLES_TYPE}" "$(test_awqlTablesType)"
 bashUnit "awqlViews" "${TEST_CONF_AWQL_VIEWS}" "$(test_awqlViews)"
