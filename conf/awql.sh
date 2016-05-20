@@ -44,6 +44,7 @@ declare -r AWQL_API_DOC_KEYS_FILE_NAME="keys.yaml"
 declare -r AWQL_API_DOC_TABLES_FILE_NAME="tables.yaml"
 declare -r AWQL_API_DOC_COMPATIBILITY_DIR_NAME="compatibility"
 declare -r AWQL_API_DOC_TABLES_TYPE_FILE_NAME="types.yaml"
+declare -r AWQL_API_DOC_PRIMARY_KEYS_FILE_NAME="primary_keys.yaml"
 
 # Query sort
 declare -r AWQL_SORT_ORDER_ASC=0
@@ -67,8 +68,10 @@ declare -r AWQL_QUERY_WITH="[Ww][Ii][Tt][Hh]"
 declare -r AWQL_QUERY_FROM="[Ff][Rr][Oo][Mm]"
 declare -r AWQL_QUERY_WHERE="[Ww][Hh][Ee][Rr][Ee]"
 declare -r AWQL_QUERY_DURING="[Dd][Uu][Rr][Ii][Nn][Gg]"
+declare -r AWQL_QUERY_GROUP="[Gg][Rr][Oo][Uu][Pp]"
 declare -r AWQL_QUERY_ORDER="[Oo][Rr][Dd][Ee][Rr]"
 declare -r AWQL_QUERY_BY="[Bb][Yy]"
+declare -r AWQL_QUERY_GROUP_BY="${AWQL_QUERY_GROUP} ${AWQL_QUERY_BY}"
 declare -r AWQL_QUERY_ORDER_BY="${AWQL_QUERY_ORDER} ${AWQL_QUERY_BY}"
 declare -r AWQL_QUERY_LIMIT="[Ll][Ii][Mm][Ii][Tt]"
 declare -r AWQL_QUERY_OR="[Oo][Rr]"
@@ -91,9 +94,12 @@ declare -r AWQL_REQUEST_STATEMENT="STATEMENT"
 declare -r AWQL_REQUEST_FIELD="FIELD"
 declare -r AWQL_REQUEST_FIELDS="FIELDS"
 declare -r AWQL_REQUEST_FIELD_NAMES="FIELD_NAMES"
+declare -r AWQL_REQUEST_HEADERS="HEADERS"
+declare -r AWQL_REQUEST_AGGREGATES="AGGREGATES"
 declare -r AWQL_REQUEST_TABLE="TABLE"
 declare -r AWQL_REQUEST_WHERE="WHERE"
 declare -r AWQL_REQUEST_DURING="DURING"
+declare -r AWQL_REQUEST_GROUP="GROUP"
 declare -r AWQL_REQUEST_ORDER="ORDER"
 declare -r AWQL_REQUEST_LIMIT="LIMIT"
 declare -r AWQL_REQUEST_VERTICAL="VERTICAL_MODE"
@@ -113,6 +119,15 @@ declare -r AWQL_REQUEST_DEFINITION="DEFINITION"
 declare -r AWQL_REQUEST_ACCESS="ACCESS_TOKEN"
 declare -r AWQL_REQUEST_DEV_TOKEN="DEVELOPER_TOKEN"
 
+# Aggregates
+declare -r AWQL_AGGREGATE_AVG="AVG"
+declare -r AWQL_AGGREGATE_DISTINCT="DISTINCT"
+declare -r AWQL_AGGREGATE_COUNT="COUNT"
+declare -r AWQL_AGGREGATE_MAX="MAX"
+declare -r AWQL_AGGREGATE_MIN="MIN"
+declare -r AWQL_AGGREGATE_SUM="SUM"
+declare -r AWQL_AGGREGATE_GROUP="GROUP"
+
 # Response properties
 declare -r AWQL_RESPONSE_FILE="FILE"
 declare -r AWQL_RESPONSE_CACHED="CACHING"
@@ -126,6 +141,7 @@ declare -r AWQL_VIEW_FIELDS="FIELDS"
 declare -r AWQL_VIEW_TABLE="TABLE"
 declare -r AWQL_VIEW_WHERE="WHERE"
 declare -r AWQL_VIEW_DURING="DURING"
+declare -r AWQL_VIEW_GROUP="GROUP"
 declare -r AWQL_VIEW_ORDER="ORDER"
 declare -r AWQL_VIEW_LIMIT="LIMIT"
 
@@ -218,6 +234,8 @@ declare -r AWQL_QUERY_ERROR_LIMIT="QueryError.LIMIT"
 declare -r AWQL_QUERY_ERROR_MULTIPLE_ORDER="QueryError.MULTIPLE_ORDER"
 declare -r AWQL_QUERY_ERROR_METHOD="QueryError.UNKNOWN_QUERY_METHOD"
 declare -r AWQL_QUERY_ERROR_MISSING="QueryError.MISSING"
+declare -r AWQL_QUERY_ERROR_PRIMARY_KEY="QueryError.MISSING_PRIMARY_KEY"
+declare -r AWQL_QUERY_ERROR_GROUP="QueryError.GROUP_BY"
 declare -r AWQL_QUERY_ERROR_ORDER="QueryError.ORDER_BY"
 declare -r AWQL_QUERY_ERROR_TABLE="QueryError.TABLE_NAME"
 declare -r AWQL_QUERY_ERROR_VIEW="QueryError.VIEW_NAME"
@@ -229,6 +247,7 @@ declare -r AWQL_QUERY_ERROR_SOURCE_IS_VIEW="QueryError.VIEW_IN_VIEW"
 declare -r AWQL_QUERY_ERROR_SOURCE="QueryError.QUERY_SOURCE"
 declare -r AWQL_QUERY_ERROR_VIEW_ALREADY_EXISTS="QueryError.VIEW_ALREADY_EXISTS"
 declare -r AWQL_QUERY_ERROR_FUNCTION="QueryError.UNKNOWN_FUNCTION"
+declare -r AWQL_QUERY_ERROR_DISTINCT="QueryError.DISTINCT"
 
 # > Response errors
 declare -r AWQL_AUTH_ERROR_INVALID="AuthenticationError.INVALID"
@@ -261,7 +280,7 @@ source "${AWQL_BASH_PACKAGES_DIR}/encoding/yaml.sh"
 source "${AWQL_CONF_DIR}/completion.sh"
 
 # AWQL reports
-declare -- AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS AWQL_KEYS AWQL_TABLES AWQL_TABLES_TYPE
+declare -- AWQL_FIELDS AWQL_BLACKLISTED_FIELDS AWQL_UNCOMPATIBLE_FIELDS AWQL_KEYS AWQL_PRIMARY_KEYS AWQL_TABLES AWQL_TABLES_TYPE
 
 ##
 # Get all fields names with for each, the type of data
@@ -335,6 +354,30 @@ function awqlKeys ()
     fi
 
     echo "${AWQL_KEYS}"
+}
+
+##
+# Get primary key for all tables
+# @example ([PRODUCT_PARTITION_REPORT]="Id")
+# @param string $1 API version
+# @return string
+# @returnStatus 1 If adwords yaml file does not exit
+function awqlPrimaryKeys ()
+{
+    local apiVersion="$1"
+    if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
+        echo "()"
+        return 1
+    fi
+    if [[ -z "${AWQL_PRIMARY_KEYS}" ]]; then
+        AWQL_PRIMARY_KEYS=$(yamlFileDecode "${AWQL_ADWORDS_DIR}/${apiVersion}/${AWQL_API_DOC_PRIMARY_KEYS_FILE_NAME}")
+        if [[ $? -ne 0 ]]; then
+            echo "()"
+            return 1
+        fi
+    fi
+
+    echo "${AWQL_PRIMARY_KEYS}"
 }
 
 ##
