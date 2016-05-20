@@ -14,8 +14,8 @@ fi
 #
 # @example /home/hgouchet/.awql/views/CAMPAIGN_REPORT.yaml
 # > ORIGIN  : SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O ORDER BY Clicks DESC LIMIT 5;
-# > NAMES   : CampaignId CampaignName CampaignStatus Impressions Clicks Conversions Cost AverageCpc
-# > FIELDS  : CampaignId CampaignName CampaignStatus Impressions Clicks Conversions Cost AverageCpc
+# > NAMES   : CampaignId CampaignName CampaignStatus Impressions Clicks
+# > FIELDS  : CampaignId CampaignName CampaignStatus Impressions Clicks
 # > TABLE   : CAMPAIGN_PERFORMANCE_REPORT
 # > WHERE   : Impressions > O
 # > DURING  :
@@ -67,6 +67,9 @@ function awqlCreate ()
     # Columns
     printRightPadding "${AWQL_VIEW_FIELDS}" $((${pad}-${#AWQL_VIEW_FIELDS})) >> "$file"
     echo -ne ": ${table["${AWQL_REQUEST_FIELD_NAMES}"]}\n" >> "$file"
+    # Columns
+    printRightPadding "${AWQL_VIEW_FIELDS}" $((${pad}-${#AWQL_VIEW_FIELDS})) >> "$file"
+    echo -ne ": ${table["${AWQL_REQUEST_FIELD_NAMES}"]}\n" >> "$file"
     # Table name
     printRightPadding "${AWQL_VIEW_TABLE}" $((${pad}-${#AWQL_VIEW_TABLE})) >> "$file"
     echo -ne ": ${table["${AWQL_REQUEST_TABLE}"]}\n" >> "$file"
@@ -80,7 +83,12 @@ function awqlCreate ()
         printRightPadding "${AWQL_VIEW_DURING}" $((${pad}-${#AWQL_VIEW_DURING})) >> "$file"
         echo -ne ": ${table["${AWQL_REQUEST_DURING}"]}\n" >> "$file"
     fi
-    # Order
+    # Group By
+    if [[ -n "${table["${AWQL_REQUEST_GROUP}"]}" ]]; then
+        printRightPadding "${AWQL_VIEW_GROUP}" $((${pad}-${#AWQL_VIEW_GROUP})) >> "$file"
+        echo -ne ": ${table["${AWQL_REQUEST_GROUP}"]}\n" >> "$file"
+    fi
+    # Order By
     if [[ -n "${table["${AWQL_REQUEST_ORDER}"]}" ]]; then
         printRightPadding "${AWQL_VIEW_ORDER}" $((${pad}-${#AWQL_VIEW_ORDER})) >> "$file"
         echo -ne ": ${table["${AWQL_REQUEST_ORDER}"]}\n" >> "$file"
