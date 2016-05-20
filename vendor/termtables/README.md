@@ -6,6 +6,7 @@ Also offers methods to filter or aggregate the CSV file by line or column, count
 In default display mode, all columns are on one line. You can use the first line as header or/and the last as footer.
 With the vertical mode, each column has it own line. All both modes can deal with lines with comma inside quotes.
 
+
 ## Basic Usage 
 
 With the following CSV file name `sample.csv` as source.
@@ -18,6 +19,7 @@ Day,Campaign ID,Campaign,Clicks,Impressions,Cost,Mobile Url,Campaign state,Track
 2015-10-24,1234567890,@1 #sp,4,547,4740000,,paused,
 2015-10-26,123456,"@2 ,#sp",4,577,1310000,,paused,
 ```
+
 
 #### Print a CSV file in the term with first as header
 
@@ -33,6 +35,7 @@ $ awk -f termTable.awk tests/unit/sample.csv
 | 2015-10-26 | 123456      | @2 ,#sp  | 4      | 577         | 1310000  |            | paused         |                            |
 +------------+-------------+----------+--------+-------------+----------+------------+----------------+----------------------------+
 ```
+
 
 #### Print it with vertical display mode
 
@@ -90,6 +93,7 @@ Tracking template:
 Tracking template:
 ```
 
+
 ## Advanced Usage
 
 More options are available for `termTable.awk`, see list below:
@@ -97,10 +101,28 @@ More options are available for `termTable.awk`, see list below:
 * `verticalMode`, enable vertical display table
 * `withFooter`, use the last line as footer. Option disabled with verticalMode 
 * `withoutHeader`, disable the first line as header. Option disabled with verticalMode
+* `addHeader`, line to add as header with column's names separated by comma
+* `replaceHeader`, The non-empty values separated by comma overloads the column's names
 * `columnSeparator`, character to separate column, default "|"
 * `columnBounce`, character to bounce separate line, default "+"
 * `columnBreakLine`, character to use as break line, default "-" or "*" in vertical mode
 * `lineLabel`, string to use as suffix of the line number in vertical mode
+
+
+### Replace name of columns at index 1 and 3.
+
+```bash
+$ awk -v replaceHeader="Date,,Name" -f termTable.awk tests/unit/sample.csv
++------------+-------------+---------+--------+-------------+----------+------------+----------------+----------------------------+
+| Date       | Campaign ID | Name    | Clicks | Impressions | Cost     | Mobile Url | Campaign state | Tracking template          |
++------------+-------------+---------+--------+-------------+----------+------------+----------------+----------------------------+
+| 2015-10-01 | 1234567890  | @1 #sp  | 11     | 297         | 4420000  |            | paused         |                            |
+| 2015-10-20 | 1234567890  | @1 #sp  | 17     | 1242        | 17170000 |            | paused         | https://github.com/rvflash |
+| 2015-10-22 | 123         | @3 #sp  | 10     | 854         | 13290000 |            | paused         |                            |
+| 2015-10-24 | 1234567890  | @1 #sp  | 4      | 547         | 4740000  |            | paused         |                            |
+| 2015-10-26 | 123456      | @2 ,#sp | 4      | 577         | 1310000  |            | paused         |                            |
++------------+-------------+---------+--------+-------------+----------+------------+----------------+----------------------------+
+```
 
 
 ### Limit display to some columns or lines

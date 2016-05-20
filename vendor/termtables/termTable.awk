@@ -5,6 +5,8 @@
 # @param int verticalMode, if 1, enable vertical display table
 # @param int withFooter if 1, use the last line as footer. Option disabled with verticalMode enabled
 # @param int withoutHeader if 1, do not use the first line as header. Option disabled with verticalMode enabled
+# @param string addHeader, line to add as header with column's names separated by comma
+# @param string replaceHeader, list of no empty value separated by comma overloads the column's names
 # @param string columnSeparator, character to separate column, default "|"
 # @param string columnBounce, character to bounce separate line, default "+"
 # @param string columnBreakLine, character to use as break line, default "-" or "*" in vertical mode
@@ -42,26 +44,30 @@ BEGIN {
     numberFields=0;
     columnMaxSizes[1]=0;
     headerMaxSize=0;
-    columnSize=0;
+
+    # Add header
+    if ("" != addHeader) {
+        numberFields=splitLine(addHeader, columns);
+        addRow(columns);
+    }
 }
 {
     numberFields=splitLine($0, columns);
-    for (column=1; column <= numberFields; column++) {
-        columnSize=(length(columns[column])+2)
-        if (0 == numberRows && headerMaxSize < columnSize) {
-            # Build header length for vertical mode
-            headerMaxSize = (columnSize-2);
+    if (1 == NR && "" != replaceHeader) {
+        # Replace some or all column names
+        numberColumnNames=splitLine(replaceHeader, columnNames);
+        for (column=1; column <= numberColumnNames; column++) {
+            if ("" != columnNames[column]) {
+                columns[column]=columnNames[column]
+            }
         }
-        columnMaxSizes[column]=(columnSize > columnMaxSizes[column] ? columnSize : columnMaxSizes[column]);
-        lines[NR "," column]=columns[column];
     }
-    numberRows++;
+    addRow(columns);
 }
 END{
     if (0 == numberRows) {
-        exit;
+        exit 1;
     }
-
     for (line=1; line <= numberRows; line++) {
         if (1 != verticalMode) {
             if ((line == numberRows && 1 == withFooter) || 1 == line) {
@@ -87,6 +93,23 @@ END{
 }
 
 ##
+# Add a row to the table
+# @param array columns
+function addRow (columns)
+{
+    numberRows++;
+    for (column=1; column <= numberFields; column++) {
+        columnSize=(length(columns[column])+2)
+        if (1 == numberRows && headerMaxSize < columnSize) {
+            # Build header length for vertical mode
+            headerMaxSize = (columnSize-2);
+        }
+        columnMaxSizes[column]=(columnSize > columnMaxSizes[column] ? columnSize : columnMaxSizes[column]);
+        lines[numberRows "," column]=columns[column];
+    }
+}
+
+##
 # Split line and deal with escaping separator within double quotes
 # Cheating with CSV file that contains comma inside a quoted field
 # @param string line
@@ -94,7 +117,7 @@ END{
 # @return int
 function splitLine (line, columns)
 {
-    numberFields=0;
+    numberColumns=0;
     line=line FS;
 
     while(line) {
@@ -102,12 +125,12 @@ function splitLine (line, columns)
         field=substr(line, RSTART, RLENGTH);
         # Remove extra data
         gsub(/^ *"?|"? *,$/, "", field);
-        numberFields++;
-        columns[numberFields]=field;
+        numberColumns++;
+        columns[numberColumns]=field;
         # So, next ?
         line=substr(line, RLENGTH+1);
     }
-    return numberFields
+    return numberColumns
 }
 
 ##
