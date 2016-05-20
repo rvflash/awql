@@ -10,6 +10,8 @@ declare -r TEST_STRINGS_BOX_SIZE=60
 declare -r TEST_STRINGS_WITH_LEADING_DOT_PAD="................... Text without leading or trailing spaces"
 declare -r TEST_STRINGS_WITH_TRAILING_DOT_PAD="Text without leading or trailing spaces ..................."
 declare -r TEST_STRINGS_WITHOUT_SPACES="Text without leading or trailing spaces"
+declare -r TEST_STRINGS_UPPERCASE="TEXT WITHOUT LEADING OR TRAILING SPACES"
+declare -r TEST_STRINGS_LOWERCASE="text without leading or trailing spaces"
 declare -r TEST_STRINGS_WITH_LEADING_SPACES=" ${TEST_STRINGS_WITHOUT_SPACES}"
 declare -r TEST_STRINGS_WITH_TRAILING_SPACES="${TEST_STRINGS_WITHOUT_SPACES} "
 declare -r TEST_STRINGS_WITH_SPACES=" ${TEST_STRINGS_WITHOUT_SPACES} "
@@ -35,17 +37,17 @@ function test_checksum ()
     # Confirm previous check
     CONFIRM_TEST=$(checksum "${TEST_STRINGS_WITHOUT_SPACES}")
     echo -n "-$?"
-    [[ "$test" == "$CONFIRM_TEST" && "$test" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
+    [[ "$test" == "${CONFIRM_TEST}" && "$test" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
 
     # Check with leading spaces and expect no change
     test=$(checksum "${TEST_STRINGS_WITH_LEADING_SPACES}")
     echo -n "-$?"
-    [[ "$test" == "$CONFIRM_TEST" && "$test" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
+    [[ "$test" == "${CONFIRM_TEST}" && "$test" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
 
     # Check with an other text and expect new hash
     CONFIRM_TEST=$(checksum "${TEST_STRINGS_WITHOUT_SPACES:10}")
     echo -n "-$?"
-    [[ "$CONFIRM_TEST" -gt 0 && "$test" != "$CONFIRM_TEST" && "$test" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
+    [[ "${CONFIRM_TEST}" -gt 0 && "$test" != "${CONFIRM_TEST}" && "$test" -eq ${TEST_STRINGS_CHK} ]] && echo -n 1
 }
 
 readonly TEST_STRINGS_EMPTY="-01-01-01-01-01-01-11"
@@ -105,12 +107,12 @@ function test_printLeftPadding ()
     # Check with one leading space
     test=$(printLeftPadding "${TEST_STRINGS_WITHOUT_SPACES}" 1)
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITH_LEADING_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITH_LEADING_SPACES}" ]] && echo -n 1
 
     # Check with one leading dash
     test=$(printLeftPadding "${TEST_STRINGS_WITHOUT_SPACES}" 20 ".")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITH_LEADING_DOT_PAD" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITH_LEADING_DOT_PAD}" ]] && echo -n 1
 
 }
 
@@ -129,12 +131,48 @@ function test_printRightPadding ()
     # Check with one trailing space
     test=$(printRightPadding "${TEST_STRINGS_WITHOUT_SPACES}" 1)
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITH_TRAILING_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITH_TRAILING_SPACES}" ]] && echo -n 1
 
     # Check with one leading dash
     test=$(printRightPadding "${TEST_STRINGS_WITHOUT_SPACES}" 20 ".")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITH_TRAILING_DOT_PAD" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITH_TRAILING_DOT_PAD}" ]] && echo -n 1
+}
+
+
+readonly TEST_STRINGS_TO_LOWER="-01-01"
+
+function test_toLower ()
+{
+    local test
+
+    # Check nothing
+    test=$(toLower)
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Check with lowercase string
+    test=$(toLower "${TEST_STRINGS_UPPERCASE}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_STRINGS_LOWERCASE}" ]] && echo -n 1
+}
+
+
+readonly TEST_STRINGS_TO_UPPER="-01-01"
+
+function test_toUpper ()
+{
+    local test
+
+    # Check nothing
+    test=$(toUpper)
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    # Check with lowercase string
+    test=$(toUpper "${TEST_STRINGS_LOWERCASE}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_STRINGS_UPPERCASE}" ]] && echo -n 1
 }
 
 
@@ -152,27 +190,27 @@ function test_trim ()
     # Check with leading spaces
     test=$(trim "${TEST_STRINGS_WITH_LEADING_SPACES}")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITHOUT_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITHOUT_SPACES}" ]] && echo -n 1
 
     # Check with trailing spaces
     test=$(trim "${TEST_STRINGS_WITH_TRAILING_SPACES}")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITHOUT_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITHOUT_SPACES}" ]] && echo -n 1
 
     # Check with leading and trailing spaces
     test=$(trim "${TEST_STRINGS_WITH_SPACES}")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITHOUT_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITHOUT_SPACES}" ]] && echo -n 1
 
     # Check with leading and trailing spaces or tabs
     test=$(trim "${TEST_STRINGS_WITH_TABS_AND_SPACES}")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITHOUT_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITHOUT_SPACES}" ]] && echo -n 1
 
     # Check with leading and trailing spaces and masks
     test=$(trim "${TEST_STRINGS_WITH_SPACES_AND_MASK}" "${TEST_STRINGS_MASK}")
     echo -n "-$?"
-    [[ "$test" == "$TEST_STRINGS_WITHOUT_SPACES" ]] && echo -n 1
+    [[ "$test" == "${TEST_STRINGS_WITHOUT_SPACES}" ]] && echo -n 1
 }
 
 
@@ -181,4 +219,6 @@ bashUnit "checksum" "${TEST_STRINGS_CHECKSUM}" "$(test_checksum)"
 bashUnit "isEmpty" "${TEST_STRINGS_EMPTY}" "$(test_isEmpty)"
 bashUnit "printLeftPadding" "${TEST_STRINGS_PRINT_LEFT_PADDING}" "$(test_printLeftPadding)"
 bashUnit "printRightPadding" "${TEST_STRINGS_PRINT_RIGHT_PADDING}" "$(test_printRightPadding)"
+bashUnit "toLower" "${TEST_STRINGS_TO_LOWER}" "$(test_toLower)"
+bashUnit "toUpper" "${TEST_STRINGS_TO_UPPER}" "$(test_toUpper)"
 bashUnit "trim" "${TEST_STRINGS_TRIM}" "$(test_trim)"

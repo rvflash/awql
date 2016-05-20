@@ -102,6 +102,34 @@ function printRightPadding ()
 }
 
 ##
+# Make a string lowercase
+# @param string $1 Str
+# @return string
+function toLower ()
+{
+    local str="$1"
+    if [[ -z "$str" ]]; then
+        return 0
+    fi
+
+    echo "$str" | awk '{ print tolower($0) }'
+}
+
+##
+# Make a string uppercase
+# @param string $1 Str
+# @return string
+function toUpper ()
+{
+    local str="$1"
+    if [[ -z "$str" ]]; then
+        return 0
+    fi
+
+    echo "$str" | awk '{ print toupper($0) }'
+}
+
+##
 # This function returns a string with whitespace (or other characters) stripped from the beginning and end of str
 # @param string $1 Str
 # @param string $2 Character to mask [optional]

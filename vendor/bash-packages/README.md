@@ -137,6 +137,8 @@ You can also add your own prefix by using the method named `logUsePrefix`.
 * Function isEmpty ( string str ) `?=0 if not empty, 1 if empty`
 * Function printLeftPadding ( string str, int padLength [ , string padChar ] ) string `?=0`
 * Function printRightPadding ( string str, int padLength [ , string padChar ] ) string `?=0`
+* Function toLower ( string str ) string `?=0`
+* Function toUpper ( string str ) string `?=0`
 * Function trim ( string str [ , string charToMask ] ) string `?=0`
 
 
