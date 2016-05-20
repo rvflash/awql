@@ -22,7 +22,7 @@ fi
 # > REPLACE           : 0
 # > VIEW              : CAMPAIGN_REPORT
 # > FIELD_NAMES       :
-# > QUERY             : CREATE VIEW CAMPAIGN_REPORT AS SELECT Id, Name, Status, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O ORDER BY Clicks DESC
+# > QUERY             : CREATE VIEW CAMPAIGN_REPORT AS SELECT CampaignId AS Id, CampaignName AS Name, CampaignStatus AS Status, Impressions, Clicks, Conversions, Cost, AverageCpc FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O GROUP BY CampaignId ORDER BY Clicks DESC
 # > DEFINITION        :
 #   > STATEMENT       : SELECT
 #   > FIELD_NAMES     : Id Name Status Impressions Clicks Conversions Cost AverageCpc
@@ -30,11 +30,12 @@ fi
 #   > TABLE           : CAMPAIGN_PERFORMANCE_REPORT
 #   > WHERE           : Impressions > O
 #   > DURING          :
+#   > GROUP           : 1
 #   > ORDER           : Clicks DESC
 #   > LIMIT           : 5
 #   > VIEW            : 0
-#   > QUERY           : SELECT Id, Name, Status, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O ORDER BY Clicks DESC;
-#   > AWQL_QUERY      : SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O;
+#   > QUERY           : SELECT CampaignId AS Id, CampaignName AS Name, CampaignStatus AS Status, Impressions, Clicks, Conversions, Cost, AverageCpc FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O GROUP BY CampaignId ORDER BY Clicks DESC;
+#   > AWQL_QUERY      : SELECT CampaignId, CampaignName, CampaignStatus, Impressions, Clicks, Conversions, Cost, AverageCpc FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O;
 #
 # @param string $1 Query
 # @return arrayToString Query component
