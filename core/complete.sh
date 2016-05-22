@@ -46,12 +46,25 @@ function __completeOptions ()
         declare -A -r awqlTables="$(awqlTables "$apiVersion")"
         if [[ "${#awqlTables[@]}" -eq 0 ]]; then
             return 1
-        elif [[ -z "$table" ]]; then
+        fi
+        # Also load views
+        declare -A -r awqlViews="$(awqlViews)"
+        if [[ "${#awqlViews[@]}" -eq 0 ]]; then
+            return 1
+        fi
+        if [[ -z "$table" ]]; then
             # List all available table names
-            echo "${!awqlTables[@]}"
-        else
+            echo "${!awqlTables[@]} ${!awqlViews[@]}"
+        elif [[ -n "${awqlTables["$table"]}" ]]; then
             # List all table's fields
             echo "${awqlTables["$table"]}"
+        elif [[ -n "${awqlViews["$table"]}" && "${awqlViews["$table"]}" == "("*")" ]]; then
+            # List all view's fields
+            declare -A -r view="${awqlViews["$table"]}"
+            if [[ "${#view[@]}" -eq 0 ]]; then
+                return 1
+            fi
+            echo "${view["${AWQL_VIEW_NAMES}"]}"
         fi
     elif [[ ${mode} -eq ${COMPLETION_MODE_FIELDS} ]]; then
         # Load fields
@@ -83,8 +96,12 @@ function __completeWord ()
     declare -i pos="${#str}"
     local replyStr="$2"
     if [[ ${pos} -eq 0 || -z "$replyStr" ]]; then
-        echo "$replyStr"
-        return 1
+        if [[ -z "$replyStr" ]]; then
+            return 1
+        else
+            echo "$replyStr"
+            return 0
+        fi
     fi
 
     declare -a compReply
@@ -184,10 +201,10 @@ function awqlComplete ()
     local table options
     if [[ "$str" == *";" || "$str" == *"\\"[gG] ]]; then
         # The end
-        return 0
+        return 1
     elif [[ "$str" == ${AWQL_QUERY_SELECT}[[:space:]]**${AWQL_QUERY_LIMIT}[[:space:]]* ]]; then
         # Nothing to do after limit
-        return 0
+        return 1
     elif [[ "$str" == ${AWQL_QUERY_SELECT}[[:space:]]**${AWQL_QUERY_ORDER_BY}[[:space:]]* ]]; then
         # Get only columns used in query to complete order by
         options="${fields[@]}"
@@ -225,7 +242,7 @@ function awqlComplete ()
     fi
 
     if [[ -z "$options" ]]; then
-        # Use default configuration and not information in query
+        # Use default configuration and not query's information
         options=$(__completeOptions ${mode} "$table" "$apiVersion")
         if [[ $? -ne 0 ]]; then
             return 0
