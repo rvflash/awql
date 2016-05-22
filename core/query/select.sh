@@ -38,7 +38,7 @@ function __queryGroupBy ()
         if [[ "${groupFields[${pos}]}" =~ ^[0-9]+$ ]]; then
             # Group by N
             groupColumn="${groupFields[${pos}]}"
-            if [[ ${groupColumn} -eq 0 || ${groupColumn} -gt ${fieldsLength} ]]; then
+            if [[ ${groupColumn} -le 0 || ${groupColumn} -gt ${fieldsLength} ]]; then
                 echo "${AWQL_QUERY_ERROR_GROUP} with index '${groupFields[${pos}]}'"
                 return 2
             fi
@@ -68,9 +68,8 @@ function __queryGroupBy ()
         # @fields CampaignId, CampaignName
         # @groupBy CampaignId
         # @example 1
-        groupBy+=${groupColumn}
+        groupBy+=(${groupColumn})
     done
-
     echo "${groupBy[@]}"
 }
 
@@ -352,7 +351,7 @@ function awqlSelectQuery ()
                             components["$name"]=""
                         fi
                     elif [[ -n "${components["$name"]}" ]]; then
-                        components["$name"]+=" $part"
+                        components["$name"]+="$part"
                     else
                         components["$name"]="$part"
                     fi
@@ -362,8 +361,8 @@ function awqlSelectQuery ()
                 fi
                 ;;
             ${AWQL_REQUEST_ORDER})
-                if [[ "$char" == " " && -n "$part" ]]; then
-                    if [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
+                if ([[ "$char" == " " || "$char" == "," ]]) && [[ -n "$part" ]]; then
+                    if [[ "$char" == " " && "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
                     elif [[ ! ${components["$name"]+rv} ]]; then
                         if [[ "$part" != ${AWQL_QUERY_BY} ]]; then
@@ -373,7 +372,7 @@ function awqlSelectQuery ()
                             components["$name"]=""
                         fi
                     elif [[ -n "${components["$name"]}" ]]; then
-                        components["$name"]+=" $part"
+                        components["$name"]+="${char}${part}"
                     else
                         components["$name"]="$part"
                     fi

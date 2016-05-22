@@ -22,7 +22,10 @@ function __aggregateRows ()
     if [[ -z "$file" || ! -f "$file" || "$file" != *"${AWQL_FILE_EXT}" ]]; then
         return 1
     fi
-    if [[ "$2" != "("*")" ]]; then
+    if [[ -z "$2" ]]; then
+        echo "$file"
+        return 0
+    elif [[ "$2" != "("*")" ]]; then
         return 1
     fi
     declare -A aggregates="$2"
@@ -36,7 +39,7 @@ function __aggregateRows ()
     declare -a aggregateOptions=()
     if [[ -n "$groupBy" ]]; then
         extendedFile+="${AWQL_AGGREGATE_GROUP}${groupBy/ /-}"
-        aggregateOptions+="-v groupByColumns=\"$groupBy\""
+        aggregateOptions+=("-v groupByColumns=\"$groupBy\"")
     fi
 
     local type="" fields=""
@@ -47,22 +50,22 @@ function __aggregateRows ()
         fi
         case "$type" in
             "${AWQL_AGGREGATE_AVG}")
-                aggregateOptions+="-v avgColumns=\"$fields\""
+                aggregateOptions+=("-v avgColumns=\"$fields\"")
                 ;;
             "${AWQL_AGGREGATE_DISTINCT}")
-                aggregateOptions+="-v distinctColumns=\"$fields\""
+                aggregateOptions+=("-v distinctColumns=\"$fields\"")
                 ;;
             "${AWQL_AGGREGATE_COUNT}")
-                aggregateOptions+="-v countColumns=\"$fields\""
+                aggregateOptions+=("-v countColumns=\"$fields\"")
                 ;;
             "${AWQL_AGGREGATE_MAX}")
-                aggregateOptions+="-v maxColumns=\"$fields\""
+                aggregateOptions+=("-v maxColumns=\"$fields\"")
                 ;;
             "${AWQL_AGGREGATE_MIN}")
-                aggregateOptions+="-v minColumns=\"$fields\""
+                aggregateOptions+=("-v minColumns=\"$fields\"")
                 ;;
             "${AWQL_AGGREGATE_SUM}")
-                aggregateOptions+="-v sumColumns=\"$fields\""
+                aggregateOptions+=("-v sumColumns=\"$fields\"")
                 ;;
             *)
                 return 1
@@ -118,12 +121,12 @@ function __limitRows ()
 
     # Keep only first line for column names and lines in bounces
     declare -a limitOptions=()
-    limitOptions+="-v withHeader=1"
+    limitOptions+=("-v withHeader=1")
     if [[ ${limitRange} -eq 2 ]]; then
-        limitOptions+="-v rowOffset=${limit[0]}"
-        limitOptions+="-v rowCount=${limit[1]}"
+        limitOptions+=("-v rowOffset=${limit[0]}")
+        limitOptions+=("-v rowCount=${limit[1]}")
     else
-        limitOptions+="-v rowCount=${limit[0]}"
+        limitOptions+=("-v rowCount=${limit[0]}")
     fi
     awk ${limitOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/termTable.awk" "$file" > "$wrkFile"
     if [[ $? -ne 0 ]]; then
@@ -162,7 +165,7 @@ function __sortingRows ()
 
     # Input field separator
     declare -a sortOptions=()
-    sortOptions+="-t,"
+    sortOptions+=("-t,")
 
     local sort=""
     declare -i pos=0
@@ -175,9 +178,9 @@ function __sortingRows ()
         # Also see syntax: -k+${order[1]} -${order[0]} [-r]
         sort="-k${order[1]},${order[1]}${order[0]}"
         if [[ ${AWQL_SORT_ORDER_DESC} -eq ${order[2]} ]]; then
-            sort+="r"
+            sort+=("r")
         fi
-        sortOptions+="$sort"
+        sortOptions+=("$sort")
     done
 
     head -1 "$file" > "$wrkFile" && sed 1d "$file" | sort ${sortOptions[@]} >> "$wrkFile"
@@ -258,11 +261,11 @@ function __printFile ()
     # Format CVS to display it in a shell terminal
     declare -a csvOptions=()
     if [[ ${vertical} -eq 1 ]]; then
-        csvOptions+="-v verticalMode=1"
+        csvOptions+=("-v verticalMode=1")
     fi
     # Change some columns names
     if [[ -n "$headers" ]]; then
-        csvOptions+="-v fieldNames=\"${headers}\""
+        csvOptions+=("-v fieldNames=\"${headers}\"")
     fi
 
     awk ${csvOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/termTable.awk" "$file"
@@ -276,14 +279,18 @@ function __printFile ()
 function awqlResponse ()
 {
     if [[ $1 != "("*")" || $2 != "("*")" ]]; then
+        echo "${AWQL_INTERNAL_ERROR_CONFIG}"
         return 1
     fi
     declare -A request="$1"
     declare -A response="$2"
 
     # Print Awql response
+    declare -i fileSize=0
     local file="${response["${AWQL_RESPONSE_FILE}"]}"
-    declare -i fileSize=$(wc -l < "$file")
+    if [[ -f "$file" ]]; then
+        fileSize="$(wc -l < "$file")"
+    fi
     if [[ ${fileSize} -le 1 ]]; then
         # No result in file
         return 2
@@ -292,18 +299,21 @@ function awqlResponse ()
     # Manage group by, avg, distinct, count or sum methods
     file=$(__aggregateRows "$file" "${request["${AWQL_REQUEST_AGGREGATES}"]}" "${request["${AWQL_REQUEST_GROUP}"]}")
     if [[ $? -ne 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_AGGREGATES}"
         return 1
     fi
 
     # Manage order clause
     file=$(__sortingRows "$file" "${request["${AWQL_REQUEST_SORT_ORDER}"]}")
     if [[ $? -ne 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_ORDER}"
         return 1
     fi
 
     # Manage limit clause
     file=$(__limitRows "$file" "${request["${AWQL_REQUEST_LIMIT}"]}")
     if [[ $? -ne 0 ]]; then
+        echo "${AWQL_INTERNAL_ERROR_LIMIT}"
         return 1
     fi
 
