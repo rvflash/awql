@@ -207,7 +207,7 @@ function test_awqlViews ()
     declare -A testViews="$test"
     [[ -n "$test" && -n "${testViews["${TEST_CONF_VIEW}"]}" ]] && echo -n 1
     declare -A testView="${testViews["${TEST_CONF_VIEW}"]}"
-    [[ "${#testView[@]}" -eq 6 && "${testView["${AWQL_REQUEST_TABLE}"]}" == "${TEST_CONF_TABLE}" ]] && echo -n 1
+    [[ "${#testView[@]}" -eq 7 && "${testView["${AWQL_REQUEST_TABLE}"]}" == "${TEST_CONF_TABLE}" ]] && echo -n 1
 }
 
 
