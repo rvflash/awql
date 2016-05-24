@@ -48,6 +48,36 @@ function __arrayType ()
 }
 
 ##
+# Get printed array string with declare method and convert it in arrayToString
+#
+# @example input declare -A rv='([k]="v")'
+# @example code
+#   declare -A rv
+#   rv[k]="v"
+#   arrayToString "$(declare -p rv)"
+# @example return ([k]=v)
+#
+# @param string $1 Array declaration
+# @return string
+function arrayToString ()
+{
+    local str="$1"
+    if [[ -z "$str" ]]; then
+        echo "()"
+        return 0
+    fi
+
+    # Remove declare -OPTIONS NAME='(
+    str="${str#*\(}"
+    # Remove )'
+    str="${str%\)*}"
+    # Remove escaping of single quote (') by declare function
+    str="${str//\\\'\'/}"
+
+    echo "(${str})"
+}
+
+##
 # Creates an array by using the values from the keys array as keys and the values from the values array as the corresponding values.
 #
 # Note : Associative arrays are stored in a 'hash' order. If you want ordering, you don't use associative arrays !
@@ -394,33 +424,42 @@ function arraySearch ()
 }
 
 ##
-# Get printed array string with declare method and convert it in arrayToString
-#
-# @example input declare -A rv='([k]="v")'
-# @example code
-#   declare -A rv
-#   rv[k]="v"
-#   arrayToString "$(declare -p rv)"
-# @example return ([k]=v)
-#
-# @param string $1 Array declaration
-# @return string
-function arrayToString ()
+# Removes duplicate values from an array
+# @param arrayToString $1 Arr1
+# @return arrayToString
+function arrayUnique ()
 {
-    local str="$1"
-    if [[ -z "$str" ]]; then
-        echo "()"
-        return 0
+    local haystack="$1"
+    local type="$(__arrayType "$haystack")"
+    if [[ "$type" == "${BP_ARRAY_DECLARED_INDEXED_TYPE}" ]]; then
+        declare -a arrSrc="$(arrayToString "$haystack")"
+    elif [[ "$type" == "${BP_ARRAY_DECLARED_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arrSrc="$(arrayToString "$haystack")"
+    elif [[ "$type" == "${BP_ARRAY_INDEXED_TYPE}" ]]; then
+        declare -a arrSrc="$haystack"
+    elif [[ "$type" == "${BP_ARRAY_ASSOCIATIVE_TYPE}" ]]; then
+        declare -A arrSrc="$haystack"
+    else
+        local arrSrc
+        IFS=" " read -a arrSrc <<<"$haystack"
     fi
 
-    # Remove declare -OPTIONS NAME='(
-    str="${str#*\(}"
-    # Remove )'
-    str="${str%\)*}"
-    # Remove escaping of single quote (') by declare function
-    str="${str//\\\'\'/}"
+    declare -A arr=()
+    declare -A unique=()
+    local key value
+    for key in "${!arrSrc[@]}"; do
+        value="${arrSrc["$key"]}"
+        if [[ -z "${unique["$value"]}" ]]; then
+            arr["$key"]="$value"
+            unique["$value"]=1
+        fi
+    done
 
-    echo "(${str})"
+    if [[ "$type" != "${BP_ARRAY_DEFAULT_INDEXED_TYPE}" ]]; then
+        arrayToString "$(declare -p arr)"
+    else
+        echo "(${arr[@]})"
+    fi
 }
 
 ##

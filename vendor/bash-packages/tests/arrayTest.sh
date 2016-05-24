@@ -23,6 +23,12 @@ declare -r TEST_ARRAY_MERGE_ASSOCIATIVE_INDEX="([four]=\"fifth\" [three]=\"third
 declare -r TEST_ARRAY_COMBINE="([fourth]=\"fourth\" [third]=\"third\" [second]=\"second\" [first]=\"first\" )"
 declare -r TEST_ARRAY_EMPTY_FILL_KEYS="([fourth]=\"\" [third]=\"\" [second]=\"\" [first]=\"\" )"
 declare -r TEST_ARRAY_WITH_FILL_KEYS="([fourth]=\"third\" [third]=\"third\" [second]=\"third\" [first]=\"third\" )"
+declare -r TEST_ARRAY_DUPLICATED_FROM_STRING="first second third second fourth first fourth"
+declare -r TEST_ARRAY_DUPLICATED_NUMERIC_INDEX="([0]=\"first\" [1]=\"second\" [2]=\"second\" [3]=\"second\" [4]=\"fourth\" [5]=\"first\")"
+declare -r TEST_ARRAY_DUPLICATED_ASSOCIATIVE_INDEX="([\"one\"]=\"first\" [\"two\"]=\"second\" [\"three\"]=\"second\" [\"four\"]=\"fourth\")"
+declare -r TEST_ARRAY_UNIQUE_NUMERIC_INDEX="([0]=\"first\" [1]=\"second\" [4]=\"fourth\" )"
+declare -r TEST_ARRAY_UNIQUE_ASSOCIATIVE_INDEX="([four]=\"fourth\" [one]=\"first\" [two]=\"second\" )"
+
 
 readonly TEST_ARRAY_ARRAY_COMBINE="-01-11-01-11-01"
 
@@ -255,6 +261,39 @@ function test_arrayToString ()
 }
 
 
+readonly TEST_ARRAY_ARRAY_UNIQUE="-01-01-01-01-01"
+
+function test_arrayUnique ()
+{
+    local test
+
+    #1 Check nothing
+    test=$(arrayUnique)
+    echo -n "-$?"
+    [[ "$test" == "()" ]] && echo -n 1
+
+    #2 Simple string without duplicate, expected same array
+    test=$(arrayUnique "${TEST_ARRAY_FROM_STRING}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_FROM_STRING_SURROUND}" ]] && echo -n 1
+
+    #3 Simple string with duplicates, expected same array
+    test=$(arrayUnique "${TEST_ARRAY_DUPLICATED_FROM_STRING}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_FROM_STRING_SURROUND}" ]] && echo -n 1
+
+    #4 Associative declared associative array
+    test=$(arrayUnique "${TEST_ARRAY_DUPLICATED_ASSOCIATIVE_INDEX}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_UNIQUE_ASSOCIATIVE_INDEX}" ]] && echo -n 1
+
+    #5 Associative declared indexed array
+    test=$(arrayUnique "${TEST_ARRAY_DUPLICATED_NUMERIC_INDEX}")
+    echo -n "-$?"
+    [[ "$test" == "${TEST_ARRAY_UNIQUE_NUMERIC_INDEX}" ]] && echo -n 1
+}
+
+
 readonly TEST_ARRAY_COUNT="-01-01-01-01-01-01-01"
 
 function test_count ()
@@ -344,5 +383,6 @@ bashUnit "arrayKeyExists" "${TEST_ARRAY_KEY_EXISTS}" "$(test_arrayKeyExists)"
 bashUnit "arrayMerge" "${TEST_ARRAY_ARRAY_MERGE}" "$(test_arrayMerge)"
 bashUnit "arraySearch" "${TEST_ARRAY_ARRAY_SEARCH}" "$(test_arraySearch)"
 bashUnit "arrayToString" "${TEST_ARRAY_ARRAY_TO_STRING}" "$(test_arrayToString)"
+bashUnit "arrayUnique" "${TEST_ARRAY_ARRAY_UNIQUE}" "$(test_arrayUnique)"
 bashUnit "count" "${TEST_ARRAY_COUNT}" "$(test_count)"
 bashUnit "inArray" "${TEST_ARRAY_IN_ARRAY}" "$(test_inArray)"
