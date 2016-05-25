@@ -59,42 +59,42 @@ readonly TEST_MAIN_GET_DATA="-11-11-21-11-01-11-01-01"
 
 function test_getData ()
 {
-    local test
+    local test testFile="${AWQL_USER_VIEWS_DIR}/RV_REPORT.yaml"
 
     #1 Check nothing
     test=$(__getData)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "${AWQL_INTERNAL_ERROR_CONFIG}" == "$test" ]] && echo -n 1
 
     #2 Check with bad request
     test=$(__getData "rv")
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "${AWQL_INTERNAL_ERROR_CONFIG}" == "$test" ]] && echo -n 1
 
     #3 Check with unsupported method as request
     test=$(__getData "${TEST_MAIN_ERROR_REQUEST}")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_QUERY_ERROR_UNKNOWN_METHOD}" ]] && echo -n 1
+    [[ "${AWQL_QUERY_ERROR_METHOD}" == "$test" ]] && echo -n 1
 
     #4 Check with missing query checksum in request
     test=$(__getData "${TEST_MAIN_MISSING_CHECKSUM_REQUEST}")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_QUERY_CHECKSUM}" ]] && echo -n 1
+    [[ "${AWQL_INTERNAL_ERROR_QUERY_CHECKSUM}" == "$test" ]] && echo -n 1
 
     #5 Check with create method as request
     test=$(__getData "${TEST_MAIN_BASIC_CREATE_REQUEST}")
     echo -n "-$?"
-    [[ "$test" == "()" ]] && echo -n 1
+    [[ "()" == "$test" ]] && echo -n 1
 
     #6 Check with select method as request
     test=$(__getData "${TEST_MAIN_BASIC_REQUEST}")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
+    [[ "${AWQL_INTERNAL_ERROR_ID}" == "$test" ]] && echo -n 1
 
     #7 Check with show method as request
     test=$(__getData "${TEST_MAIN_BASIC_SHOW_REQUEST}")
     echo -n "-$?"
-    [[ "$test" == "([FILE]="*" [CACHING]=1)" ]] && echo -n 1
+    [[ "$test" == "([FILE]="*" [CACHING]=0)" ]] && echo -n 1
 
     #0 Force workspace
     touch "${TEST_MAIN_RESPONSE_FILE}"
@@ -105,7 +105,7 @@ function test_getData ()
     [[ "$test" == "([FILE]="*" [CACHING]=1)" ]] && echo -n 1
 
     #0 Clear workspace
-    rm -f "${AWQL_USER_VIEWS_DIR}/RV_REPORT.yaml"
+    rm -f "$testFile"
     rm -f "${TEST_MAIN_RESPONSE_FILE}"
     awqlClearCacheViews
 }
@@ -120,17 +120,17 @@ function test_awql ()
     #1 Check nothing
     test=$(awql)
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
+    [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
     #1 Check with only query
     test=$(awql "${TEST_MAIN_QUERY}")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
+    [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
     #2 Check with query and invalid api version
     test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_BAD_API_VERSION}")
     echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
+    [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
     #3 Check with empty query and valid api version
     test=$(awql "" "${TEST_QUERY_API_VERSION}")

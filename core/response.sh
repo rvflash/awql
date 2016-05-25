@@ -38,7 +38,7 @@ function __aggregateRows ()
     local extendedFile=""
     declare -a aggregateOptions=()
     if [[ -n "$groupBy" ]]; then
-        extendedFile+="${AWQL_AGGREGATE_GROUP}${groupBy/ /-}"
+        extendedFile+="${AWQL_AGGREGATE_GROUP}${groupBy// /-}"
         aggregateOptions+=("-v groupByColumns=\"$groupBy\"")
     fi
 
@@ -71,7 +71,7 @@ function __aggregateRows ()
                 return 1
                 ;;
         esac
-        extendedFile+="${type}${fields/ /-}"
+        extendedFile+="${type}${fields// /-}"
     done
 
     local wrkFile="${file//${AWQL_FILE_EXT}/___${extendedFile}${AWQL_FILE_EXT}}"
@@ -111,8 +111,7 @@ function __limitRows ()
     fi
 
     # Limit size of data to display
-    local limits="${limit[@]}"
-    local wrkFile="${file//${AWQL_FILE_EXT}/_${limits/ /-}${AWQL_FILE_EXT}}"
+    local wrkFile="${file//${AWQL_FILE_EXT}/_${2// /-}${AWQL_FILE_EXT}}"
     if [[ -f "$wrkFile" ]]; then
         # Job already done
         echo "$wrkFile"
@@ -156,7 +155,8 @@ function __sortingRows ()
         return 0
     fi
 
-    local wrkFile="${file//${AWQL_FILE_EXT}/__${orders/ /-}${AWQL_FILE_EXT}}"
+    local wrkFile="${2// /-}"
+    wrkFile="${file//${AWQL_FILE_EXT}/__${wrkFile//,/}${AWQL_FILE_EXT}}"
     if [[ -f "$wrkFile" ]]; then
         # Job already done
         echo "$wrkFile"
@@ -177,13 +177,14 @@ function __sortingRows ()
 
         # Also see syntax: -k+${order[1]} -${order[0]} [-r]
         sort="-k${order[1]},${order[1]}${order[0]}"
-        if [[ ${AWQL_SORT_ORDER_DESC} -eq ${order[2]} ]]; then
-            sort+=("r")
+        if [[ ${order[2]} -eq ${AWQL_SORT_ORDER_DESC} ]]; then
+            sort+="r"
         fi
         sortOptions+=("$sort")
     done
 
-    head -1 "$file" > "$wrkFile" && sed 1d "$file" | sort ${sortOptions[@]} >> "$wrkFile"
+    # Remove header line for sorting, use the default language for output, and forces sorting to be bytewise
+    head -1 "$file" > "$wrkFile" && sed 1d "$file" | LC_ALL=C sort ${sortOptions[@]} >> "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
     fi
@@ -304,7 +305,7 @@ function awqlResponse ()
     fi
 
     # Manage order clause
-    file=$(__sortingRows "$file" "${request["${AWQL_REQUEST_SORT_ORDER}"]}")
+    file=$(__sortingRows "$file" "${request["${AWQL_REQUEST_ORDER}"]}")
     if [[ $? -ne 0 ]]; then
         echo "${AWQL_INTERNAL_ERROR_ORDER}"
         return 1

@@ -12,6 +12,7 @@ fi
 # Return the list of field indexes to use as group, separated by space
 # @param string $1 List of column to use as group, separated by comma
 # @param string $2 List of column names to fetch, separated by space
+# @param array $3 Aggregate columns list by type
 # @return string
 # @returnStatus 1 If query has no field
 # @returnStatus 1 If third parameter named aggregates is not an array
@@ -30,23 +31,25 @@ function __queryGroupBy ()
     fi
     declare -A aggregates="$3"
 
+    local group=""
     declare -a fields=() groupFields=() groupBy=()
     IFS=" " read -a fields <<<"$fieldsQuery"
     IFS="," read -a groupFields <<<"$groupQuery"
     declare -i pos=0 groupColumn=0 numberGroups="${#groupFields[@]}" fieldsLength="${#fields[@]}"
     for (( pos=0; pos < ${numberGroups}; pos++ )); do
-        if [[ "${groupFields[${pos}]}" =~ ^[0-9]+$ ]]; then
+        group="$(trim "${groupFields[${pos}]}")"
+        if [[ "$group" =~ ^[0-9]+$ ]]; then
             # Group by N
-            groupColumn="${groupFields[${pos}]}"
+            groupColumn="$group"
             if [[ ${groupColumn} -le 0 || ${groupColumn} -gt ${fieldsLength} ]]; then
-                echo "${AWQL_QUERY_ERROR_GROUP} with index '${groupFields[${pos}]}'"
+                echo "${AWQL_QUERY_ERROR_GROUP} with index '$group'"
                 return 2
             fi
         else
             # Group by columnName
-            groupColumn=$(arraySearch "${groupFields[${pos}]}" "$fieldsQuery")
+            groupColumn=$(arraySearch "$group" "$fieldsQuery")
             if [[ $? -ne 0 ]]; then
-                echo "${AWQL_QUERY_ERROR_GROUP} on '${groupFields[${pos}]}'"
+                echo "${AWQL_QUERY_ERROR_GROUP} on '$group'"
                 return 2
             fi
             # Increment array key index
@@ -61,7 +64,7 @@ function __queryGroupBy ()
             inArray ${groupColumn} "${aggregates["${AWQL_AGGREGATE_MIN}"]}" || \
             inArray ${groupColumn} "${aggregates["${AWQL_AGGREGATE_SUM}"]}";
         then
-            echo "${AWQL_QUERY_ERROR_GROUP} on aggregated field named '${groupFields[${pos}]}'"
+            echo "${AWQL_QUERY_ERROR_GROUP} on aggregated field named '$group'"
             return 2
         fi
 
@@ -82,7 +85,7 @@ function __queryOrder ()
 {
     if [[ "$1" == ${AWQL_QUERY_DESC} ]]; then
         echo "${AWQL_SORT_ORDER_DESC}"
-    elif [[ "$1" == ${AWQL_QUERY_ASC} ]]; then
+    elif [[ -z "$1" || "$1" == ${AWQL_QUERY_ASC} ]]; then
         echo "${AWQL_SORT_ORDER_ASC}"
     else
         return 1
@@ -130,12 +133,11 @@ function __querySortOrder ()
     fi
     local apiVersion="$4"
     if [[ ! "$apiVersion" =~ ${AWQL_API_VERSION_REGEX} ]]; then
-        echo "${AWQL_INTERNAL_ERROR_API_VERSION}"
         return 1
     fi
 
     local type="" orderBy=""
-    declare -A -r fieldsType="$(awqlFields "$apiVersion")"
+    declare -A fieldsType="$(awqlFields "$apiVersion")"
     declare -a orderFields=()
     IFS="," read -a orderFields <<<"$orderQuery"
     declare -i pos=0 numberOrders="${#orderFields[@]}" orderColumn=0 sortOrder=0
@@ -163,7 +165,7 @@ function __querySortOrder ()
             echo "${AWQL_QUERY_ERROR_COLUMN_TYPE} with '${fields[$((${orderColumn}-1))]}'"
             return 1
         fi
-        sortOrder=$(__queryOrder "${order[1]}")
+        sortOrder="$(__queryOrder "${order[1]}")"
         if [[ $? -ne 0 ]]; then
             echo "${AWQL_QUERY_ERROR_ORDER} with '${orderFields[${pos}]}'"
             return 2
@@ -361,8 +363,8 @@ function awqlSelectQuery ()
                 fi
                 ;;
             ${AWQL_REQUEST_ORDER})
-                if ([[ "$char" == " " || "$char" == "," ]]) && [[ -n "$part" ]]; then
-                    if [[ "$char" == " " && "$part" == ${AWQL_QUERY_LIMIT} ]]; then
+                if [[ "$char" == " " && -n "$part" ]]; then
+                    if [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
                     elif [[ ! ${components["$name"]+rv} ]]; then
                         if [[ "$part" != ${AWQL_QUERY_BY} ]]; then
@@ -372,7 +374,7 @@ function awqlSelectQuery ()
                             components["$name"]=""
                         fi
                     elif [[ -n "${components["$name"]}" ]]; then
-                        components["$name"]+="${char}${part}"
+                        components["$name"]+=" $part"
                     else
                         components["$name"]="$part"
                     fi
@@ -594,6 +596,7 @@ function awqlSelectQuery ()
         echo "$groups"
         return 2
     fi
+    # to do : use #${view["${AWQL_VIEW_GROUP}"]} in case of view
     components["${AWQL_REQUEST_GROUP}"]="$groups"
 
     # Order by
@@ -603,6 +606,7 @@ function awqlSelectQuery ()
         echo "$orders"
         return 2
     fi
+    # to do : use #${view["${AWQL_VIEW_ORDER}"]} in case of view
     components["${AWQL_REQUEST_ORDER}"]="$orders"
 
     # Build AWQL query: SELECT...FROM...WHERE...DURING...
@@ -622,5 +626,4 @@ function awqlSelectQuery ()
     components["${AWQL_REQUEST_TYPE}"]="select"
 
     arrayToString "$(declare -p components)"
-    return 2
 }

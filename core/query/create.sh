@@ -156,7 +156,7 @@ function awqlCreateQuery ()
         echo "${AWQL_QUERY_ERROR_VIEW}"
         return 2
     elif [[ -z "${components["${AWQL_REQUEST_QUERY_SOURCE}"]}" ]]; then
-        echo "${AWQL_QUERY_ERROR_SOURCE}"
+        echo "${AWQL_QUERY_ERROR_MISSING_SOURCE}"
         return 2
     elif awqlReservedWord "${components["${AWQL_REQUEST_VIEW}"]}"; then
         echo "${AWQL_QUERY_ERROR_VIEW}"
@@ -182,7 +182,7 @@ function awqlCreateQuery ()
     # Source
     components["${AWQL_REQUEST_DEFINITION}"]="$(awqlSelectQuery "${components["${AWQL_REQUEST_QUERY_SOURCE}"]}" "$apiVersion")"
     if [[ $? -ne 0 ]]; then
-         echo "${AWQL_QUERY_ERROR_SOURCE}"
+         echo "${AWQL_QUERY_ERROR_INVALID_SOURCE}"
         return 2
     fi
     # Check view definition

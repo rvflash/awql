@@ -67,9 +67,6 @@ function awqlCreate ()
     # Columns
     printRightPadding "${AWQL_VIEW_FIELDS}" $((${pad}-${#AWQL_VIEW_FIELDS})) >> "$file"
     echo -ne ": ${table["${AWQL_REQUEST_FIELD_NAMES}"]}\n" >> "$file"
-    # Columns
-    printRightPadding "${AWQL_VIEW_FIELDS}" $((${pad}-${#AWQL_VIEW_FIELDS})) >> "$file"
-    echo -ne ": ${table["${AWQL_REQUEST_FIELD_NAMES}"]}\n" >> "$file"
     # Table name
     printRightPadding "${AWQL_VIEW_TABLE}" $((${pad}-${#AWQL_VIEW_TABLE})) >> "$file"
     echo -ne ": ${table["${AWQL_REQUEST_TABLE}"]}\n" >> "$file"
