@@ -487,5 +487,6 @@ function awqlRead ()
         fi
     done
 
-    eval "${readerVarName}=\"${reply}\""
+    # Protect and export
+    eval "${readerVarName}=\"${reply//\"/\\\"}\""
 }
