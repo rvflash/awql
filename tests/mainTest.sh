@@ -5,9 +5,15 @@ source ../core/main.sh
 
 # Default entries
 declare -r TEST_QUERY_API_ID="123-456-7890"
+declare -r TEST_QUERY_BAD_API_ID="123"
 declare -r TEST_QUERY_API_VERSION="v201601"
 declare -r TEST_QUERY_BAD_API_VERSION="v0883"
-declare -r TEST_MAIN_QUERY="DESC CAMPAIGN_PERFORMANCE_REPORT"
+declare -ri TEST_MAIN_QUERY_LINE=18
+declare -r TEST_MAIN_QUERY_ENDING="13 rows in set (0.00 sec) "
+declare -r TEST_MAIN_QUERY_VERBOSE_ENDING="${TEST_MAIN_QUERY_ENDING}@source ${AWQL_WRK_DIR}/3928115536.awql"
+declare -r TEST_MAIN_QUERY_CACHED_VERBOSE_ENDING="${TEST_MAIN_QUERY_ENDING}@source ${AWQL_WRK_DIR}/3928115536.awql @cached"
+declare -r TEST_MAIN_QUERY="DESC CAMPAIGN_REPORT"
+declare -r TEST_MAIN_BAD_QUERY="UPDATE CAMPAIGN_REPORT SET CampaignId = 12;"
 declare -r TEST_MAIN_TEST_DIR="${PWD}/unit"
 declare -r TEST_MAIN_UNKNOWN_CSV_FILE="/awql/file.csv"
 declare -r TEST_MAIN_CSV_FILE="${TEST_MAIN_TEST_DIR}/test01.csv"
@@ -111,53 +117,66 @@ function test_getData ()
 }
 
 
-readonly TEST_MAIN_AWQL="-11-11-11-11-11"
+readonly TEST_MAIN_AWQL="-11-11-11-01-11-11-11-11-01-01-01"
 
 function test_awql ()
 {
     local test
 
-    #1 Check nothing
+    #1 Check nothing, expected error
     test=$(awql)
     echo -n "-$?"
     [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
-    #1 Check with only query
+    #2 Check with only query, expected error
     test=$(awql "${TEST_MAIN_QUERY}")
     echo -n "-$?"
     [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
-    #2 Check with query and invalid api version
-    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_BAD_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
-
-    #3 Check with empty query and valid api version
-    test=$(awql "" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?"
-    [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
-
-    #4 Check with query and api version
+    #3 Check only with query and valid API version, expected error
     test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?$test"
+    echo -n "-$?"
     [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
-    #5 Check with query in error
-    test=$(awql "${TEST_MAIN_ERROR_REQUEST}" "${TEST_QUERY_API_VERSION}")
-    echo -n "-$?$test"
+    #4 Check only with query, valid API version and Adwords Id, expected valid response
+    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_API_ID}")
+    echo -n "-$?"
+    [[ $(wc -l <<< "$test") -eq ${TEST_MAIN_QUERY_LINE} && "$test" == *"${TEST_MAIN_QUERY_ENDING}" ]] && echo -n 1
+
+    #5 Check with empty query, valid API version and Adwords ID, expected empty response with error status
+    test=$(awql "" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_API_ID}")
+    echo -n "-$?"
+    [[ -z "$test" ]] && echo -n 1
+
+    #6 Check with bad query, valid API version and Adwords ID, expected query error
+    test=$(awql "${TEST_MAIN_BAD_QUERY}" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_API_ID}")
+    echo -n "-$?"
+    [[ "$test" == "${AWQL_QUERY_ERROR_METHOD}" ]] && echo -n 1
+
+    #7 Check with with query, invalid API version and Adwords ID, expected internal error
+    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_BAD_API_VERSION}" "${TEST_QUERY_API_ID}")
+    echo -n "-$?"
+    [[ "$test" == "${AWQL_INTERNAL_ERROR_API_VERSION}" ]] && echo -n 1
+
+    #8 Check with with query, API version and invalid Adwords ID, expected internal error
+    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_BAD_API_ID}")
+    echo -n "-$?"
     [[ "$test" == "${AWQL_INTERNAL_ERROR_ID}" ]] && echo -n 1
 
-    #5 Check with query, api version and adwordsId
-    #6 Check with query, api version, adwordsId and accessToken
-    #7 Check with query, api version, adwordsId and developerToken
-    #8 Check with query, api version, adwordsId with cache
-    #9 Check with query, api version, adwordsId with verbose mode
-    #10 Check with query, api version, adwordsId with raw mode
+    #9 Check with with query, API version and invalid Adwords ID with verbose mode, expected valid response
+    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_API_ID}" "" "" 0 1)
+    echo -n "-$?"
+    [[ $(wc -l <<< "$test") -eq ${TEST_MAIN_QUERY_LINE} && "$test" == *"${TEST_MAIN_QUERY_VERBOSE_ENDING}" ]] && echo -n 1
 
-    #0 Clear workspace
-    rm -f "${AWQL_USER_VIEWS_DIR}/RV_REPORT.yaml"
-    rm -f "${TEST_MAIN_RESPONSE_FILE}"
-    awqlClearCacheViews
+    #10 Check with with query, API version and invalid Adwords ID with cache and verbose mode, expected valid response
+    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_API_ID}" "" "" 1 1)
+    echo -n "-$?"
+    [[ $(wc -l <<< "$test") -eq ${TEST_MAIN_QUERY_LINE} && "$test" == *"${TEST_MAIN_QUERY_CACHED_VERBOSE_ENDING}" ]] && echo -n 1
+
+    #11 Check with with query, API version and invalid Adwords ID with only cache enabled, expected valid response
+    test=$(awql "${TEST_MAIN_QUERY}" "${TEST_QUERY_API_VERSION}" "${TEST_QUERY_API_ID}" "" "" 1 0)
+    echo -n "-$?"
+    [[ $(wc -l <<< "$test") -eq ${TEST_MAIN_QUERY_LINE} && "$test" == *"${TEST_MAIN_QUERY_ENDING}" ]] && echo -n 1
 }
 
 

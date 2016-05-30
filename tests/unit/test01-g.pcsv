@@ -1,4 +1,4 @@
-*************************** 1. row ***************************
+**************************** 1. row ****************************
               Day: 2015-10-01
       Campaign ID: 1234567890
          Campaign: @1 #sp
@@ -8,7 +8,7 @@
        Mobile Url:
    Campaign state: paused
 Tracking template:
-*************************** 2. row ***************************
+**************************** 2. row ****************************
               Day: 2015-10-20
       Campaign ID: 1234567890
          Campaign: @2 #sp
@@ -18,7 +18,7 @@ Tracking template:
        Mobile Url:
    Campaign state: paused
 Tracking template: https://github.com/rvflash
-*************************** 3. row ***************************
+**************************** 3. row ****************************
               Day: 2015-10-22
       Campaign ID: 123
          Campaign: @3 #sp
@@ -28,7 +28,7 @@ Tracking template: https://github.com/rvflash
        Mobile Url:
    Campaign state: paused
 Tracking template:
-*************************** 4. row ***************************
+**************************** 4. row ****************************
               Day: 2015-10-24
       Campaign ID: 1234567890
          Campaign: @4 #sp
@@ -38,7 +38,7 @@ Tracking template:
        Mobile Url:
    Campaign state: paused
 Tracking template:
-*************************** 5. row ***************************
+**************************** 5. row ****************************
               Day: 2015-10-26
       Campaign ID: 123456
          Campaign: @5 #sp

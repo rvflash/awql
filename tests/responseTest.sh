@@ -22,6 +22,9 @@ declare -r TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_TEXT2_ASC="${TEST_PRI
 declare -r TEST_PRINT_AWQL_FILE_LIMIT_START2_OFFSET3_ORDER_NUMERIC3_DESC="${TEST_PRINT_TEST_DIR}/test01_2-3_k3-1.awql"
 declare -r TEST_PRINT_PRINT_CSV_FILE="${TEST_PRINT_TEST_DIR}/test01.pcsv"
 declare -r TEST_PRINT_VPRINT_CSV_FILE="${TEST_PRINT_TEST_DIR}/test01-g.pcsv"
+declare -r TEST_PRINT_HPRINT_CSV_FILE="${TEST_PRINT_TEST_DIR}/test01-h.pcsv"
+declare -r TEST_PRINT_HVPRINT_CSV_FILE="${TEST_PRINT_TEST_DIR}/test01-hg.pcsv"
+declare -r TEST_PRINT_HEADERS="Day,Id,Name,Clicks,Impressions,Cost,Mobile Url,Status,Url"
 declare -r TEST_PRINT_EMPTY="$(echo -e "Empty set (0.00 sec) \n")"
 declare -r TEST_PRINT_ONE_LINE_WITH_HEADER="$(echo -e "1 row in set (0.00 sec) \n")"
 declare -r TEST_PRINT_ALL_LINE="$(echo -e "$((${TEST_PRINT_FILE_SIZE}-1)) rows in set (${TEST_PRINT_DURATION} sec) \n")"
@@ -131,7 +134,7 @@ function test_printContext ()
 }
 
 
-readonly TEST_PRINT_FILE="-11-11-01-01"
+readonly TEST_PRINT_FILE="-11-11-01-01-01-01"
 
 function test_printFile ()
 {
@@ -156,6 +159,16 @@ function test_printFile ()
     test=$(__printFile "${TEST_PRINT_CSV_FILE}" 1)
     echo -n "-$?"
     [[ -n "$test" && -z "$(diff -b "${TEST_PRINT_VPRINT_CSV_FILE}" <(echo "$test"))" ]] && echo -n 1
+
+    #5 Check with valid CSV file and overloading for header line
+    test=$(__printFile "${TEST_PRINT_CSV_FILE}" 0 "${TEST_PRINT_HEADERS}")
+    echo -n "-$?"
+    [[ -n "$test" && -z "$(diff -b "${TEST_PRINT_HPRINT_CSV_FILE}" <(echo "$test"))" ]] && echo -n 1
+
+    #6 Check with valid CSV file and overloading for header line
+    test=$(__printFile "${TEST_PRINT_CSV_FILE}" 1 "${TEST_PRINT_HEADERS}")
+    echo -n "-$?"
+    [[ -n "$test" && -z "$(diff -b "${TEST_PRINT_HVPRINT_CSV_FILE}" <(echo "$test"))" ]] && echo -n 1
 }
 
 

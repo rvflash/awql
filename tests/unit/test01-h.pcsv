@@ -1,50 +1,9 @@
-**************************** 1. row ****************************
-              Day: 2015-10-01
-      Campaign ID: 1234567890
-         Campaign: @1 #sp
-           Clicks: 11
-      Impressions: 297
-             Cost: 4420000
-       Mobile Url:
-   Campaign state: paused
-Tracking template:
-**************************** 2. row ****************************
-              Day: 2015-10-20
-      Campaign ID: 1234567890
-         Campaign: @2 #sp
-           Clicks: 17
-      Impressions: 1242
-             Cost: 17170000
-       Mobile Url:
-   Campaign state: paused
-Tracking template: https://github.com/rvflash
-**************************** 3. row ****************************
-              Day: 2015-10-22
-      Campaign ID: 123
-         Campaign: @3 #sp
-           Clicks: 10
-      Impressions: 854
-             Cost: 13290000
-       Mobile Url:
-   Campaign state: paused
-Tracking template:
-**************************** 4. row ****************************
-              Day: 2015-10-24
-      Campaign ID: 1234567890
-         Campaign: @4 #sp
-           Clicks: 4
-      Impressions: 547
-             Cost: 4740000
-       Mobile Url:
-   Campaign state: paused
-Tracking template:
-**************************** 5. row ****************************
-              Day: 2015-10-26
-      Campaign ID: 123456
-         Campaign: @5 #sp
-           Clicks: 4
-      Impressions: 577
-             Cost: 1310000
-       Mobile Url:
-   Campaign state: paused
-Tracking template:
++------------+------------+--------+--------+-------------+----------+------------+--------+----------------------------+
+| Day        | Id         | Name   | Clicks | Impressions | Cost     | Mobile Url | Status | Url                        |
++------------+------------+--------+--------+-------------+----------+------------+--------+----------------------------+
+| 2015-10-01 | 1234567890 | @1 #sp | 11     | 297         | 4420000  |            | paused |                            |
+| 2015-10-20 | 1234567890 | @2 #sp | 17     | 1242        | 17170000 |            | paused | https://github.com/rvflash |
+| 2015-10-22 | 123        | @3 #sp | 10     | 854         | 13290000 |            | paused |                            |
+| 2015-10-24 | 1234567890 | @4 #sp | 4      | 547         | 4740000  |            | paused |                            |
+| 2015-10-26 | 123456     | @5 #sp | 4      | 577         | 1310000  |            | paused |                            |
++------------+------------+--------+--------+-------------+----------+------------+--------+----------------------------+

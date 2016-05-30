@@ -154,8 +154,8 @@ function awqlSelect ()
             errMsg="${AWQL_RESP_ERROR_NO_CONNEXION}"
         elif [[ ${resp["${AWQL_RESPONSE_HTTP_CODE}"]} -eq 400 ]]; then
             # API error: check for any issues in the XML
-            errMsg="$(awk -F 'type>|<\/type' '{print $2}' "$file")"
-            local errField="$(awk -F 'fieldPath>|<\/fieldPath' '{print $2}' "$file")"
+            errMsg="$(awk -F 'type>|</type' '{print $2}' "$file")"
+            local errField="$(awk -F 'fieldPath>|</fieldPath' '{print $2}' "$file")"
             if [[ -n "$errField" ]]; then
                 errMsg+=" regarding field(s) named ${errField}"
             fi
