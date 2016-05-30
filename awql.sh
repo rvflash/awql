@@ -60,16 +60,16 @@ function usage ()
 {
     local error="$1"
 
-    echo "usage: awql -i adwordsId [-a accessToken] [-d developerToken] [-e query] [-V apiVersion] [-c] [-v] [-A]"
+    echo "usage: awql -i adwordsId [-a accessToken] [-d developerToken] [-e query] [-V apiVersion] [-c] [-v] [-A] [-b]"
     echo "-i for Google Adwords account ID"
     echo "-a for Google Adwords access token"
     echo "-d for Google developer token"
     echo "-e for AWQL query, if not set here, a prompt will be launch"
     echo "-c used to enable cache"
     echo "-v used to print more information"
+    echo "-b batch mode to print results using comma as the column separator"
     echo "-A Disable automatic rehashing. This option is on by default, which enables table and column name completion"
     echo "-V Google API version, by default '${AWQL_API_LAST_VERSION}'"
-    echo "-B to print results using comma as the column separator"
 
     if [[ "$error" == "curl" ]]; then
         echo -e "\n> CURL in command line is required"
@@ -97,10 +97,10 @@ while getopts "i::a::d::s:e::V:cvAB" FLAG; do
         a) accessToken="$OPTARG" ;;
         d) developerToken="$OPTARG" ;;
         e) query="$OPTARG" ;;
+        b) batch=1 ;;
         c) cache=1 ;;
         v) verbose=1 ;;
         A) autoRehash=0 ;;
-        B) batch=1 ;;
         V) apiVersion="$OPTARG" ;;
         *) usage; exit 1 ;;
         ?) exit  ;;

@@ -266,16 +266,16 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 ### Usage
 
 ```bash
-~ $ awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-V apiversion] [-c] [-v] [-A] [-B]
+~ $ awql -i adwordsid [-a accesstoken] [-d developertoken] [-e query] [-s savefilepath] [-V apiversion] [-c] [-v] [-A] [-b]
 -i for Google Adwords account ID
 -a for Google Adwords access token
 -d for Google developer token
 -e for AWQL query, if not set here, a prompt will be launch
 -s to append a copy of output to the given file
+-b batch mode to print results using comma as the column separator
 -c used to enable cache
 -v used to print more informations
--A Disable automatic rehashing. This option is on by default, which enables table and column name completion
--B to print results using comma as the column separator
+-A disable automatic rehashing. This option is on by default, which enables table and column name completion
 -V Google API version to use
 ```
 
