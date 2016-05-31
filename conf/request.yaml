@@ -10,5 +10,12 @@ AUTHORIZATION    : Authorization
 ADWORDS_ID       : clientCustomerId
 DEVELOPER_TOKEN  : developerToken
 
+SKIP_HEADER      : skipReportHeader
+SKIP_SUMMARY     : skipReportSummary
+ZERO_IMPRESSION  : IncludeZeroImpressions
+
 CONNECT_TIME_OUT : 1
 TIME_OUT         : 2000
+REPORT_HEADER    : true
+REPORT_SUMMARY   : true
+REPORT_ZERO      : true

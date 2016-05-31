@@ -212,7 +212,7 @@ function __printContext ()
 
     # Size
     local size
-    if [[ ${fileSize} -lt 2 ]]; then
+    if [[ ${fileSize} -eq 1 ]]; then
         size="Empty set"
     elif [[ ${fileSize} -eq 2 ]]; then
         size="1 row in set"
@@ -258,18 +258,14 @@ function __printFile ()
     fi
     declare -i vertical="$2"
     local headers="$3"
+    declare -i rawMode="$4"
 
     # Format CVS to display it in a shell terminal
-    declare -a csvOptions=()
-    if [[ ${vertical} -eq 1 ]]; then
-        csvOptions+=("-v verticalMode=1")
+    if [[ ${rawMode} -eq 1 ]]; then
+        cat "$file"
+    else
+        awk -v verticalMode=${vertical} -v replaceHeader="$headers" -f "${AWQL_TERM_TABLES_DIR}/termTable.awk" "$file"
     fi
-    # Change some columns names
-    if [[ -n "$headers" ]]; then
-        csvOptions+=("-v fieldNames=\"${headers}\"")
-    fi
-
-    awk ${csvOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/termTable.awk" "$file"
 }
 
 ##
@@ -287,48 +283,52 @@ function awqlResponse ()
     declare -A response="$2"
 
     # Print Awql response
-    declare -i fileSize=0
+    declare -i fileSize=0 rawMode="${request["${AWQL_REQUEST_RAW}"]}"
     local file="${response["${AWQL_RESPONSE_FILE}"]}"
     if [[ -f "$file" ]]; then
         fileSize="$(wc -l < "$file")"
     fi
-    if [[ ${fileSize} -le 1 ]]; then
+    if [[ ${fileSize} -eq 0 ]]; then
         # No result in file
         return 2
-    fi
+    elif [[ ${fileSize} -gt 1 ]]; then
+        if [[ ${fileSize} -gt 2 ]]; then
+            # Manage group by, avg, distinct, count or sum methods
+            file="$(__aggregateRows "$file" "${request["${AWQL_REQUEST_AGGREGATES}"]}" "${request["${AWQL_REQUEST_GROUP}"]}")"
+            if [[ $? -ne 0 ]]; then
+                echo "${AWQL_INTERNAL_ERROR_AGGREGATES}"
+                return 1
+            fi
 
-    # Manage group by, avg, distinct, count or sum methods
-    file=$(__aggregateRows "$file" "${request["${AWQL_REQUEST_AGGREGATES}"]}" "${request["${AWQL_REQUEST_GROUP}"]}")
-    if [[ $? -ne 0 ]]; then
-        echo "${AWQL_INTERNAL_ERROR_AGGREGATES}"
-        return 1
-    fi
+            # Manage order clause
+            file="$(__sortingRows "$file" "${request["${AWQL_REQUEST_ORDER}"]}")"
+            if [[ $? -ne 0 ]]; then
+                echo "${AWQL_INTERNAL_ERROR_ORDER}"
+                return 1
+            fi
 
-    # Manage order clause
-    file=$(__sortingRows "$file" "${request["${AWQL_REQUEST_ORDER}"]}")
-    if [[ $? -ne 0 ]]; then
-        echo "${AWQL_INTERNAL_ERROR_ORDER}"
-        return 1
-    fi
+            # Manage limit clause
+            file="$(__limitRows "$file" "${request["${AWQL_REQUEST_LIMIT}"]}")"
+            if [[ $? -ne 0 ]]; then
+                echo "${AWQL_INTERNAL_ERROR_LIMIT}"
+                return 1
+            fi
+        fi
 
-    # Manage limit clause
-    file=$(__limitRows "$file" "${request["${AWQL_REQUEST_LIMIT}"]}")
-    if [[ $? -ne 0 ]]; then
-        echo "${AWQL_INTERNAL_ERROR_LIMIT}"
-        return 1
-    fi
-
-    # At least one result line to display
-    __printFile "$file" "${request["${AWQL_REQUEST_VERTICAL}"]}" "${request["${AWQL_REQUEST_HEADERS}"]}"
-    if [[ $? -ne 0 ]]; then
-        echo "${AWQL_INTERNAL_ERROR_DATA_FILE}"
-        return 1
+        # Print results
+        __printFile "$file" "${request["${AWQL_REQUEST_VERTICAL}"]}" "${request["${AWQL_REQUEST_HEADERS}"]}" ${rawMode}
+        if [[ $? -ne 0 ]]; then
+            echo "${AWQL_INTERNAL_ERROR_DATA_FILE}"
+            return 1
+        fi
     fi
 
     # Add context (file size, time duration, etc.)
-    local timeDuration="${response["${AWQL_RESPONSE_TIME_DURATION}"]}"
-    declare -i cache=${response["${AWQL_RESPONSE_CACHED}"]}
-    declare -i verbose=${request["${AWQL_REQUEST_VERBOSE}"]}
+    if [[ ${rawMode} -eq 0 ]]; then
+        local timeDuration="${response["${AWQL_RESPONSE_TIME_DURATION}"]}"
+        declare -i cache="${response["${AWQL_RESPONSE_CACHED}"]}"
+        declare -i verbose="${request["${AWQL_REQUEST_VERBOSE}"]}"
 
-    __printContext "$file" ${fileSize} "$timeDuration" ${cache} ${verbose}
+        __printContext "$file" ${fileSize} "$timeDuration" ${cache} ${verbose}
+    fi
 }

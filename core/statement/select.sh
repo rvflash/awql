@@ -131,6 +131,9 @@ function awqlSelect ()
             --request "${api["${AWQL_API_METHOD}"]}" "${url}${request["${AWQL_REQUEST_VERSION}"]}" \
             --data-urlencode "${api["${AWQL_API_RESPONSE}"]}=CSV" \
             --data-urlencode "${api["${AWQL_API_QUERY}"]}=${request["${AWQL_REQUEST_QUERY}"]}" \
+            --header "${api["${AWQL_API_SKIP_HEADER}"]}:${api["${AWQL_API_REPORT_HEADER}"]}" \
+            --header "${api["${AWQL_API_SKIP_SUMMARY}"]}:${api["${AWQL_API_REPORT_SUMMARY}"]}" \
+            --header "${api["${AWQL_API_WITH_ZERO_IMPRESSION}"]}:${api["${AWQL_API_REPORT_ZERO_IMPRESSION}"]}" \
             --header "${api["${AWQL_API_AUTH}"]}:${token["${AWQL_TOKEN_TYPE}"]} ${token["${AWQL_ACCESS_TOKEN}"]}" \
             --header "${api["${AWQL_API_TOKEN}"]}:${token["${AWQL_DEVELOPER_TOKEN}"]}" \
             --header "${api["${AWQL_API_ID}"]}:${request["${AWQL_REQUEST_ID}"]}" \
@@ -173,8 +176,5 @@ function awqlSelect ()
         return ${error}
     fi
 
-    # Format CSV in order to improve re-using by removing first and last line
-    # Do not use -i option for MacOs portability
-    sed -e '$d; 1d' "$file" > "${file}-e" && mv "${file}-e" "$file"
     echo "$response"
 }
