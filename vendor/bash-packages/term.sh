@@ -10,6 +10,11 @@
 # @license http://www.apache.org/licenses/LICENSE-2.0
 # @source https://github.com/rvflash/bash-packages
 
+# Load dependencies files if are not already loaded
+if [[ -z "${BP_ASCII_COLOR_OFF}" ]]; then
+    declare -r BP_TERM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "${BP_TERM_DIR}/encoding/ascii.sh"
+fi
 declare -r BP_TERM_ERROR="An error occured"
 
 ##
