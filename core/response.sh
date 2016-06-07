@@ -5,6 +5,7 @@
 if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     source "${AWQL_CUR_DIR}/../conf/awql.sh"
+    source "${AWQL_BASH_PACKAGES_DIR}/encoding/ascii.sh"
 fi
 
 ##
@@ -103,10 +104,10 @@ function __limitRows ()
     fi
     declare -a limit="($2)"
     declare -i limitRange="${#limit[@]}"
-    if [[ 0 -eq ${limitRange} ]]; then
+    if [[ ${limitRange} -eq 0 ]]; then
         echo "$file"
         return 0
-    elif [[ ${limitRange} -ne 1 || ${limitRange} -ne 2 ]]; then
+    elif [[ ${limitRange} -gt 2 ]]; then
         return 1
     fi
 
@@ -127,7 +128,7 @@ function __limitRows ()
     else
         limitOptions+=("-v rowCount=${limit[0]}")
     fi
-    awk ${limitOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/termTable.awk" "$file" > "$wrkFile"
+    awk ${limitOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/limit.awk" "$file" > "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
     fi
@@ -329,6 +330,19 @@ function awqlResponse ()
         declare -i cache="${response["${AWQL_RESPONSE_CACHED}"]}"
         declare -i verbose="${request["${AWQL_REQUEST_VERBOSE}"]}"
 
+        # Add debugs
+        if [[ "${request["${AWQL_REQUEST_DEBUG}"]}" -eq 1 ]]; then
+            local debug=""
+            for debug in "${!request[@]}"; do
+                if [[ "$debug" == "${AWQL_REQUEST_TYPE}" || "$debug" == "${AWQL_REQUEST_STATEMENT}" ||\
+                      "$debug" == "${AWQL_REQUEST_VERBOSE}" || "$debug" == "${AWQL_REQUEST_RAW}" ||\
+                      "$debug" == "${AWQL_REQUEST_DEBUG}" \
+                   ]]; then
+                    continue
+                fi
+                echo -e "${BP_ASCII_COLOR_GRAY}${debug}: ${request["${debug}"]}${BP_ASCII_COLOR_OFF}"
+            done
+        fi
         __printContext "$file" ${fileSize} "$timeDuration" ${cache} ${verbose}
     fi
 }
