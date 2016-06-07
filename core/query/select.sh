@@ -288,6 +288,9 @@ function awqlSelectQuery ()
                         name=${AWQL_REQUEST_ORDER}
                     elif [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
+                    else
+                        name=${AWQL_REQUEST_UNKNOWN}
+                        components["$name"]="$part "
                     fi
                     part=""
                 elif [[ "$char" != " " ]]; then
@@ -400,6 +403,9 @@ function awqlSelectQuery ()
                     part+="$char"
                 fi
                 ;;
+            ${AWQL_REQUEST_UNKNOWN})
+                components["$name"]+="$char"
+                ;;
             *)
                 echo "${AWQL_INTERNAL_ERROR_QUERY_COMPONENT}"
                 return 1
@@ -411,6 +417,9 @@ function awqlSelectQuery ()
     declare -i fieldsLength="${#queryFields[@]}"
     if [[ -z "${components["${AWQL_REQUEST_TABLE}"]}" || ${fieldsLength} -eq 0 ]]; then
         echo "${AWQL_QUERY_ERROR_SYNTAX}"
+        return 2
+    elif [[ -n "${components["${AWQL_REQUEST_UNKNOWN}"]}" ]]; then
+        echo "${AWQL_QUERY_ERROR_SYNTAX} near '${components["${AWQL_REQUEST_UNKNOWN}"]%?}'"
         return 2
     fi
 
