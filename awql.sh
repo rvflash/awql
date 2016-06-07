@@ -26,6 +26,7 @@ declare -i cache=0
 declare -i autoRehash=1
 declare -i verbose=0
 declare -i batch=0
+declare -i debug=0
 
 ##
 # Returns list of API versions supported
@@ -54,22 +55,27 @@ function welcome ()
 
 ##
 # Help
+#
+# Common patterns in Unix command options
+# @see http://www.catb.org/~esr/writings/taoup/html/ch10s05.html#id2948149
+#
 # @param string $1 Error
 # @return string
 function usage ()
 {
     local error="$1"
 
-    echo "usage: awql -i adwordsId [-a accessToken] [-d developerToken] [-e query] [-V apiVersion] [-c] [-v] [-A] [-b]"
+    echo "usage: awql -i adwordsId [-T accessToken] [-D developerToken] [-e query] [-V apiVersion] [-b] [-c] [-d] [-v] [-A]"
     echo "-i for Google Adwords account ID"
-    echo "-a for Google Adwords access token"
-    echo "-d for Google developer token"
+    echo "-T for Google Adwords access token"
+    echo "-D for Google developer token"
     echo "-e for AWQL query, if not set here, a prompt will be launch"
-    echo "-c used to enable cache"
-    echo "-v used to print more information"
-    echo "-b batch mode to print results using comma as the column separator"
-    echo "-A Disable automatic rehashing. This option is on by default, which enables table and column name completion"
     echo "-V Google API version, by default '${AWQL_API_LAST_VERSION}'"
+    echo "-b batch mode to print results using comma as the column separator"
+    echo "-c used to enable cache"
+    echo "-d used to enable debug mode, print real query as status line"
+    echo "-v used to print more information"
+    echo "-A Disable automatic rehashing. This option is on by default, which enables table and column name completion"
 
     if [[ "$error" == "curl" ]]; then
         echo -e "\n> CURL in command line is required"
@@ -91,17 +97,18 @@ fi
 
 # Read the options
 # Use getopts vs getopt for MacOs portability
-while getopts "i::a::d::s:e::V:cvAB" FLAG; do
+while getopts "i::T::D::e::V:bcdvA" FLAG; do
     case "${FLAG}" in
         i) adwordsId="$OPTARG" ;;
-        a) accessToken="$OPTARG" ;;
-        d) developerToken="$OPTARG" ;;
+        T) accessToken="$OPTARG" ;;
+        D) developerToken="$OPTARG" ;;
         e) query="$OPTARG" ;;
+        V) apiVersion="$OPTARG" ;;
         b) batch=1 ;;
         c) cache=1 ;;
+        d) debug=1 ;;
         v) verbose=1 ;;
         A) autoRehash=0 ;;
-        V) apiVersion="$OPTARG" ;;
         *) usage; exit 1 ;;
         ?) exit  ;;
     esac
@@ -122,13 +129,16 @@ if [[ -z "$query" ]]; then
     if [[ ${autoRehash} -eq 1 ]]; then
         source "${AWQL_INC_DIR}/complete.sh"
     fi
+    if [[ ${debug} -eq 1 ]]; then
+        source "${AWQL_BASH_PACKAGES_DIR}/encoding/ascii.sh"
+    fi
     source "${AWQL_BASH_PACKAGES_DIR}/math.sh"
     source "${AWQL_INC_DIR}/read.sh"
     welcome "$apiVersion"
 
     while true; do
         awqlRead query ${autoRehash} "$apiVersion"
-        awql "$query" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" ${cache} ${verbose}
+        awql "$query" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" ${cache} ${verbose} 0 ${debug}
     done
 else
     awql "$query" "$apiVersion" "$adwordsId" "$accessToken" "$developerToken" ${cache} ${verbose} ${batch}
