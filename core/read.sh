@@ -9,17 +9,12 @@ if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     source "${AWQL_BASH_PACKAGES_DIR}/math.sh"
 fi
 
-# DEBUG
-source "${AWQL_BASH_PACKAGES_DIR}/log/file.sh"
-
-
 ##
 # Erase all the screen on go on top on the screen
 # @return string
 function __clearScreen ()
 {
-    tput clear
-    echo -n "${AWQL_PROMPT}"
+    (tput clear; echo -n "${AWQL_PROMPT}")
 }
 
 ##
@@ -49,6 +44,7 @@ function __moveLineAndCursor ()
         # Go to the line below
         tput cud $((${lineIndex}-${linePrevIndex}))
     fi
+
     # Move cursor on line
     declare -i linePrevPosition="$(modulo ${prevPosition} ${windowWidth})"
     declare -i linePosition="$(modulo ${position} ${windowWidth})"
@@ -98,132 +94,63 @@ function __printLine ()
     declare -i moveCursor="$2"
 
     if [[ ${moveCursor} -eq 0 ]]; then
-        # Save cursor position
-        tput sc && tput el && echo -n "$text" && tput rc
+        # Also save cursor position
+        (echo -e "sc\ned" | tput -S; echo -n "$text"; tput rc)
     else
-        tput el && echo -n "$text"
+        (tput ed; echo -n "$text")
     fi
-}
-
-##
-# Erase text after this position and add in place the given text
-# @param int $1 Position
-# @param string $2 Text
-# @param int $3 Line width
-# @param int $4 Window width
-function __printLineModification ()
-{
-    declare -i position="$1"
-    local text="$2"
-    declare -i lineWidth="$3"
-    declare -i windowWidth="$4"
-
-    # Need to reset more than the current line ?
-    declare -i lineCurrentIndex="$(floor $(divide ${position} ${windowWidth} 4))"
-    declare -i lineIndex="$(floor $(divide ${lineWidth} ${windowWidth} 4))"
-    if [[ ${lineCurrentIndex} -lt ${lineIndex} ]]; then
-        # Erase the screen from the line below to the bottom of the screen
-        tput -S <<END
-sc
-cud1
-ed
-cuu1
-rc
-END
-    fi
-    __printLine "$text"
 }
 
 ##
 # Replace current line by another
 # @param int $1 Previous position
 # @param int $2 Line
-# @param int $3 Position
-# @param int $4 Window width
+# @param int $3 Window width
 # @return string
 function __replaceLine ()
 {
-    declare -i charPrevIndex="$1"
+    declare -i position="$1"
     local text="$2"
-    declare -i charIndex="$3"
-    declare -i windowWidth="$4"
+    declare -i windowWidth="$3"
 
-    __moveToStart ${charPrevIndex} ${windowWidth}
-    # Erase the screen from the current line to the bottom of the screen
-    tput ed
-    __printLine "$text" 1
+    # Erase the screen from the beginning of the line to the bottom of the screen
+    (tput civis; __moveToStart ${position} ${windowWidth}; __printLine "$text" 1; tput cnorm)
 }
 
 ##
 # Change content of the current line
 # @param int $1 Previous position
 # @param int $2 Position
-# @param string $2 Text
-# @param int $4 Line width
-# @param int $5 Window width
+# @param string $3 Text
+# @param int $4 Window width
 function __reformLine ()
 {
     declare -i prevPosition="$1"
     declare -i position="$2"
     local text="$3"
-    declare -i lineWidth="$4"
-    declare -i windowWidth="$5"
-    declare -i promptWidth="${#AWQL_PROMPT}"
-
-    # Manage end of line
-    __printLineModification $((${prevPosition}+${promptWidth})) "$text" $((${lineWidth}+${promptWidth})) ${windowWidth}
-    # Move cursor right
-    __moveLineAndCursor ${prevPosition} ${position} ${windowWidth}
-}
-
-##
-# Restore line and cursor position
-# @param int $1 Position
-# @param string $2 Text
-# @param int $3 Line width
-# @param int $4 Window width
-function __restoreLine ()
-{
-    declare -i position="$1"
-    local text="$2"
-    declare -i lineWidth="$3"
     declare -i windowWidth="$4"
 
-    __printLine "$text" 1
-    __moveLineAndCursor ${lineWidth} ${position} ${windowWidth}
+    (tput civis; __printLine "$text" 1; __moveLineAndCursor ${prevPosition} ${position} ${windowWidth}; tput cnorm)
 }
 
 ##
-# Erase character to the left of the current position
+# Erase character to the left of the current position and move rest of the content backwards
 # @param int $1 Position
 # @param string $2 Text
-# @param int $3 Line width
-# @param int $4 Window width
+# @param int $3 Window width
 function __reviseLine ()
 {
     declare -i position="$1"
     local text="$2"
-    declare -i lineWidth="$3"
-    declare -i windowWidth="$4"
+    declare -i windowWidth="$3"
     declare -i promptWidth="${#AWQL_PROMPT}"
 
-    # Add prompt size
-    position+=${promptWidth}
-    lineWidth+=${promptWidth}
-
-    if [[ 0 -eq $(modulo ${position} ${windowWidth}) ]]; then
-        # Move cursor on right of the line up
-        tput cuu1
-        tput hpa ${windowWidth}
+    if [[ 0 -eq $(modulo $((${position}+${promptWidth})) ${windowWidth}) ]]; then
+        # Move cursor on right of the line up & erase char & move rest of line backwards
+        (echo -e "cuu1\nhpa ${windowWidth}\ndch1" | tput -S; __printLine "$text")
     else
-        # Move cursor left
-        tput cub 1
-    fi
-    # Erase it
-    tput ech 1
-    # Manage end of line
-    if [[ -n "$text" ]]; then
-        __printLineModification ${position} "$text" ${lineWidth} ${windowWidth}
+        # Move cursor left & erase this char & move rest of line backwards
+        (echo -e "cub1\ndch1" | tput -S; __printLine "$text")
     fi
 }
 
@@ -269,7 +196,7 @@ function awqlRead ()
         if [[ -f "$file" ]]; then
             mapfile -t history < "$file"
         fi
-        historySize=${#history[@]}
+        historySize="${#history[@]}"
         historyIndex=${historySize}
     fi
 
@@ -281,7 +208,7 @@ function awqlRead ()
     # Launch prompt by sending introduction message
     echo -n "$prompt"
 
-    # Reset terminal to current state when we exit
+     # Reset terminal to current state when we exit
     trap "stty $(stty -g)" EXIT
 
     # Disable echo and special characters, set input timeout to 0.2 seconds
@@ -289,12 +216,8 @@ function awqlRead ()
 
     # Read one character at a time
     local char rest
-    declare -a read
-    declare -i readLength=0
-    declare -i readIndex=0
-    declare -i charIndex=0
-    declare -i charPrevIndex=0
-    declare -i readPrevLength=0
+    declare -a read=()
+    declare -i readLength=0 readPrevLength=0 readIndex=0 charIndex=0 charPrevIndex=0
     while IFS="" read -rsn1 char; do
         # \x1b is the start of an escape sequence == \033
         if [[ "$char" == $'\x1b' ]]; then
@@ -338,7 +261,7 @@ function awqlRead ()
             read["${readIndex}"]="${history["${historyIndex}"]}"
             readLength="${#read["${readIndex}"]}"
             charIndex="${readLength}"
-            __replaceLine ${charPrevIndex} "${prompt}${read["${readIndex}"]}" ${charIndex} ${windowWidth}
+            __replaceLine ${charPrevIndex} "${prompt}${read["${readIndex}"]}" ${windowWidth}
         elif [[ "$char" == $'\x1b[C' || "$char" == $'\x1b[D' ]]; then
             # Moving char by char with left or right arrow keys
             if [[ "$char" == $'\x1b[C' && ${charIndex} -lt ${readLength} ]]; then
@@ -366,9 +289,9 @@ function awqlRead ()
             fi
             readLength+=-1
             charIndex+=-1
-            __reviseLine ${charPrevIndex} "$rest" ${readPrevLength} ${windowWidth}
+            __reviseLine ${charPrevIndex} "$rest" ${windowWidth}
         elif [[ "$char" == $'\x09' ]]; then
-            # Completion by tabulation disabled ?
+            # Completion enabled ?
             if [[ ${autoRehash} -eq 0 ]]; then
                 continue
             fi
@@ -385,17 +308,14 @@ function awqlRead ()
             if [[ ${compReplyLength} -eq 1 ]]; then
                 # A completion was found
                 declare -i compReplySize="${#compReply[0]}"
-                rest="${compReply[0]}${read["${readIndex}"]:$charIndex}"
-                read["${readIndex}"]="${read["${readIndex}"]::$charIndex}${rest}"
                 charIndex+=${compReplySize}
                 readLength+=${compReplySize}
-                __reformLine ${charPrevIndex} ${charIndex} "$rest" ${readPrevLength} ${windowWidth}
+                rest="${compReply[0]}${read["${readIndex}"]:$charPrevIndex}"
+                read["${readIndex}"]="${read["${readIndex}"]::$charPrevIndex}${rest}"
             else
                 # Various completions were found, go to new line to display it
                 echo
                 local displayAllCompletions="$(printf "${AWQL_COMPLETION_CONFIRM}" "${compReplyLength}")"
-                # Temporary re-enable echoing for read method
-                stty echo
                 if confirm "$displayAllCompletions" "${AWQL_CONFIRM}"; then
                     # Display in columns
                     local column=""
@@ -416,9 +336,10 @@ function awqlRead ()
                         echo
                     fi
                 fi
-                stty -echo
-                __restoreLine ${charIndex} "${prompt}${read["${readIndex}"]}" ${readLength} ${windowWidth}
+                # Reset and restore query with previous position of cursor
+                rest="${prompt}${read["${readIndex}"]}"
             fi
+            __reformLine ${readLength} ${charIndex} "$rest" ${windowWidth}
         elif [[ -z "$char" ]]; then
             # Enter
             reply="${read[@]}"
@@ -432,7 +353,7 @@ function awqlRead ()
                 if [[ -n "$file" ]]; then
                     # Add current line in file history
                     if [[ "${historyIndex}" -lt ${historySize} ]]; then
-                        # Remove the old position in historic in order to put this line as the last played command
+                        # Remove the old position in historic in order to put this line as the last command
                         sed -e $((${historyIndex} + 1))d "$file" > "${file}-e" && mv "${file}-e" "$file"
                     fi
                     echo "$reply" >> "$file"
@@ -482,7 +403,7 @@ function awqlRead ()
             else
                 rest="${char}${read["${readIndex}"]:$charPrevIndex}"
                 read["${readIndex}"]="${read["${readIndex}"]::$charPrevIndex}${rest}"
-                __reformLine ${charPrevIndex} ${charIndex} "$rest" ${readPrevLength} ${windowWidth}
+                __reformLine ${readLength} ${charIndex} "$rest" ${windowWidth}
             fi
         fi
     done
