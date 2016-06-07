@@ -280,14 +280,17 @@ function awqlSelectQuery ()
                         components["$name"]="$part"
                     elif [[ "$part" == ${AWQL_QUERY_WHERE} ]]; then
                         name=${AWQL_REQUEST_WHERE}
+                        components["$name"]=""
                     elif [[ "$part" == ${AWQL_QUERY_DURING} ]]; then
                         name=${AWQL_REQUEST_DURING}
+                        components["$name"]=""
                     elif [[ "$part" == ${AWQL_QUERY_GROUP} ]]; then
                         name=${AWQL_REQUEST_GROUP}
                     elif [[ "$part" == ${AWQL_QUERY_ORDER} ]]; then
                         name=${AWQL_REQUEST_ORDER}
                     elif [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
+                        components["$name"]=""
                     else
                         name=${AWQL_REQUEST_UNKNOWN}
                         components["$name"]="$part "
@@ -301,12 +304,14 @@ function awqlSelectQuery ()
                  if [[ "$char" == " " && -n "$part" ]]; then
                     if [[ "$part" == ${AWQL_QUERY_DURING} ]]; then
                         name=${AWQL_REQUEST_DURING}
+                        components["$name"]=""
                     elif [[ "$part" == ${AWQL_QUERY_GROUP} ]]; then
                         name=${AWQL_REQUEST_GROUP}
                     elif [[ "$part" == ${AWQL_QUERY_ORDER} ]]; then
                         name=${AWQL_REQUEST_ORDER}
                     elif [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
+                        components["$name"]=""
                     elif [[ -n "${components["$name"]}" ]]; then
                         components["$name"]+=" $part"
                     else
@@ -325,6 +330,7 @@ function awqlSelectQuery ()
                         name=${AWQL_REQUEST_ORDER}
                     elif [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
+                        components["$name"]=""
                     elif inArray "$part" "$duringLiteral"; then
                         components["$name"]="$part"
                     elif [[ "$part" =~ ^[[:digit:]]{8}$ ]]; then
@@ -348,6 +354,7 @@ function awqlSelectQuery ()
                         name=${AWQL_REQUEST_ORDER}
                     elif [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
+                        components["$name"]=""
                     elif [[ ! ${components["$name"]+rv} ]]; then
                         if [[ "$part" != ${AWQL_QUERY_BY} ]]; then
                             echo "${AWQL_QUERY_ERROR_GROUP}"
@@ -369,6 +376,7 @@ function awqlSelectQuery ()
                 if [[ "$char" == " " && -n "$part" ]]; then
                     if [[ "$part" == ${AWQL_QUERY_LIMIT} ]]; then
                         name=${AWQL_REQUEST_LIMIT}
+                        components["$name"]=""
                     elif [[ ! ${components["$name"]+rv} ]]; then
                         if [[ "$part" != ${AWQL_QUERY_BY} ]]; then
                             echo "${AWQL_QUERY_ERROR_ORDER}"
@@ -416,10 +424,24 @@ function awqlSelectQuery ()
     # Empty query
     declare -i fieldsLength="${#queryFields[@]}"
     if [[ -z "${components["${AWQL_REQUEST_TABLE}"]}" || ${fieldsLength} -eq 0 ]]; then
+        # Missing table name or fields
         echo "${AWQL_QUERY_ERROR_SYNTAX}"
         return 2
     elif [[ -n "${components["${AWQL_REQUEST_UNKNOWN}"]}" ]]; then
+        # Has unknown keywords inside
         echo "${AWQL_QUERY_ERROR_SYNTAX} near '${components["${AWQL_REQUEST_UNKNOWN}"]%?}'"
+        return 2
+    elif [[ ${components["${AWQL_REQUEST_WHERE}"]+rv} && -z "${components["${AWQL_REQUEST_WHERE}"]}" ]]; then
+        # Missing where content
+        echo "${AWQL_QUERY_ERROR_WHERE}"
+        return 2
+    elif [[ ${components["${AWQL_REQUEST_DURING}"]+rv} && -z "${components["${AWQL_REQUEST_DURING}"]}" ]]; then
+        # Missing during content
+        echo "${AWQL_QUERY_ERROR_DURING}"
+        return 2
+    elif [[ ${components["${AWQL_QUERY_ERROR_LIMIT}"]+rv} && -z "${components["${AWQL_QUERY_ERROR_LIMIT}"]}" ]]; then
+        # Missing during content
+        echo "${AWQL_QUERY_ERROR_LIMIT}"
         return 2
     fi
 

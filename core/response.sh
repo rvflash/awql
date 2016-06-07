@@ -5,7 +5,6 @@
 if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     declare -r AWQL_CUR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     source "${AWQL_CUR_DIR}/../conf/awql.sh"
-    source "${AWQL_BASH_PACKAGES_DIR}/encoding/ascii.sh"
 fi
 
 ##
