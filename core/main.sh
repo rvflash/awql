@@ -96,6 +96,7 @@ function __getData ()
 # @param int $6 Caching mode
 # @param int $7 Verbose
 # @param int $8 Raw CSV mode
+# @param int $9 Debug mode
 # @param string
 # @returnStatus 1 If query is invalid
 function awql ()
@@ -108,10 +109,11 @@ function awql ()
     declare -i cache="$6"
     declare -i verbose="$7"
     declare -i raw="$8"
+    declare -i debug="$9"
 
     # Prepare and validate query, manage all extended behaviors to AWQL basics
     local request
-    request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw} "$accessToken" "$developerToken")
+    request=$(awqlRequest "$adwordsId" "$query" "$apiVersion" ${cache} ${verbose} ${raw} ${debug} "$accessToken" "$developerToken")
     declare -i errCode=$?
     if [[ ${errCode} -ne 0 ]]; then
         if [[ -n "$request" ]]; then
