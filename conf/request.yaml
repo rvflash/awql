@@ -18,4 +18,4 @@ CONNECT_TIME_OUT : 1
 TIME_OUT         : 2000
 REPORT_HEADER    : true
 REPORT_SUMMARY   : true
-REPORT_ZERO      : true
+REPORT_ZERO      : false
