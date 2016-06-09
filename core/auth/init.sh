@@ -24,7 +24,7 @@ scriptPath="$0"; while [[ -h "$scriptPath" ]]; do scriptPath="$(readlink "$scrip
 rootDir=$(dirname "$scriptPath")
 
 # Import
-source "${rootDir}/../../../conf/awql.sh"
+source "${rootDir}/../../conf/awql.sh"
 source "${AWQL_AUTH_DIR}/token.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/net.sh"
 
@@ -35,7 +35,7 @@ declare -- clientId=""
 declare -- clientSecret=""
 declare -- refreshToken=""
 declare -- developerToken=""
-declare -- URL=""
+declare -- url=""
 declare -i verbose=0
 declare -- auth=""
 
@@ -128,7 +128,7 @@ function authCustomToken ()
     fi
     declare -A -r url="$strUrl"
 
-    sed -e "s/__${AWQL_AUTH_TYPE}__/${AUTH_CUSTOM_TYPE}/g" \
+    sed -e "s/__${AWQL_AUTH_TYPE}__/${AWQL_AUTH_CUSTOM_TYPE}/g" \
         -e "s/__${AWQL_DEVELOPER_TOKEN}__/${developerToken//\//\\/}/g" \
         -e "s/__${AWQL_AUTH_PROTOCOL}__/${url["SCHEME"]}/g" \
         -e "s/__${AWQL_AUTH_HOSTNAME}__/${url["HOST"]}/g" \
@@ -160,7 +160,7 @@ function authGoogleToken ()
         return 1
     fi
 
-    sed -e "s/__${AWQL_AUTH_TYPE}__/${AUTH_GOOGLE_TYPE}/g" \
+    sed -e "s/__${AWQL_AUTH_TYPE}__/${AWQL_AUTH_GOOGLE_TYPE}/g" \
         -e "s/__${AWQL_DEVELOPER_TOKEN}__/${developerToken//\//\\/}/g" \
         -e "s/__${AWQL_AUTH_CLIENT_ID}__/${clientId//\//\\/}/g" \
         -e "s/__${AWQL_AUTH_CLIENT_SECRET}__/${clientSecret//\//\\/}/g" \
@@ -174,7 +174,7 @@ function authGoogleToken ()
 }
 
 # Create auth Yaml file
-if [[ "${AUTH_GOOGLE_TYPE}" == "$authType" ]]; then
+if [[ "${AWQL_AUTH_GOOGLE_TYPE}" == "$authType" ]]; then
     auth="$(authGoogleToken "$clientId" "$clientSecret" "$refreshToken" "$developerToken")"
 else
     auth="$(authCustomToken "$url" "$developerToken")"
