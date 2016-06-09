@@ -212,7 +212,7 @@ function __printContext ()
 
     # Size
     local size
-    if [[ ${fileSize} -eq 1 ]]; then
+    if [[ ${fileSize} -le 1 ]]; then
         size="Empty set"
     elif [[ ${fileSize} -eq 2 ]]; then
         size="1 row in set"

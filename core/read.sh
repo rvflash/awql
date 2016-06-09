@@ -316,6 +316,8 @@ function awqlRead ()
                 # Various completions were found, go to new line to display it
                 echo
                 local displayAllCompletions="$(printf "${AWQL_COMPLETION_CONFIRM}" "${compReplyLength}")"
+                # Temporary re-enable echoing for read method
+                stty echo
                 if confirm "$displayAllCompletions" "${AWQL_CONFIRM}"; then
                     # Display in columns
                     local column=""
@@ -336,6 +338,7 @@ function awqlRead ()
                         echo
                     fi
                 fi
+                stty -echo
                 # Reset and restore query with previous position of cursor
                 rest="${prompt}${read["${readIndex}"]}"
             fi
