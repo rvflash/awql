@@ -3,7 +3,7 @@
 ##
 # Install AWQL by creating a bash alias in BashRC
 # Also create a configuration file with default method to get a valid access token
-echo "Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API."
+echo "Welcome to the process to install Awql, a Bash command line tool to request Google Adwords Reports API."
 echo "----------"
 echo
 
