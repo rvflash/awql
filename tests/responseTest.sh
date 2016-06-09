@@ -181,7 +181,9 @@ function test_awqlResponse ()
     # Check nothing
     test=$(awqlResponse)
     echo -n "-$?"
-    [[ -z "$test" ]] && echo -n 1
+    [[ "$test" == "${AWQL_INTERNAL_ERROR_CONFIG}" ]] && echo -n 1
+
+    # @todo Complete unit tests
 }
 
 
