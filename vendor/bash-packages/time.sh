@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+##
+# bash-packages
+#
+# Part of bash-packages project.
+#
+# @package time
+# @copyright 2016 Hervé Gouchet
+# @license http://www.apache.org/licenses/LICENSE-2.0
+# @source https://github.com/rvflash/bash-packages
+
 declare -r BP_OS="$(uname -s)"
 declare -r BP_UTC_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z"
 
@@ -10,14 +20,14 @@ declare -r BP_UTC_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z"
 # @returnStatus 1 If date method fails
 function timestamp ()
 {
-    local CURRENT_TIMESTAMP
+    declare -i ts
 
-    CURRENT_TIMESTAMP=$(date +"%s" 2>/dev/null)
+    ts=$(date +"%s" 2>/dev/null)
     if [[ $? -ne 0 ]]; then
         return 1
     fi
 
-    echo -n "$CURRENT_TIMESTAMP"
+    echo -n ${ts}
 }
 
 ##
@@ -29,14 +39,14 @@ function timestamp ()
 # @returnStatus 1 If the time method does not return expected time values
 function timeTodo ()
 {
-    local COMMAND="$1"
-    if [[ -z "$COMMAND" ]]; then
+    local command="$1"
+    if [[ -z "$command" ]]; then
         return 1
     fi
-    declare -a TIMER="($({ time "$COMMAND"; } 2>&1 >/dev/null))"
+    declare -a timer="($({ time "$command"; } 2>&1 >/dev/null))"
 
-    if [[ "${TIMER[0]}" == "real" && "${TIMER[2]}" == "user" && "${TIMER[4]}" == "sys" ]]; then
-        echo -n "([\"real\"]=\"${TIMER[1]}\" [\"user\"]=\"${TIMER[3]}\" [\"sys\"]=\"${TIMER[5]}\")"
+    if [[ "${timer[0]}" == "real" && "${timer[2]}" == "user" && "${timer[4]}" == "sys" ]]; then
+        echo -n "([\"real\"]=\"${timer[1]}\" [\"user\"]=\"${timer[3]}\" [\"sys\"]=\"${timer[5]}\")"
         return 0
     fi
 
@@ -51,20 +61,20 @@ function timeTodo ()
 # @returnStatus 1 If the time method does not return the user timer
 function userTimeTodo ()
 {
-    local COMMAND="$1"
-    if [[ -z "$COMMAND" ]]; then
+    local command="$1"
+    if [[ -z "$command" ]]; then
         return 1
     fi
 
-    local USER_TIME
-    USER_TIME="$(timeTodo "$COMMAND")"
+    local userTime
+    userTime="$(timeTodo "$command")"
     if [[ $? -ne 0 ]]; then
         return 1
     fi
 
-    declare -a TIMER="$USER_TIME"
-    if [[ -n "${TIMER[user]}" ]]; then
-        echo -n "${TIMER[user]}" |  awk -F '[^0-9.]*' '$0=$2'
+    declare -a timer="$userTime"
+    if [[ -n "${timer["user"]}" ]]; then
+        echo -n "${timer["user"]}" |  awk -F '[^0-9.]*' '$0=$2'
         return 0
     fi
 
@@ -81,31 +91,30 @@ function userTimeTodo ()
 # @returnStatus 1 If the second parameter named maxTime is empty or an invalid number
 function isUserTimeTodoExceeded ()
 {
-    local VAR_2
+    local maxTime
     if [[ -z "$1" || -z "$2" ]]; then
         return 1
     elif [[ "$2" =~ ^[-+]?[0-9]+\.[0-9]+$ ]]; then
-        VAR_2="$2"
+        maxTime="$2"
     elif [[ "$2" =~ ^[-+]?[0-9]+$ ]]; then
         # Int to float
-        VAR_2="${2}.0"
+        maxTime="${2}.0"
     else
         return 1
     fi
 
-    local VAR_1
-    VAR_1="$(userTimeTodo "$1")"
+    local userTime
+    userTime="$(userTimeTodo "$1")"
     if [[ $? -ne 0 ]]; then
         return 1
-    elif [[ "$VAR_1" != *"."* ]]; then
+    elif [[ "$userTime" != *"."* ]]; then
         # Int to float
-        VAR_1="${VAR_1}.0"
+        userTime="${userTime}.0"
     fi
 
-    declare -i RES=0
-    local DEC_VAR_1=$(( 10#${VAR_1##*.} ))
-    local DEC_VAR_2=$(( 10#${VAR_2##*.} ))
-    if (( ${VAR_1%%.*} > ${VAR_2%%.*} || ( ${VAR_1%%.*} == ${VAR_2%%.*} && $DEC_VAR_1 > $DEC_VAR_2 ) )) ; then
+    declare -i decUserTime=$(( 10#${userTime##*.} ))
+    declare -i decMaxTime=$(( 10#${maxTime##*.} ))
+    if (( ${userTime%%.*} > ${maxTime%%.*} || ( ${userTime%%.*} == ${maxTime%%.*} && $decUserTime > $decMaxTime ) )) ; then
         return 0
     fi
 
@@ -115,63 +124,66 @@ function isUserTimeTodoExceeded ()
 ##
 # Convert a Timestamp to UTC datetime
 # @example 2015-12-19T01:28:58+01:00
-# @param int $1 TIMESTAMP
+# @param int $1 Timestamp
 # @return string
 # @returnStatus 1 If parameter named timestamp is invalid
 # @returnStatus 1 If UTC datetime is invalid
 function utcDateTimeFromTimestamp ()
 {
-    local TIMESTAMP="$1"
-
     # Data check
-    if [[ -z "$TIMESTAMP" || ! "$TIMESTAMP" =~ ^[-+]?[0-9]+$ ]]; then
+    local ts="$1"
+    if [[ -z "$ts" || ! "$ts" =~ ^[-+]?[0-9]+$ ]]; then
         return 1
     fi
 
     # MacOs portability
-    local OPTIONS="-d @"
+    local options="-d @"
     if [[ "${BP_OS}" == 'Darwin' ]]; then
-       OPTIONS="-r"
+       options="-r"
     fi
 
-    local UTC_DATETIME
-    UTC_DATETIME=$(date ${OPTIONS}${TIMESTAMP} "+${BP_UTC_DATE_FORMAT}" 2>/dev/null)
+    local utcDatetime
+    utcDatetime=$(date ${options}${ts} "+${BP_UTC_DATE_FORMAT}" 2>/dev/null)
     if [[ $? -ne 0 ]]; then
         return 1
     fi
 
-    echo -n "$UTC_DATETIME"
+    echo -n "$utcDatetime"
 }
 
 ##
 # Convert a UTC datetime to Timestamp
-# @example 1450485413 => 2015-12-19T01:28:58+01:00
-# @param string $1 UTC_DATETIME
+# @example 1450485413 => 2015-12-19T01:28:58+0100
+# @param string $1 utcDatetime
 # @return int
 # @returnStatus 1 If parameter named utcDatetime is invalid
 # @returnStatus 1 If timestamp is invalid
 function timestampFromUtcDateTime ()
 {
-    local UTC_DATETIME="$1"
-    local TIMESTAMP=O
+    local utcDatetime="$1"
+    declare -i ts=O
 
     # Data check
-    if [[ -z "$UTC_DATETIME" || ! "$UTC_DATETIME" == *"T"* ]]; then
+    if [[ -z "$utcDatetime" || ! "$utcDatetime" == *"T"* ]]; then
         return 1
     fi
-
+    # Manage 2015-12-19T01:28:58+01:00 as 2015-12-19T01:28:58+0100
+    if [[ "$utcDatetime" == *"+"*":"* ]]; then
+        local z="${utcDatetime%:*}"
+        utcDatetime="${utcDatetime%:*}${utcDatetime: -2}"
+    fi
     # MacOs portability
     if [[ "${BP_OS}" == 'Darwin' ]]; then
-        TIMESTAMP=$(date -j -f "${BP_UTC_DATE_FORMAT}" "${UTC_DATETIME}" "+%s" 2>/dev/null)
+        ts=$(date -j -f "${BP_UTC_DATE_FORMAT}" "$utcDatetime" "+%s" 2>/dev/null)
         if [[ $? -ne 0 ]]; then
             return 1
         fi
     else
-        TIMESTAMP=$(date -d "${UTC_DATETIME}" "+%s" 2>/dev/null)
+        ts=$(date -d "$utcDatetime" "+%s" 2>/dev/null)
         if [[ $? -ne 0 ]]; then
             return 1
         fi
     fi
 
-    echo -n ${TIMESTAMP}
+    echo -n ${ts}
 }

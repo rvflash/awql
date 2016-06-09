@@ -1,0 +1,9 @@
+ConversionTypeName       : AverageCpc AverageCpm AveragePosition Clicks Cost Ctr Impressions
+ConversionCategoryName   : AverageCpc AverageCpm AveragePosition Clicks Cost Ctr Impressions
+Cost                     : ConversionCategoryName ConversionTypeName
+AverageCpm               : ConversionCategoryName ConversionTypeName
+Clicks                   : ConversionCategoryName ConversionTypeName
+Impressions              : ConversionCategoryName ConversionTypeName
+AveragePosition          : ConversionCategoryName ConversionTypeName
+Ctr                      : ConversionCategoryName ConversionTypeName
+AverageCpc               : ConversionCategoryName ConversionTypeName

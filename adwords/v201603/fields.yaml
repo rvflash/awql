@@ -1,0 +1,357 @@
+AccountCurrencyCode                                    : String
+AccountDescriptiveName                                 : String
+AccountTimeZoneId                                      : String
+ActiveViewCpm                                          : Money
+ActiveViewCtr                                          : Double
+ActiveViewImpressions                                  : Long
+ActiveViewMeasurability                                : Double
+ActiveViewMeasurableCost                               : Money
+ActiveViewMeasurableImpressions                        : Long
+ActiveViewViewability                                  : Double
+AdNetworkType1                                         : AdNetworkType1 (UNKNOWN SEARCH CONTENT YOUTUBE_SEARCH YOUTUBE_WATCH)
+AdNetworkType2                                         : AdNetworkType2 (UNKNOWN SEARCH SEARCH_PARTNERS CONTENT YOUTUBE_SEARCH YOUTUBE_WATCH)
+AllConversionRate                                      : Double
+AllConversions                                         : Double
+AllConversionValue                                     : Double
+AverageCost                                            : Money
+AverageCpc                                             : Money
+AverageCpe                                             : Double
+AverageCpm                                             : Money
+AverageCpv                                             : Double
+AveragePosition                                        : Double
+CanManageClients                                       : Enum (TRUE FALSE)
+ClickConversionRate                                    : Double
+Clicks                                                 : Long
+ClickType                                              : ClickType (URL_CLICKS CALLS OTHER PRODUCT_EXTENSION_CLICKS SITELINKS PRODUCT_LISTING_AD_CLICKS GET_DIRECTIONS OFFER_PRINTS BREADCRUMBS CALL_TRACKING MOBILE_CALL_TRACKING LOCATION_EXPANSION VIDEO_WEBSITE_CLICKS VIDEO_CALL_TO_ACTION_CLICKS VIDEO_APP_STORE_CLICKS VIDEO_CARD_ACTION_HEADLINE_CLICKS VIDEO_END_CAP_CLICKS CLICK_ON_ENGAGEMENT_AD UNKNOWN)
+ContentBudgetLostImpressionShare                       : Double
+ContentImpressionShare                                 : Double
+ContentRankLostImpressionShare                         : Double
+ConversionCategoryName                                 : String
+ConversionRate                                         : Double
+Conversions                                            : Double
+ConversionTrackerId                                    : Long
+ConversionTypeName                                     : String
+ConversionValue                                        : Double
+ConvertedClicks                                        : Long
+Cost                                                   : Money
+CostPerAllConversion                                   : Money
+CostPerConversion                                      : Money
+CostPerConvertedClick                                  : Money
+CrossDeviceConversions                                 : Double
+Ctr                                                    : Double
+CustomerDescriptiveName                                : String
+Date                                                   : Date
+DayOfWeek                                              : DayOfWeek (MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY)
+Device                                                 : DeviceType (UNKNOWN DESKTOP HIGH_END_MOBILE TABLET)
+EngagementRate                                         : Double
+Engagements                                            : Long
+ExternalCustomerId                                     : Long
+HourOfDay                                              : Integer
+Impressions                                            : Long
+InteractionRate                                        : Double
+Interactions                                           : Long
+InteractionTypes                                       : EnumSet
+InvalidClickRate                                       : Double
+InvalidClicks                                          : Long
+IsAutoTaggingEnabled                                   : Enum (TRUE FALSE)
+IsTestAccount                                          : Enum (TRUE FALSE)
+Month                                                  : String
+MonthOfYear                                            : MonthOfYear (JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER)
+PrimaryCompanyName                                     : String
+Quarter                                                : String
+SearchBudgetLostImpressionShare                        : Double
+SearchExactMatchImpressionShare                        : Double
+SearchImpressionShare                                  : Double
+SearchRankLostImpressionShare                          : Double
+Slot                                                   : Slot (SearchRhs SearchTop SearchOther Content AfsTop AfsOther Unknown)
+ValuePerAllConversion                                  : Double
+ValuePerConversion                                     : Double
+ValuePerConvertedClick                                 : Double
+VideoViewRate                                          : Double
+VideoViews                                             : Long
+ViewThroughConversions                                 : Long
+Week                                                   : String
+Year                                                   : Integer
+AdGroupId                                              : Long
+AdGroupName                                            : String
+AdId                                                   : Long
+CampaignId                                             : Long
+CampaignName                                           : String
+FeedId                                                 : Long
+FeedItemAttributes                                     : Byte
+FeedItemEndTime                                        : Long
+FeedItemId                                             : Long
+FeedItemStartTime                                      : Long
+FeedItemStatus                                         : Status (ENABLED REMOVED UNKNOWN)
+GeoTargetingCriterionId                                : Long
+KeywordTargetingMatchType                              : String
+KeywordTargetingText                                   : String
+TargetingAdGroupId                                     : Long
+TargetingCampaignId                                    : Long
+AdGroupAdDisapprovalReasons                            : List
+AdGroupAdTrademarkDisapproved                          : Boolean
+AdGroupStatus                                          : AdGroupStatus (UNKNOWN ENABLED PAUSED REMOVED)
+AdType                                                 : Type (DEPRECATED_AD IMAGE_AD PRODUCT_AD TEMPLATE_AD TEXT_AD THIRD_PARTY_REDIRECT_AD DYNAMIC_SEARCH_AD CALL_ONLY_AD UNKNOWN)
+AdvertiserExperimentSegmentationBin                    : AdvertiserExperimentSegmentationBin (OUTSIDE_OF_EXPERIMENT CONTROL EXPERIMENT)
+AveragePageviews                                       : Double
+AverageTimeOnSite                                      : Double
+BaseAdGroupId                                          : Long
+BaseCampaignId                                         : Long
+BounceRate                                             : Double
+CampaignStatus                                         : CampaignStatus (UNKNOWN ENABLED PAUSED REMOVED)
+ClickAssistedConversions                               : Long
+ClickAssistedConversionsOverLastClickConversions       : Double
+ClickAssistedConversionValue                           : Double
+ClickConversionRateSignificance                        : SignificanceData
+ClickSignificance                                      : SignificanceData
+ConvertedClicksSignificance                            : SignificanceData
+CostPerConvertedClickSignificance                      : SignificanceData
+CostSignificance                                       : SignificanceData
+CpcSignificance                                        : SignificanceData
+CpmSignificance                                        : SignificanceData
+CreativeApprovalStatus                                 : ApprovalStatus (APPROVED FAMILY_SAFE NON_FAMILY_SAFE PORN UNCHECKED DISAPPROVED)
+CreativeDestinationUrl                                 : String
+CreativeFinalAppUrls                                   : List
+CreativeFinalMobileUrls                                : List
+CreativeFinalUrls                                      : List
+CreativeTrackingUrlTemplate                            : String
+CreativeUrlCustomParameters                            : CustomParameters
+CtrSignificance                                        : SignificanceData
+Description1                                           : String
+Description2                                           : String
+DevicePreference                                       : Long
+DisplayUrl                                             : String
+GmailForwards                                          : Long
+GmailSaves                                             : Long
+GmailSecondaryClicks                                   : Long
+Headline                                               : String
+Id                                                     : Long
+ImageAdUrl                                             : String
+ImageCreativeName                                      : String
+ImpressionAssistedConversions                          : Long
+ImpressionAssistedConversionsOverLastClickConversions  : Double
+ImpressionAssistedConversionValue                      : Double
+ImpressionSignificance                                 : SignificanceData
+IsNegative                                             : Enum (TRUE FALSE)
+KeywordId                                              : Long
+LabelIds                                               : List
+Labels                                                 : List
+PercentNewVisitors                                     : Double
+PositionSignificance                                   : SignificanceData
+Status                                                 : Status (ENABLED PAUSED DISABLED)
+Trademarks                                             : List
+VideoQuartile100Rate                                   : Double
+VideoQuartile25Rate                                    : Double
+VideoQuartile50Rate                                    : Double
+VideoQuartile75Rate                                    : Double
+ViewThroughConversionsSignificance                     : SignificanceData
+AdGroupMobileBidModifier                               : Double
+BiddingStrategyId                                      : Long
+BiddingStrategyName                                    : String
+BiddingStrategySource                                  : BiddingStrategySource (CAMPAIGN ADGROUP CRITERION)
+BiddingStrategyType                                    : BiddingStrategyType (BUDGET_OPTIMIZER CONVERSION_OPTIMIZER MANUAL_CPC MANUAL_CPV MANUAL_CPM PAGE_ONE_PROMOTED TARGET_SPEND ENHANCED_CPC TARGET_CPA TARGET_ROAS TARGET_OUTRANK_SHARE NONE UNKNOWN)
+BidType                                                : BidType (TARGET_CPA)
+ContentBidCriterionTypeGroup                           : CriterionTypeGroup (KEYWORD USER_INTEREST_AND_LIST VERTICAL GENDER AGE_RANGE PLACEMENT PARENT NONE UNKNOWN)
+CpcBid                                                 : Money
+CpmBid                                                 : Money
+CpvBid                                                 : Money
+EnhancedCpcEnabled                                     : Enum (TRUE FALSE)
+EnhancedCpvEnabled                                     : Enum (TRUE FALSE)
+NumOfflineImpressions                                  : Long
+NumOfflineInteractions                                 : Long
+OfflineInteractionRate                                 : Double
+RelativeCtr                                            : Double
+TargetCpa                                              : Money
+TargetCpaBidSource                                     : BidSource (ADGROUP CRITERION ADGROUP_BIDDING_STRATEGY CAMPAIGN_BIDDING_STRATEGY)
+TrackingUrlTemplate                                    : String
+UrlCustomParameters                                    : CustomParameters
+BidModifier                                            : Double
+CpcBidSource                                           : BidSource (ADGROUP CRITERION ADGROUP_BIDDING_STRATEGY CAMPAIGN_BIDDING_STRATEGY)
+CpmBidSource                                           : BidSource (ADGROUP CRITERION ADGROUP_BIDDING_STRATEGY CAMPAIGN_BIDDING_STRATEGY)
+Criteria                                               : String
+CriteriaDestinationUrl                                 : String
+FinalAppUrls                                           : AppUrlList
+FinalMobileUrls                                        : UrlList
+FinalUrls                                              : UrlList
+IsRestrict                                             : Enum (TRUE FALSE)
+UserListName                                           : String
+AdFormat                                               : AdFormat (UNKNOWN TEXT IMAGE DYNAMIC_IMAGE FLASH VIDEO HTML AUDIO COMPOSITE PRINT)
+CriteriaParameters                                     : String
+DisplayName                                            : String
+Domain                                                 : String
+IsAutoOptimized                                        : Enum (TRUE FALSE)
+IsBidOnPath                                            : boolean
+IsPathExcluded                                         : boolean
+AdGroupCount                                           : Integer
+AdGroupCriteriaCount                                   : Integer
+CampaignCount                                          : Integer
+Name                                                   : String
+NonRemovedAdGroupCount                                 : Long
+NonRemovedAdGroupCriteriaCount                         : Long
+NonRemovedCampaignCount                                : Long
+PageOnePromotedBidCeiling                              : Money
+PageOnePromotedBidChangesForRaisesOnly                 : Boolean
+PageOnePromotedBidModifier                             : Double
+PageOnePromotedRaiseBidWhenBudgetConstrained           : Enum (TRUE FALSE)
+PageOnePromotedRaiseBidWhenLowQualityScore             : Enum (TRUE FALSE)
+PageOnePromotedStrategyGoal                            : StrategyGoal
+TargetCpaMaxCpcBidCeiling                              : Money
+TargetCpaMaxCpcBidFloor                                : Money
+TargetOutrankShare                                     : Integer
+TargetOutrankShareBidChangesForRaisesOnly              : Enum (TRUE FALSE)
+TargetOutrankShareCompetitorDomain                     : String
+TargetOutrankShareMaxCpcBidCeiling                     : Money
+TargetOutrankShareRaiseBidWhenLowQualityScore          : Enum (TRUE FALSE)
+TargetRoas                                             : Double
+TargetRoasBidCeiling                                   : Money
+TargetRoasBidFloor                                     : Money
+TargetSpendBidCeiling                                  : Money
+TargetSpendSpendTarget                                 : Money
+Type                                                   : BiddingStrategyType (BUDGET_OPTIMIZER CONVERSION_OPTIMIZER MANUAL_CPC MANUAL_CPV MANUAL_CPM PAGE_ONE_PROMOTED TARGET_SPEND ENHANCED_CPC TARGET_CPA TARGET_ROAS TARGET_OUTRANK_SHARE NONE UNKNOWN)
+Amount                                                 : Money
+AssociatedCampaignId                                   : Long
+AssociatedCampaignName                                 : String
+AssociatedCampaignStatus                               : CampaignStatus (ENABLED PAUSED REMOVED UNKNOWN)
+BudgetCampaignAssociationStatus                        : BudgetCampaignAssociationStatus (ENABLED REMOVED UNKNOWN)
+BudgetId                                               : Long
+BudgetName                                             : String
+BudgetReferenceCount                                   : Integer
+BudgetStatus                                           : BudgetStatus (ENABLED REMOVED UNKNOWN)
+DeliveryMethod                                         : BudgetDeliveryMethod
+IsBudgetExplicitlyShared                               : Enum (TRUE FALSE)
+Period                                                 : BudgetPeriod
+CallDuration                                           : Long
+CallEndTime                                            : Long
+CallerCountryCallingCode                               : String
+CallerNationalDesignatedCode                           : String
+CallStartTime                                          : Long
+CallStatus                                             : CallStatus (RECEIVED MISSED UNKNOWN)
+CallTrackingDisplayLocation                            : CallDetailsDisplayLocation (UNKNOWN AD LANDING_PAGE)
+CallType                                               : CallType (GOOGLE_SEARCH HIGH_END_MOBILE_SEARCH UNKNOWN)
+KeywordMatchType                                       : KeywordMatchType (EXACT PHRASE BROAD)
+AdvertisingChannelSubType                              : AdvertisingChannelSubType (UNKNOWN SEARCH_MOBILE_APP DISPLAY_MOBILE_APP SEARCH_EXPRESS DISPLAY_EXPRESS UNIVERSAL_APP_CAMPAIGN)
+AdvertisingChannelType                                 : AdvertisingChannelType (UNKNOWN SEARCH DISPLAY SHOPPING VIDEO MULTI_CHANNEL)
+AverageFrequency                                       : Double
+CampaignMobileBidModifier                              : Double
+CampaignTrialType                                      : CampaignTrialType (UNKNOWN BASE DRAFT TRIAL)
+EndDate                                                : Date
+ImpressionReach                                        : Long
+ServingStatus                                          : ServingStatus (SERVING NONE ENDED PENDING SUSPENDED)
+StartDate                                              : Date
+SharedSetName                                          : String
+SharedSetType                                          : SharedSetType (NEGATIVE_KEYWORDS NEGATIVE_PLACEMENTS UNKNOWN)
+AoiMostSpecificTargetId                                : Long
+CampaignLocationTargetId                               : Long
+CityCriteriaId                                         : Integer
+CountryCriteriaId                                      : Integer
+CreativeId                                             : Long
+CriteriaId                                             : Long
+GclId                                                  : String
+LopMostSpecificTargetId                                : Long
+MetroCriteriaId                                        : Integer
+Page                                                   : Integer
+RegionCriteriaId                                       : Integer
+UserListId                                             : Long
+CriteriaTypeName                                       : String
+CriterionId                                            : Long
+ApprovalStatus                                         : ApprovalStatus (APPROVED PENDING_REVIEW UNDER_REVIEW DISAPPROVED)
+CpvBidSource                                           : BidSource (ADGROUP CRITERION ADGROUP_BIDDING_STRATEGY CAMPAIGN_BIDDING_STRATEGY)
+CreativeQualityScore                                   : QualityScoreBucket (UNKNOWN BELOW_AVERAGE AVERAGE ABOVE_AVERAGE)
+CriteriaType                                           : Type (CONTENT_LABEL KEYWORD PLACEMENT VERTICAL USER_LIST USER_INTEREST MOBILE_APPLICATION MOBILE_APP_CATEGORY PRODUCT_PARTITION IP_BLOCK WEBPAGE LANGUAGE LOCATION AGE_RANGE CARRIER OPERATING_SYSTEM_VERSION MOBILE_DEVICE GENDER PARENT PROXIMITY PLATFORM PREFERRED_CONTENT AD_SCHEDULE LOCATION_GROUPS PRODUCT_SCOPE CUSTOM_AFFINITY YOUTUBE_VIDEO YOUTUBE_CHANNEL APP_PAYMENT_MODEL UNKNOWN)
+EstimatedAddClicksAtFirstPositionCpc                   : Long
+EstimatedAddCostAtFirstPositionCpc                     : Money
+FirstPageCpc                                           : Bid
+FirstPositionCpc                                       : Bid
+Parameter                                              : WebpageParameter
+PostClickQualityScore                                  : QualityScoreBucket (UNKNOWN BELOW_AVERAGE AVERAGE ABOVE_AVERAGE)
+QualityScore                                           : Integer
+SearchPredictedCtr                                     : QualityScoreBucket (UNKNOWN BELOW_AVERAGE AVERAGE ABOVE_AVERAGE)
+SystemServingStatus                                    : SystemServingStatus (ELIGIBLE RARELY_SERVED)
+TopOfPageCpc                                           : Bid
+CriteriaStatus                                         : UserStatus (ENABLED REMOVED PAUSED)
+EffectiveDestinationUrl                                : String
+EffectiveFinalUrl                                      : String
+EffectiveTrackingUrlTemplate                           : String
+IsTargetingLocation                                    : Enum (TRUE FALSE)
+LocationType                                           : GeoTargetType (AREA_OF_INTEREST LOCATION_OF_PRESENCE UNKNOWN)
+MostSpecificCriteriaId                                 : Long
+Category0                                              : String
+Category1                                              : String
+Category2                                              : String
+CategoryPaths                                          : String
+Line1                                                  : String
+Query                                                  : String
+Title                                                  : String
+Url                                                    : String
+AdGroupCreativesCount                                  : Long
+AdGroupsCount                                          : Long
+CampaignsCount                                         : Long
+LabelId                                                : Long
+LabelName                                              : String
+UserListsCount                                         : Long
+CombinedAdsOrganicClicks                               : Long
+CombinedAdsOrganicClicksPerQuery                       : Double
+CombinedAdsOrganicQueries                              : Long
+KeywordTextMatchingQuery                               : String
+OrganicAveragePosition                                 : Double
+OrganicClicks                                          : Long
+OrganicClicksPerQuery                                  : Double
+OrganicImpressions                                     : Long
+OrganicImpressionsPerQuery                             : Double
+OrganicQueries                                         : Long
+QueryMatchType                                         : QueryMatchType (AUTO BROAD EXACT EXPANDED PHRASE)
+SearchQuery                                            : String
+SerpType                                               : SerpType (UNKNOWN ADS_ONLY ORGANIC_ONLY ADS_AND_ORGANIC)
+AttributeValues                                        : List
+DisapprovalShortNames                                  : List
+EndTime                                                : DateTime
+IsSelfAction                                           : Enum (TRUE FALSE)
+PlaceholderType                                        : Integer
+Scheduling                                             : FeedItemScheduling
+StartTime                                              : DateTime
+ValidationDetails                                      : List
+ExtensionPlaceholderCreativeId                         : Long
+ExtensionPlaceholderType                               : int
+BenchmarkAverageMaxCpc                                 : Money
+BenchmarkCtr                                           : Double
+ParentCriterionId                                      : Long
+PartitionType                                          : ProductPartitionType (UNKNOWN SUBDIVISION UNIT)
+ProductGroup                                           : String
+SearchClickShare                                       : Double
+DestinationUrl                                         : String
+FinalUrl                                               : String
+QueryMatchTypeWithVariant                              : QueryMatchTypeWithVariant (AUTO BROAD EXACT EXPANDED PHRASE NEAR_EXACT NEAR_PHRASE)
+SharedSetId                                            : Long
+MemberCount                                            : int
+ReferenceCount                                         : int
+AggregatorId                                           : Long
+Brand                                                  : String
+CategoryL1                                             : String
+CategoryL2                                             : String
+CategoryL3                                             : String
+CategoryL4                                             : String
+CategoryL5                                             : String
+Channel                                                : ShoppingProductChannel (UNKNOWN ONLINE LOCAL)
+ChannelExclusivity                                     : ShoppingProductChannelExclusivity (UNKNOWN SINGLE_CHANNEL MULTI_CHANNEL)
+CustomAttribute0                                       : String
+CustomAttribute1                                       : String
+CustomAttribute2                                       : String
+CustomAttribute3                                       : String
+CustomAttribute4                                       : String
+LanguageCriteriaId                                     : Integer
+MerchantId                                             : Long
+OfferId                                                : String
+ProductCondition                                       : ShoppingProductCondition (UNKNOWN NEW REFURBISHED USED)
+ProductTypeL1                                          : String
+ProductTypeL2                                          : String
+ProductTypeL3                                          : String
+ProductTypeL4                                          : String
+ProductTypeL5                                          : String
+StoreId                                                : String
+AdGroupCriterionStatus                                 : UserStatus (ENABLED REMOVED PAUSED)
+DistanceBucket                                         : DistanceBucket (DISTANCE_BUCKET_WITHIN_200M DISTANCE_BUCKET_WITHIN_500M DISTANCE_BUCKET_WITHIN_700M DISTANCE_BUCKET_WITHIN_1KM DISTANCE_BUCKET_WITHIN_5KM DISTANCE_BUCKET_WITHIN_10KM DISTANCE_BUCKET_WITHIN_15KM DISTANCE_BUCKET_WITHIN_20KM DISTANCE_BUCKET_WITHIN_25KM DISTANCE_BUCKET_WITHIN_30KM DISTANCE_BUCKET_WITHIN_35KM DISTANCE_BUCKET_WITHIN_40KM DISTANCE_BUCKET_WITHIN_45KM DISTANCE_BUCKET_WITHIN_50KM DISTANCE_BUCKET_WITHIN_55KM DISTANCE_BUCKET_WITHIN_60KM DISTANCE_BUCKET_WITHIN_65KM DISTANCE_BUCKET_BEYOND_65KM DISTANCE_BUCKET_WITHIN_0_2MILES DISTANCE_BUCKET_WITHIN_0_5MILES DISTANCE_BUCKET_WITHIN_0_7MILES DISTANCE_BUCKET_WITHIN_1MILE DISTANCE_BUCKET_WITHIN_5MILES DISTANCE_BUCKET_WITHIN_10MILES DISTANCE_BUCKET_WITHIN_15MILES DISTANCE_BUCKET_WITHIN_20MILES DISTANCE_BUCKET_WITHIN_25MILES DISTANCE_BUCKET_WITHIN_30MILES DISTANCE_BUCKET_WITHIN_35MILES DISTANCE_BUCKET_WITHIN_40MILES DISTANCE_BUCKET_BEYOND_40MILES UNKNOWN)
+CreativeStatus                                         : Status (ENABLED PAUSED DISABLED)
+VideoChannelId                                         : String
+VideoDuration                                          : Long
+VideoId                                                : String
+VideoTitle                                             : String

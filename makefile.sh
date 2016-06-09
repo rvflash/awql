@@ -4,69 +4,82 @@
 # Install AWQL by creating a bash alias in BashRC
 # Also create a configuration file with default method to get a valid access token
 echo "Welcome to the process to install Awql, a Bash command line tools to request Google Adwords Reports API."
+echo "----------"
+echo
 
 # Workspace
-SCRIPT_ROOT=$(pwd)
-AWQL_SHELL=$(if [[ -n "$ZSH_NAME" ]]; then echo "zsh"; else echo "bash"; fi)
+rootDir=$(pwd)
+shell=$(if [ ! -z "$ZSH_NAME" ]; then echo 'zsh'; else echo 'bash'; fi)
+declare -i error=0
 
-source "${SCRIPT_ROOT}/conf/awql.sh"
-source "${AWQL_INC_DIR}/common.sh"
-source "${AWQL_BASH_PACKAGES_DIR}/term.sh"
+source "${rootDir}/conf/awql.sh"
 source "${AWQL_BASH_PACKAGES_DIR}/time.sh"
+source "${AWQL_BASH_PACKAGES_DIR}/log/print.sh"
 
-# Bashrc file path (manage Linux & Unix)
-if [[ "$AWQL_SHELL" == "bash" ]]; then
-    if [[ "$AWQL_OS" == "Darwin" || "$AWQL_OS" == "FreeBSD" ]]; then
-        BASHRC_FILE="${AWQL_USER_HOME}/.profile"
+# bashrc file path (manage Linux & Unix)
+if [[ "$shell" == "bash" ]]; then
+    if [[ "${AWQL_OS}" == "Darwin" || "${AWQL_OS}" == "FreeBSD" ]]; then
+        bashFile="${AWQL_USER_HOME}/.profile"
     else
-        BASHRC_FILE="${AWQL_USER_HOME}/.${AWQL_SHELL}rc"
+        bashFile="${AWQL_USER_HOME}/.${shell}rc"
     fi
 else
-    BASHRC_FILE="${AWQL_USER_HOME}/.${AWQL_SHELL}rc"
+    bashFile="${AWQL_USER_HOME}/.${shell}rc"
 fi
 
 # Add alias in bashrc
-if [[ -z "$(grep "alias awql" ${BASHRC_FILE})" ]]; then
-    echo >> "${BASHRC_FILE}"
-    echo "# Added by AWQL makefile" >> "${BASHRC_FILE}"
-    if isUserTimeTodoExceeded "${AWQL_AUTH_DIR}/custom/auth.sh" "0.100"; then
-        # Slow machine, do not load environment
-        echo "alias awql='env -i bash ${SCRIPT_ROOT}/awql.sh'" >> "${BASHRC_FILE}"
-    else
-        echo "alias awql='${SCRIPT_ROOT}/awql.sh'" >> "${BASHRC_FILE}"
+if [[ ! -f "$bashFile" ]]; then
+    pFatal "Fail to detect shell environment, installation aborded"
+elif [[ -z "$(grep "alias awql" ${bashFile})" ]]; then
+    echo >> "$bashFile"
+    if [[ $? -ne 0 ]]; then
+        pFatal "Fail to create alias to AWQL command in path: ${bashFile}"
     fi
-    source ${BASHRC_FILE}
-    STATUS=$?
-else
-    STATUS=0
+
+    echo "# Added by AWQL makefile" >> "$bashFile"
+    if isUserTimeTodoExceeded "${AWQL_AUTH_DIR}/custom/auth.sh" "0.100"; then
+        # Slow machine, do not load current environment
+        echo "alias awql='env -i bash ${rootDir}/awql.sh'" >> "$bashFile"
+    else
+        echo "alias awql='${rootDir}/awql.sh'" >> "$bashFile"
+    fi
 fi
-printAndExitOnError "$STATUS" "Add AWQL as bash alias"
 
 # Create a history file for command lines
 if [[ ! -f "${AWQL_HISTORY_FILE}" ]]; then
     echo > "${AWQL_HISTORY_FILE}"
-    STATUS=$?
-else
-    STATUS=0
+    if [[ $? -ne 0 ]]; then
+        pError "Can not create AWQL history file in path: ${AWQL_HISTORY_FILE}"
+        error+=1
+    fi
 fi
-printAndExitOnError "$STATUS" "Create history file for AWQL queries"
 
 # Start creation of authentification file
-DEVELOPER_TOKEN="$(dialog "Your Google developer token" 1 "$AWQL_PROMPT_REQUIRED")"
+developerToken="$(dialog "Your Google developer token" 1 "${AWQL_PROMPT_REQUIRED}")"
 
 # Use Google auth or custom webservice to refresh Token
-if confirm "Use Google to get access tokens" "$AWQL_CONFIRM"; then
+if confirm "Use Google to get access tokens" "${AWQL_CONFIRM}"; then
     # Google Auth as provider
-    CLIENT_ID="$(dialog "Your Google client ID" 1 "$AWQL_PROMPT_REQUIRED")"
-    CLIENT_SECRET="$(dialog "Your Google client secret" 1 "$AWQL_PROMPT_REQUIRED")"
-    REFRESH_TOKEN="$(dialog "Your Google refresh token" 1 "$AWQL_PROMPT_REQUIRED")"
-    ${AWQL_AUTH_INIT_FILE} -a "$AUTH_GOOGLE_TYPE" -c "$CLIENT_ID" -s "$CLIENT_SECRET" -r "$REFRESH_TOKEN" -d "$DEVELOPER_TOKEN"
-    printAndExitOnError "$?" "Use Google as token provider"
+    clientId="$(dialog "Your Google client ID" 1 "${AWQL_PROMPT_REQUIRED}")"
+    clientSecret="$(dialog "Your Google client secret" 1 "${AWQL_PROMPT_REQUIRED}")"
+    refreshToken="$(dialog "Your Google refresh token" 1 "${AWQL_PROMPT_REQUIRED}")"
+    ${AWQL_AUTH_INIT_FILE} -a "${AWQL_AUTH_GOOGLE_TYPE}" -c "$clientId" -s "$clientSecret" -r "$refreshToken" -d "$developerToken"
+    if [[ $? -ne 0 ]]; then
+        pError "Fail to get a valid access token from Google"
+        error+=1
+    fi
 else
     # Custom webservice as token provider
-    URL="$(dialog "Url of the web service to use to retrieve a Google access token" 1 "$AWQL_PROMPT_REQUIRED")"
-    ${AWQL_AUTH_INIT_FILE} -a "$AUTH_CUSTOM_TYPE" -u "$URL" -d "$DEVELOPER_TOKEN"
-    printAndExitOnError "$?" "Use a custom web service as token provider"
+    url="$(dialog "Url of the web service to use to retrieve a Google access token" 1 "${AWQL_PROMPT_REQUIRED}")"
+    ${AWQL_AUTH_INIT_FILE} -a "${AWQL_AUTH_CUSTOM_TYPE}" -u "$url" -d "$developerToken"
+    if [[ $? -ne 0 ]]; then
+        pError "Fail to get a valid access token with the custom web service"
+        error+=1
+    fi
 fi
 
-echo "Installation successfull. Open a new terminal or reload your bash environment. Enjoy!"
+if [[ ${error} -eq 0 ]]; then
+    pInfo "Installation successfull. Open a new terminal or reload your bash environment. Enjoy!"
+else
+    pWarn "AWQL is now install, but some errors must be resolved in order to use all these features."
+fi

@@ -1,0 +1,6 @@
+ORIGIN    : SELECT AdNetworkType2,AdGroupId,KeywordId,CampaignId,Query,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition FROM SEARCH_QUERY_PERFORMANCE_REPORT DURING TODAY ORDER BY Impressions ASC
+NAMES     : Network AdGroupId Id CampaignId Query Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition
+FIELDS    : AdNetworkType2 AdGroupId KeywordId CampaignId Query Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition
+TABLE     : SEARCH_QUERY_PERFORMANCE_REPORT
+DURING    : TODAY
+ORDER     : Impressions ASC

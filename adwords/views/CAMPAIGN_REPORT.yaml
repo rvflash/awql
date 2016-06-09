@@ -1,0 +1,7 @@
+ORIGIN    : SELECT Device,CampaignId,CampaignName,CampaignStatus,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,SearchImpressionShare FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O DURING TODAY ORDER BY Clicks ASC
+NAMES     : Device Id Name Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
+FIELDS    : Device CampaignId CampaignName CampaignStatus Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
+TABLE     : CAMPAIGN_PERFORMANCE_REPORT
+WHERE     : Impressions > O
+DURING    : TODAY
+ORDER     : Clicks ASC

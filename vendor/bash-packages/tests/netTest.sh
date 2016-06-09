@@ -15,45 +15,45 @@ readonly TEST_NET_PARSE_URL="-11-011-011-011-011-11"
 
 function test_parseUrl ()
 {
-    local TEST
+    local test
 
     # Check nothing
-    TEST=$(parseUrl)
+    test=$(parseUrl)
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 
     # Check local http url
-    TEST=$(parseUrl "${TEST_NET_LOCAL_HTTP}")
+    test=$(parseUrl "${TEST_NET_LOCAL_HTTP}")
     echo -n "-$?"
-    [[ -n "$TEST" && "$TEST" == "("*")" ]] && echo -n 1
-    declare -A URL="$TEST"
+    [[ -n "$test" && "$test" == "("*")" ]] && echo -n 1
+    declare -A URL="$test"
     [[ "http" == "${URL[SCHEME]}" && "localhost" == "${URL[HOST]}" && "/" == "${URL[PATH]}" ]] && echo -n 1
 
     # Check https url
-    TEST=$(parseUrl "${TEST_NET_HTTPS}")
+    test=$(parseUrl "${TEST_NET_HTTPS}")
     echo -n "-$?"
-    [[ -n "$TEST" && "$TEST" == "("*")" ]] && echo -n 1
-    declare -A URL="$TEST"
+    [[ -n "$test" && "$test" == "("*")" ]] && echo -n 1
+    declare -A URL="$test"
     [[ "https" == "${URL[SCHEME]}" && "test.hgouchet.lan" == "${URL[HOST]}" && "8961" == "${URL[PORT]}" && "/google-token" == "${URL[PATH]}" ]] && echo -n 1
 
     # Check ftp url
-    TEST=$(parseUrl "${TEST_NET_FTP}")
+    test=$(parseUrl "${TEST_NET_FTP}")
     echo -n "-$?"
-    [[ -n "$TEST" && "$TEST" == "("*")" ]] && echo -n 1
-    declare -A URL="$TEST"
+    [[ -n "$test" && "$test" == "("*")" ]] && echo -n 1
+    declare -A URL="$test"
     [[ "ftp" == "${URL[SCHEME]}" && "user" == "${URL[USER]}" && "password" == "${URL[PASS]}" && "ftp.hgouchet.lan" == "${URL[HOST]}" && "21" == "${URL[PORT]}" && "/token" == "${URL[PATH]}" ]] && echo -n 1
 
     # Check http url
-    TEST=$(parseUrl "${TEST_NET_HTTP}")
+    test=$(parseUrl "${TEST_NET_HTTP}")
     echo -n "-$?"
-    [[ -n "$TEST" && "$TEST" == "("*")" ]] && echo -n 1
-    declare -A URL="$TEST"
+    [[ -n "$test" && "$test" == "("*")" ]] && echo -n 1
+    declare -A URL="$test"
     [[ "http" == "${URL[SCHEME]}" && "login" == "${URL[USER]}" && "password" == "${URL[PASS]}" && "example.com" == "${URL[HOST]}" && "/dir/file.ext" == "${URL[PATH]}" && "a=sth&b=std" == "${URL[QUERY]}" ]] && echo -n 1
 
     # Check bad url
-    TEST=$(parseUrl "${TEST_NET_BAD}")
+    test=$(parseUrl "${TEST_NET_BAD}")
     echo -n "-$?"
-    [[ -z "$TEST" ]] && echo -n 1
+    [[ -z "$test" ]] && echo -n 1
 }
 
 

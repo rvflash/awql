@@ -1,0 +1,14 @@
+Field,Type,Key
+Impressions,Long,
+Device,DeviceType (UNKNOWN DESKTOP HIGH_END_MOBILE TABLET),MUL
+Id,Long,
+AverageCpc,Money,
+SearchImpressionShare,Double,
+Clicks,Long,
+Conversions,Double,
+ConvertedClicks,Long,
+Name,String,
+ConversionValue,Double,
+Status,CampaignStatus (UNKNOWN ENABLED PAUSED REMOVED),
+Cost,Money,
+AveragePosition,Double,

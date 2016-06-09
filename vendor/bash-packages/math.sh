@@ -1,96 +1,63 @@
 #!/usr/bin/env bash
 
+##
+# bash-packages
+#
+# Part of bash-packages project.
+#
+# @package math
+# @copyright 2016 Hervé Gouchet
+# @license http://www.apache.org/licenses/LICENSE-2.0
+# @source https://github.com/rvflash/bash-packages
+
 # Use BC by default to manipulate string. If BC is not available, used pure bash
 declare -r -i BP_BC="$(if [[ -z "$(type -p bc)" ]]; then echo 0; else echo 1; fi)"
+declare -r -i BP_AWK="$(if [[ -z "$(type -p awk)" ]]; then echo 0; else echo 1; fi)"
 declare -r BP_INT_TYPE="integer"
 declare -r BP_FLOAT_TYPE="float"
 declare -r BP_UNKNOWN_TYPE="unknown"
 
-# Convert a number between arbitrary bases
-# @return string $1 Var
-# @return int $2 FromBase
-# @return int $2 ToBase
-# @return int
-# @incoming
-#function baseConvert ()
-#{
-#    local VAR="$1"
-#    declare -i FROM_BASE="$2"
-#    if [[ -z "${FROM_BASE}" || "${FROM_BASE}" -lt 2 || "${FROM_BASE}" -gt 36 ]]; then
-#        echo -n 0
-#        return 1
-#    fi
-#    declare -i TO_BASE="$2"
-#    if [[ -z "${TO_BASE}" || "${TO_BASE}" -lt 2 || "${TO_BASE}" -gt 36 ]]; then
-#        echo -n 0
-#        return 2
-#    fi
-#
-#    #$(( 10#${VAR} ))
-#    #echo 'obase=16; ibase=2; 11010101' | bc
-#}
 
 ##
-# Only return the decimal part of a float in integer
-# @param string $1
-# @return int Var
-# @returnStatus 1 If first parameter named var is not a float
-function decimal ()
+# Calculates a mathematical operation
+# @param string $1 Operation
+# @param int $2 Scale / Precision
+# @return numeric
+# @returnStatus 1 If operation can not be done
+function __calculate ()
 {
-    local VAR="$1"
-    if ! isFloat "$VAR"; then
-        echo -n 0
+    local operation="$1"
+    if [[ -z "$operation" ]]; then
+        echo 0
+        return 1
+    elif [[ ${BP_BC} -eq 0 && ${BP_AWK} -eq 0 ]]; then
+        echo 0
         return 1
     fi
-    VAR=${VAR##*.}
+    declare -i scale="$2"
 
-    # Removing leading zeros by converting it in base 10
-    if [[ ${VAR:0:1} == 0 && ${VAR} != 0 ]]; then
-        echo -n $(( 10#$VAR ))
+    local rs
+    if [[ ${BP_BC} -eq 1 ]]; then
+        rs=$(echo "scale=${scale}; ${operation}" | bc -l 2>/dev/null)
+        rs=$(LC_NUMERIC="en_US.UTF-8" printf "%.${scale}f" "$rs")
     else
-        echo -n ${VAR}
-    fi
-}
-
-##
-# Get the integer value of a variable
-# @param string $1 Var
-# @return int
-# @returnStatus 1 If first parameter named var is not a numeric
-function int ()
-{
-    local VAR="$1"
-
-    if ! isNumeric "$VAR"; then
-        echo -n 0
-        return 1
+        rs="BEGIN { LC_NUMERIC='en_US.UTF-8' printf scale, ${operation} }"
+        rs=$(awk -v scale="%.${scale}f" "$rs" 2>/dev/null)
     fi
 
-    # Keep only the value left point
-    VAR=$(floor "$VAR")
-    if [[ $? -ne 0 ]]; then
-        echo -n ${VAR}
-        return 1
-    fi
-
-    # Removing leading zeros by converting it in base 10
-    if [[ ${VAR:0:1} == 0 && ${VAR} != 0 ]]; then
-        echo -n $(( 10#${VAR} ))
-    else
-        echo -n ${VAR}
-    fi
+    echo "$rs"
 }
 
 ##
 # Finds whether the type of a variable is float
-# @param string $1 Var
+# @param string $1 Value
 # @returnStatus 1 If first parameter named var is not a float
 function isFloat ()
 {
     if [[ -z "$1" ]]; then
         return 1
     elif [[ "$1" =~ ^[-+]?[0-9]+\.[0-9]+$ ]]; then
-        return
+        return 0
     else
         return 1
     fi
@@ -98,14 +65,14 @@ function isFloat ()
 
 ##
 # Find whether the type of a variable is integer
-# @param string $1 Var
+# @param string $1 Value
 # @returnStatus 1 If first parameter named var is not an integer
 function isInt ()
 {
     if [[ -z "$1" ]]; then
         return 1
     elif [[ "$1" =~ ^[-+]?[0-9]+$ ]]; then
-        return
+        return 0
     else
         return 1
     fi
@@ -118,78 +85,8 @@ function isInt ()
 function isNumeric ()
 {
     if isFloat "$1" || isInt "$1"; then
-         return
+         return 0
     else
-        return 1
-    fi
-}
-
-##
-# First float value is greater than the second ?
-# @param float $1
-# @param float $2
-# @return int If $1 is greater than $2 then 1, 0 otherwise
-function isFloatGreaterThan ()
-{
-    local VAR_1="$1"
-    local RES_1=$(numericType "$VAR_1")
-    if [[ "$RES_1" == "${BP_UNKNOWN_TYPE}" ]]; then
-        return 1
-    fi
-
-    local VAR_2="$2"
-    local RES_2=$(numericType "$VAR_2")
-    if [[ "$RES_2" == "${BP_UNKNOWN_TYPE}" ]]; then
-        return 1
-    fi
-
-    if [[ "$BP_BC" -eq 1 ]]; then
-        if [[ 1 -eq $(echo "${VAR_1} > ${VAR_2}" | bc) ]]; then
-            return
-        fi
-    else
-        if [[ "$RES_1" == "${BP_INT_TYPE}" ]]; then
-            VAR_1="${VAR_1}.0"
-        fi
-        if [[ "$RES_2" == "${BP_INT_TYPE}" ]]; then
-            VAR_2="${VAR_2}.0"
-        fi
-        if (( $(floor "${VAR_1}") > $(floor "${VAR_2}") || ( $(floor "${VAR_1}") == $(floor "${VAR_2}") && $(decimal "${VAR_1}") > $(decimal "${VAR_2}") ) )) ; then
-            return
-        fi
-    fi
-
-    return 1
-}
-
-##
-# First float value is lower than the second ?
-# @param float Var1
-# @param float Var2
-# @returnStatus 1 If first parameter named var is not numeric
-function isFloatLowerThan ()
-{
-    if isFloatGreaterThan "$2" "$1"; then
-        return
-    else
-        return 1
-    fi
-}
-
-##
-# Round fractions down
-# @param float Value
-# @return int Var
-# @returnStatus 1 If first parameter named var is not numeric
-function floor ()
-{
-    if isFloat "$1"; then
-        # Keep only the value left point
-        echo -n "${1%%.*}"
-    elif isInt "$1"; then
-        echo -n $1
-    else
-        echo -n 0
         return 1
     fi
 }
@@ -202,17 +99,284 @@ function floor ()
 # - "int" via constant named BP_UNKNOWN_TYPE
 # - "unknown" via constant named BP_UNKNOWN_TYPE
 #
-# @param stringableNumeric $1
+# @param mixed $1
 # @return string
 function numericType ()
 {
     if isFloat "$1"; then
-        echo -n "${BP_FLOAT_TYPE}"
+        echo "${BP_FLOAT_TYPE}"
     elif isInt "$1"; then
-        echo -n "${BP_INT_TYPE}"
+        echo "${BP_INT_TYPE}"
     else
-        echo -n "${BP_UNKNOWN_TYPE}"
+        echo "${BP_UNKNOWN_TYPE}"
     fi
+}
+
+##
+# Only return the decimal part of a float in integer
+# @param string $1 Value
+# @return int
+# @returnStatus 1 If first parameter named var is not a float
+function decimal ()
+{
+    local value="$1"
+
+    if ! isFloat "$value"; then
+        echo 0
+        return 1
+    fi
+    value=${value##*.}
+
+    # Removing leading zeros by converting it in base 10
+    echo $(( 10#$value ))
+}
+
+##
+# Get the integer value of a variable
+# @param string $1 Value
+# @return int
+# @returnStatus 1 If first parameter named var is not a numeric
+function int ()
+{
+    local value="$1"
+
+    if ! isNumeric "$value"; then
+        echo 0
+        return 1
+    fi
+
+    # Keep only the value left point
+    if isFloat "$value"; then
+        value=$(floor "$value")
+        if [[ $? -ne 0 ]]; then
+            echo ${value}
+            return 1
+        fi
+    fi
+
+    # Removing leading zeros by converting it in base 10
+    echo $(( 10#$value ))
+}
+
+##
+# First float value is greater than the second ?
+# @param float $1
+# @param float|int $2
+# @returnStatus 1 If $1 is greater than $2, 0 otherwise
+function isFloatGreaterThan ()
+{
+    local val1="$1"
+    local res1=$(numericType "$val1")
+    if [[ "$res1" == "${BP_UNKNOWN_TYPE}" ]]; then
+        return 1
+    fi
+
+    local val2="$2"
+    local res2=$(numericType "$val2")
+    if [[ "$res2" == "${BP_UNKNOWN_TYPE}" ]]; then
+        return 1
+    fi
+
+    if [[ ${BP_BC} -eq 1 ]]; then
+        if [[ 1 -eq $(echo "$val1 > $val2" | bc) ]]; then
+            return 0
+        fi
+    else
+        if [[ "$res1" == "${BP_INT_TYPE}" ]]; then
+            val1="${val1}.0"
+        fi
+        if [[ "$res2" == "${BP_INT_TYPE}" ]]; then
+            val2="${val2}.0"
+        fi
+        if (( $(floor "$val1") > $(floor "$val2") || ( $(floor "$val1") == $(floor "$val2") && $(decimal "$val1") > $(decimal "$val2") ) )) ; then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+##
+# First float value is lower than the second ?
+# @param float Var1
+# @param float|int Var2
+# @returnStatus 1 If $1 is lower than $2, 0 otherwise
+function isFloatLowerThan ()
+{
+    if isFloatGreaterThan "$2" "$1"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+##
+# Round fractions up
+# @param float Value
+# @return int Var
+# @returnStatus 1 If first parameter named var is not numeric
+function ceil ()
+{
+    local val1="$1"
+    declare -i value=0
+
+    if isFloat "$val1"; then
+        # Keep only the value left point
+        value=$(( 10#${val1%%.*} ))
+        if [[ $(decimal "$val1") -gt 0 && "$val1" != "-"* ]] ; then
+            value+=1
+        fi
+    elif isInt "$val1"; then
+        value=$(( 10#$val1 ))
+    else
+        echo ${value}
+        return 1
+    fi
+
+    echo ${value}
+}
+
+##
+# Round fractions down
+# @param float Value
+# @return int Var
+# @returnStatus 1 If first parameter named var is not numeric
+function floor ()
+{
+    local val1="$1"
+    declare -i value=0
+
+    if isFloat "$val1"; then
+        # Keep only the value left point
+        value=$(( 10#${val1%%.*} ))
+        if [[ ${value} -lt 0 || "$val1" == "-"* ]] && [[ $(decimal "$val1") -gt 0 ]]; then
+            value+=-1
+        fi
+    elif isInt "$val1"; then
+        value=$(( 10#$val1 ))
+    else
+        echo ${value}
+        return 1
+    fi
+
+    echo ${value}
+}
+
+##
+# Mathematical operations with float precision
+# @param string $1 Operator
+# @param mixed $2 Value1
+# @param mixed $3 Value2
+# @param int $4 Scale
+# @return numeric
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If arithmetic's operation is unknown
+# @returnStatus 3 If value1 or value2 are not numeric
+# @returnStatus 4 If scale parameter is not an integer
+function math ()
+{
+    local op="$1"
+    if [[ "+" != "$op" && "-" != "$op" && "*" != "$op" && "/" != "$op" && "%" != "$op" ]]; then
+        echo 0
+        return 2
+    fi
+    local val1="$2"
+    if ! isNumeric "$val1"; then
+        echo 0
+        return 3
+    fi
+    local val2="$3"
+    if ! isNumeric "$val2"; then
+        echo 0
+        return 3
+    fi
+    declare -i scale=0
+    if isInt "$4"; then
+        scale="$4"
+    elif [[ -z "$4" ]]; then
+        if [[ "%" != "$op" ]]; then
+            scale=2;
+        fi
+    else
+        return 4
+    fi
+
+    __calculate "( ${val1} ${op} ${val2} )" ${scale}
+}
+
+##
+# Addition with float precision
+# @param mixed $1 Value1
+# @param mixed $2 Value2
+# @param int $3 Scale, number of digits after decimal point
+# @return numeric
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If arithmetic's operation is unknown
+# @returnStatus 3 If value1 or value2 are not numeric
+# @returnStatus 4 If scale parameter is not an integer
+function add ()
+{
+    math "+" "$1" "$2" "$3"
+}
+
+##
+# Division with float precision
+# @param mixed $1 Value1
+# @param mixed $2 Value2
+# @param int $3 Scale, number of digits after decimal point
+# @return numeric
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If arithmetic's operation is unknown
+# @returnStatus 3 If value1 or value2 are not numeric
+# @returnStatus 4 If scale parameter is not an integer
+function divide ()
+{
+    math "/" "$1" "$2" "$3"
+}
+
+##
+# Multiplication with float precision
+# @param mixed $1 Value1
+# @param mixed $2 Value2
+# @param int $3 Scale, number of digits after decimal point
+# @return numeric
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If arithmetic's operation is unknown
+# @returnStatus 3 If value1 or value2 are not numeric
+# @returnStatus 4 If scale parameter is not an integer
+function multiply ()
+{
+    math "*" "$1" "$2" "$3"
+}
+
+##
+# Modulo with float precision
+# @param mixed $1 Value1
+# @param mixed $2 Value2
+# @param int $3 Scale, number of digits after decimal point
+# @return numeric
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If arithmetic's operation is unknown
+# @returnStatus 3 If value1 or value2 are not numeric
+# @returnStatus 4 If scale parameter is not an integer
+function modulo ()
+{
+    math "%" "$1" "$2" "$3"
+}
+
+##
+# Subtraction with float precision
+# @param mixed $1 Value1
+# @param mixed $2 Value2
+# @param int $3 Scale, number of digits after decimal point
+# @return numeric
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If arithmetic's operation is unknown
+# @returnStatus 3 If value1 or value2 are not numeric
+# @returnStatus 4 If scale parameter is not an integer
+function subtract ()
+{
+    math "-" "$1" "$2" "$3"
 }
 
 ##
@@ -220,5 +384,35 @@ function numericType ()
 # @return int
 function rand ()
 {
-    echo -n ${RANDOM}
+    echo ${RANDOM}
+}
+
+##
+# Rounds a float
+# @param float $1 Value
+# @param int $2 Scale / Precision
+# @return float
+# @returnStatus 1 If bc or awk are not available in current environment
+# @returnStatus 2 If value is not numeric
+# @returnStatus 3 If scale parameter is not an integer
+function round()
+{
+    local value="$1"
+    if ! isNumeric "$value"; then
+        echo 0
+        return 2
+    fi
+    declare -i scale=0
+    if isInt "$2"; then
+        scale="$2"
+    elif [[ -n "$2" ]]; then
+        return 3
+    fi
+
+    local sign="+"
+    if [[ "$value" == "-"* ]]; then
+        sign="-"
+    fi
+
+    __calculate "(((10^${scale}) * ${value}) ${sign} 0.5) / (10^${scale})" ${scale}
 }
