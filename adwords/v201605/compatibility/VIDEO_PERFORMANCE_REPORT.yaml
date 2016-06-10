@@ -1,0 +1,17 @@
+ConversionTypeName      : AverageCpm AverageCpv Clicks ConversionRate Conversions Cost CostPerConversion Ctr EngagementRate Engagements Impressions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+ConversionCategoryName  : AverageCpm AverageCpv Clicks ConversionRate Conversions Cost CostPerConversion Ctr EngagementRate Engagements Impressions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+Engagements             : ClickType ConversionCategoryName ConversionTypeName
+EngagementRate          : ConversionCategoryName ConversionTypeName
+Ctr                     : ConversionCategoryName ConversionTypeName
+Cost                    : ConversionCategoryName ConversionTypeName
+VideoQuartile100Rate    : ConversionCategoryName ConversionTypeName
+VideoQuartile25Rate     : ConversionCategoryName ConversionTypeName
+Impressions             : ConversionCategoryName ConversionTypeName
+VideoQuartile50Rate     : ConversionCategoryName ConversionTypeName
+Clicks                  : ConversionCategoryName ConversionTypeName
+VideoQuartile75Rate     : ConversionCategoryName ConversionTypeName
+VideoViewRate           : ConversionCategoryName ConversionTypeName
+AverageCpv              : ConversionCategoryName ConversionTypeName
+AverageCpm              : ConversionCategoryName ConversionTypeName
+VideoViews              : ConversionCategoryName ConversionTypeName
+ClickType               : Engagements
