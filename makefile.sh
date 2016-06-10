@@ -8,8 +8,9 @@ echo "----------"
 echo
 
 # Workspace
-rootDir=$(pwd)
-shell=$(if [ ! -z "$ZSH_NAME" ]; then echo 'zsh'; else echo 'bash'; fi)
+declare -r rootDir=$(pwd)
+declare -r shell=$(if [ ! -z "$ZSH_NAME" ]; then echo 'zsh'; else echo 'bash'; fi)
+declare -r -i hasAwk="$(if [[ -z "$(type -p awk)" ]]; then echo 0; else echo 1; fi)"
 declare -i error=0
 
 source "${rootDir}/conf/awql.sh"
@@ -27,19 +28,32 @@ else
     bashFile="${AWQL_USER_HOME}/.${shell}rc"
 fi
 
+# Check for AWK version
+# @see http://www.unix.com/shell-programming-and-scripting/142154-mawk-does-not-support-length-array.html
+if [[ ${hasAwk} -eq 0 || "$(awk 'BEGIN { a[1]="string"; print length(a) }')" != 1 ]]; then
+    pError "Awk is a mandatory tool, please install it and retry installation after it."
+    if [[ "${AWQL_OS}" == "Darwin" ]]; then
+        command="brew install gawk"
+    else
+        command="sudo apt-get update; sudo apt-get install gawk"
+    fi
+    pInfo "You can use the following command for that: ${command}"
+    exit 1
+fi
+
 # Add alias in bashrc
 if [[ ! -f "$bashFile" ]]; then
     pFatal "Fail to detect shell environment, installation aborded"
 elif [[ -z "$(grep "alias awql" ${bashFile})" ]]; then
     echo >> "$bashFile"
     if [[ $? -ne 0 ]]; then
-        pFatal "Fail to create alias to AWQL command in path: ${bashFile}"
+        pError "Fail to create alias to AWQL command in path: ${bashFile}"
     fi
 
     echo "# Added by AWQL makefile" >> "$bashFile"
-    if isUserTimeTodoExceeded "${AWQL_AUTH_DIR}/custom/auth.sh" "0.100"; then
-        # Slow machine, do not load current environment
-        echo "alias awql='env -i bash ${rootDir}/awql.sh'" >> "$bashFile"
+    if isUserTimeTodoExceeded "${AWQL_AUTH_DIR}/init.sh" "0.050"; then
+        # Slow machine, do not load current environment, just keep TERM variable for tput command
+        echo "alias awql='env -i TERM=${TERM} bash ${rootDir}/awql.sh'" >> "$bashFile"
     else
         echo "alias awql='${rootDir}/awql.sh'" >> "$bashFile"
     fi
