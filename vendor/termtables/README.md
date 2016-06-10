@@ -152,7 +152,7 @@ Available options for `limit.awk`, see list below:
 
 ### Aggregate data by columns
 
-Group sample datas by Campaign ID and sum the clicks, impressions and cost.
+Group the sample datas by Campaign ID and sum the clicks, impressions and cost.
 
 ```bash
 $ awk -v columns="2 3 4 5 6" -f limit.awk tests/unit/sample.csv | awk -v groupByColumns="1" -v sumColumns="3 4 5" -v omitHeader=1 -v header="Campaign Id,Name,Sum of clicks, Sum of impression, Sum of cost" -f aggregate.awk | awk -f termTable.awk
@@ -177,3 +177,17 @@ Available options for `aggregate.awk`, see list below:
 * `minColumns`, list of columns per index where find the min value, separated by space
 * `sumColumns`, list of columns by index to sum, separated by space
 * `groupByColumns`, list of columns by index to use to group, separated by space
+
+
+## Known limits
+
+The length() function is not supported in mawk, but I use it in these scripts. So prefered instead gawk, nawk or original awk.
+To find the current awk version, use the following command : 
+
+```bash
+awk -Wversion 2>/dev/null || awk --version
+```
+
+On MacOs, you can use brew to install it: ```brew install gawk```
+
+On Debian based GNU/Linux, use APT package manager: ```sudo apt-get update; sudo apt-get install gawk```
