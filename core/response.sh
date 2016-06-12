@@ -313,6 +313,7 @@ function awqlResponse ()
                 echo "${AWQL_INTERNAL_ERROR_LIMIT}"
                 return 1
             fi
+            fileSize="$(wc -l < "$file")"
         fi
 
         # Print results
