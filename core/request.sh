@@ -126,7 +126,7 @@ function __queryWithoutDisplayMode ()
 #
 # @response
 # > ADWORDS_ID      : 123-456-7890
-# > API_VERSION     : v201601
+# > API_VERSION     : v201605
 # > VERTICAL_MODE   : 0
 # > VERBOSE         : 0
 # > CACHING         : 0

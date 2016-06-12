@@ -15,13 +15,13 @@ declare -r TEST_STATEMENT_SHOW_WITH_FILE="${TEST_STATEMENT_TEST_DIR}/show-with.c
 declare -r TEST_STATEMENT_SHOW_ERROR_FILE="${TEST_STATEMENT_TEST_DIR}/123456789.txt"
 declare -r TEST_STATEMENT_SHOW_TEST_FILE="${TEST_STATEMENT_TEST_DIR}/123456789${AWQL_FILE_EXT}"
 declare -r TEST_STATEMENT_SHOW_RESPONSE="([FILE]=\"${TEST_STATEMENT_SHOW_TEST_FILE}\" [CACHING]=0)"
-declare -r TEST_STATEMENT_SHOW_BASIC='([FULL]="0" [QUERY]="SHOW TABLES" [STATEMENT]="SHOW TABLES" [METHOD]="show" [API_VERSION]="v201601" )'
-declare -r TEST_STATEMENT_SHOW_FULL='([FULL]="1" [QUERY]="show full tables" [STATEMENT]="show full tables" [METHOD]="show" [API_VERSION]="v201601" )'
-declare -r TEST_STATEMENT_SHOW_FULL_LIKE='([FULL]="1" [QUERY]="SHOW FULL TABLES LIKE \"CAMPAIGN%\"" [STATEMENT]="SHOW FULL TABLES" [LIKE]="CAMPAIGN%" [METHOD]="show" [API_VERSION]="v201601" )'
-declare -r TEST_STATEMENT_SHOW_LIKE="([FULL]=\"0\" [QUERY]=\"show tables like 'CAMPAIGN%'\" [STATEMENT]=\"show tables\" [LIKE]=\"CAMPAIGN%\" [METHOD]=\"show\" [API_VERSION]=\"v201601\" )"
-declare -r TEST_STATEMENT_SHOW_EMPTY_LIKE='([FULL]="0" [QUERY]="SHOW TABLES LIKE \"\"" [STATEMENT]="SHOW TABLES" [LIKE]="" [METHOD]="show" [API_VERSION]="v201601" )'
-declare -r TEST_STATEMENT_SHOW_FULL_WITH="([FULL]=\"1\" [QUERY]=\"show full tables with 'ViewThroughConversions'\" [STATEMENT]=\"show full tables\" [METHOD]=\"show\" [WITH]=\"ViewThroughConversions\" [API_VERSION]=\"v201601\" )"
-declare -r TEST_STATEMENT_SHOW_WITH="([FULL]=\"0\" [QUERY]=\"SHOW TABLES WITH 'ViewThroughConversions'\" [STATEMENT]=\"SHOW TABLES\" [METHOD]=\"show\" [WITH]=\"ViewThroughConversions\" [API_VERSION]=\"v201601\" )"
+declare -r TEST_STATEMENT_SHOW_BASIC='([FULL]="0" [QUERY]="SHOW TABLES" [STATEMENT]="SHOW TABLES" [METHOD]="show" [API_VERSION]="v201605" )'
+declare -r TEST_STATEMENT_SHOW_FULL='([FULL]="1" [QUERY]="show full tables" [STATEMENT]="show full tables" [METHOD]="show" [API_VERSION]="v201605" )'
+declare -r TEST_STATEMENT_SHOW_FULL_LIKE='([FULL]="1" [QUERY]="SHOW FULL TABLES LIKE \"CAMPAIGN%\"" [STATEMENT]="SHOW FULL TABLES" [LIKE]="CAMPAIGN%" [METHOD]="show" [API_VERSION]="v201605" )'
+declare -r TEST_STATEMENT_SHOW_LIKE="([FULL]=\"0\" [QUERY]=\"show tables like 'CAMPAIGN%'\" [STATEMENT]=\"show tables\" [LIKE]=\"CAMPAIGN%\" [METHOD]=\"show\" [API_VERSION]=\"v201605\" )"
+declare -r TEST_STATEMENT_SHOW_EMPTY_LIKE='([FULL]="0" [QUERY]="SHOW TABLES LIKE \"\"" [STATEMENT]="SHOW TABLES" [LIKE]="" [METHOD]="show" [API_VERSION]="v201605" )'
+declare -r TEST_STATEMENT_SHOW_FULL_WITH="([FULL]=\"1\" [QUERY]=\"show full tables with 'ViewThroughConversions'\" [STATEMENT]=\"show full tables\" [METHOD]=\"show\" [WITH]=\"ViewThroughConversions\" [API_VERSION]=\"v201605\" )"
+declare -r TEST_STATEMENT_SHOW_WITH="([FULL]=\"0\" [QUERY]=\"SHOW TABLES WITH 'ViewThroughConversions'\" [STATEMENT]=\"SHOW TABLES\" [METHOD]=\"show\" [WITH]=\"ViewThroughConversions\" [API_VERSION]=\"v201605\" )"
 
 
 readonly TEST_AWQL_SHOW="-11-11-11-01-01-01-01-01-01-01-0"

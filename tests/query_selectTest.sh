@@ -4,7 +4,7 @@ source ../vendor/bash-packages/testing.sh
 source ../core/query/select.sh
 
 # Default entries
-declare -r TEST_QUERY_API_VERSION="v201603"
+declare -r TEST_QUERY_API_VERSION="v201605"
 declare -r TEST_QUERY_BAD_API_VERSION="v0883"
 declare -r TEST_QUERY_INVALID_METHOD="UPDATE RV_REPORT SET R='v'"
 # > Select

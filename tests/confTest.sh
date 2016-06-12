@@ -4,7 +4,7 @@ source ../vendor/bash-packages/testing.sh
 source ../conf/awql.sh
 
 # Default entries
-declare -r TEST_CONF_API_VERSION="v201603"
+declare -r TEST_CONF_API_VERSION="v201605"
 declare -r TEST_CONF_BAD_API_VERSION="v0883"
 declare -r TEST_CONF_TABLE="CAMPAIGN_PERFORMANCE_REPORT"
 declare -r TEST_CONF_VIEW="CAMPAIGN_REPORT"
