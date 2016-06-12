@@ -1,7 +1,6 @@
-ORIGIN    : SELECT AdGroupId,Id,CampaignId,Criteria,Status,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,BidModifier FROM AUDIENCE_PERFORMANCE_REPORT WHERE Impressions > O DUTING TODAY ORDER BY Clicks ASC
+ORIGIN    : SELECT AdGroupId,Id,CampaignId,Criteria,Status,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,BidModifier FROM AUDIENCE_PERFORMANCE_REPORT DURING TODAY ORDER BY Clicks ASC
 NAMES     : AdGroupId Id CampaignId Criteria Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition BidModifier
 FIELDS    : AdGroupId Id CampaignId Criteria Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition BidModifier
 TABLE     : AUDIENCE_PERFORMANCE_REPORT
-WHERE     : Impressions > O
 DURING    : TODAY
 ORDER     : Clicks ASC
