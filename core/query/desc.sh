@@ -21,7 +21,7 @@ fi
 # > VIEW            : 0
 # > VERTICAL_MODE   : 1
 # > QUERY           : DESC FULL CAMPAIGN_PERFORMANCE_REPORT CampaignId
-# > API_VERSION     : v201601
+# > API_VERSION     : v201605
 #
 # @param string $1 Query
 # @param string $2 apiVersion

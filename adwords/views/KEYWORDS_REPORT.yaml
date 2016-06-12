@@ -1,6 +1,6 @@
-ORIGIN    : SELECT Device,AdGroupId,Id,CampaignId,Impressions,CpcBid,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,FirstPageCpc,AveragePosition,QualityScore,KeywordMatchType,SearchImpressionShare,TopOfPageCpc FROM PRODUCT_PARTITION_REPORT DURING TODAY ORDER BY Clicks ASC
-NAMES     : Device AdGroupId Id CampaignId Impressions CpcBid Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc FirstPageCpc AveragePosition QualityScore KeywordMatchType SearchImpressionShare TopOfPageCpc
-FIELDS    : Device AdGroupId Id CampaignId Impressions CpcBid Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc FirstPageCpc AveragePosition QualityScore KeywordMatchType SearchImpressionShare TopOfPageCpc
-TABLE     : PRODUCT_PARTITION_REPORT
+ORIGIN    : SELECT Device,AdGroupId,Id,CampaignId,Impressions,CpcBid,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,QualityScore,KeywordMatchType,SearchImpressionShare,TopOfPageCpc FROM KEYWORDS_PERFORMANCE_REPORT DURING LAST_30_DAYS ORDER BY Date ASC
+NAMES     : Device AdGroupId Id CampaignId Impressions CpcBid Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition QualityScore KeywordMatchType SearchImpressionShare TopOfPageCpc
+FIELDS    : Device AdGroupId Id CampaignId Impressions CpcBid Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition QualityScore KeywordMatchType SearchImpressionShare TopOfPageCpc
+TABLE     : KEYWORDS_PERFORMANCE_REPORT
 DURING    : TODAY
 ORDER     : Clicks ASC

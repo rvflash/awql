@@ -1,0 +1,39 @@
+ConversionTypeName               : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRate Clicks ConvertedClicks Cost CostPerConvertedClick Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions ValuePerConvertedClick VideoViewRate VideoViews
+ConversionTrackerId              : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRate Clicks ConvertedClicks Cost CostPerConvertedClick Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions ValuePerConvertedClick VideoViewRate VideoViews
+ConversionCategoryName           : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRate Clicks ConvertedClicks Cost CostPerConvertedClick Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions ValuePerConvertedClick VideoViewRate VideoViews
+ClickType                        : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions Engagements ValuePerAllConversion
+Slot                             : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Engagements                      : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpv                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ClickConversionRate              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Clicks                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionTypes                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Interactions                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpe                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionRate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ConvertedClicks                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Cost                             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Impressions                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+CostPerConvertedClick            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Ctr                              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+EngagementRate                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpm                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AveragePosition                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpc                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ValuePerConvertedClick           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCpm                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCtr                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewImpressions            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurability          : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableCost         : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableImpressions  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewViewability            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViews                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCost                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViewRate                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ValuePerAllConversion            : ClickType Slot
+AllConversionRate                : ClickType Slot
+AllConversions                   : ClickType Slot
+CostPerAllConversion             : ClickType Slot
+CrossDeviceConversions           : ClickType Slot
+AllConversionValue               : ClickType Slot

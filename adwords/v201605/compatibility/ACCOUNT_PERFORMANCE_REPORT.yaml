@@ -1,0 +1,49 @@
+ConversionCategoryName            : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRate Clicks ContentBudgetLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare ConvertedClicks Cost CostPerConvertedClick Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions InvalidClickRate InvalidClicks SearchBudgetLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare ValuePerConvertedClick VideoViewRate VideoViews
+ConversionTrackerId               : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRate Clicks ContentBudgetLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare ConvertedClicks Cost CostPerConvertedClick Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions InvalidClickRate InvalidClicks SearchBudgetLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare ValuePerConvertedClick VideoViewRate VideoViews
+ConversionTypeName                : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition ClickConversionRate Clicks ContentBudgetLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare ConvertedClicks Cost CostPerConvertedClick Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions InvalidClickRate InvalidClicks SearchBudgetLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare ValuePerConvertedClick VideoViewRate VideoViews
+Slot                              : AllConversionRate AllConversionValue AllConversions ContentBudgetLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare CostPerAllConversion CrossDeviceConversions HourOfDay InvalidClickRate InvalidClicks SearchBudgetLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare ValuePerAllConversion
+ClickType                         : AllConversionRate AllConversionValue AllConversions ContentBudgetLostImpressionShare ContentImpressionShare ContentRankLostImpressionShare CostPerAllConversion CrossDeviceConversions Engagements SearchBudgetLostImpressionShare SearchExactMatchImpressionShare SearchImpressionShare SearchRankLostImpressionShare ValuePerAllConversion
+HourOfDay                         : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions InvalidClickRate InvalidClicks Slot ValuePerAllConversion
+ContentBudgetLostImpressionShare  : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+SearchBudgetLostImpressionShare   : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+SearchExactMatchImpressionShare   : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+SearchImpressionShare             : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+SearchRankLostImpressionShare     : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+InvalidClicks                     : ConversionCategoryName ConversionTrackerId ConversionTypeName HourOfDay Slot
+ContentImpressionShare            : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+ContentRankLostImpressionShare    : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName Slot
+InvalidClickRate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName HourOfDay Slot
+Engagements                       : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName
+CrossDeviceConversions            : ClickType HourOfDay Slot
+ConvertedClicks                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Cost                              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+CostPerAllConversion              : ClickType HourOfDay Slot
+VideoViews                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+CostPerConvertedClick             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AllConversionValue                : ClickType HourOfDay Slot
+Ctr                               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCpm                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewViewability             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableImpressions   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableCost          : ConversionCategoryName ConversionTrackerId ConversionTypeName
+EngagementRate                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionRate                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ValuePerAllConversion             : ClickType HourOfDay Slot
+ActiveViewCtr                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCost                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ClickConversionRate               : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpc                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpe                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpm                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpv                        : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AveragePosition                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViewRate                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Clicks                            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Interactions                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Impressions                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AllConversions                    : ClickType HourOfDay Slot
+AllConversionRate                 : ClickType HourOfDay Slot
+ActiveViewMeasurability           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionTypes                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ValuePerConvertedClick            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewImpressions             : ConversionCategoryName ConversionTrackerId ConversionTypeName

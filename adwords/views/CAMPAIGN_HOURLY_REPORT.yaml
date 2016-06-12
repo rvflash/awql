@@ -1,4 +1,4 @@
-ORIGIN    : SELECT HourOfDay,Device,CampaignId,CampaignName,CampaignStatus,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,SearchImpressionShare FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > O DURING TODAY ORDER BY HourOfDay ASC
+ORIGIN    : SELECT HourOfDay,Device,CampaignId,CampaignName,CampaignStatus,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,SearchImpressionShare FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > 0 DURING TODAY ORDER BY HourOfDay ASC
 NAMES     : Hour Device Id Name Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
 FIELDS    : HourOfDay Device CampaignId CampaignName CampaignStatus Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
 TABLE     : CAMPAIGN_PERFORMANCE_REPORT
