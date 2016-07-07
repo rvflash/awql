@@ -27,6 +27,11 @@ BEGIN {
         start++;
     }
 
+    # Declare default values
+    groupSize=1;
+    split("", count);
+    split("", order);
+
     # Convert string args to array
     splitFlip(avgColumns, averages, " ");
     splitFlip(distinctColumns, distincts, " ");
@@ -57,6 +62,12 @@ BEGIN {
     # If no group has been defined but first column requested as distinct value, use it for grouping
     if ("" == group && 1 in distincts) {
         group=columns[1];
+    }
+    # Keep original order by
+    if (group in count) {
+        # awk seems to not have pattern for "not in array"
+    } else {
+        order[groupSize++]=group;
     }
     aggregating[group]=$0;
     count[group]++;
@@ -93,7 +104,8 @@ END {
         print header;
     }
 
-    for (group in aggregating) {
+    for (pos=1; pos < groupSize; pos++) {
+        group=order[pos];
         numberFields=splitLine(aggregating[group], columns);
         for (column=1; column <= numberFields; column++) {
             if (column in counts) {
@@ -164,6 +176,8 @@ function printNumber (number, decimal)
 # @return int
 function splitFlip (string, array, separator)
 {
+    # Declare array to manage empty string
+    split("", array);
     split(string, arr, separator);
     for (key in arr) {
         array[arr[key]]=key;
