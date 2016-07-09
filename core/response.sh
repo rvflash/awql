@@ -81,7 +81,7 @@ function __aggregateRows ()
         return 0
     fi
 
-    awk -v ${aggregateOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/aggregate.awk" "$file" > "$wrkFile"
+    awk ${aggregateOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/aggregate.awk" "$file" > "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
     fi
@@ -127,6 +127,7 @@ function __limitRows ()
     else
         limitOptions+=("-v rowCount=${limit[0]}")
     fi
+
     awk ${limitOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/limit.awk" "$file" > "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
