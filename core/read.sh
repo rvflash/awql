@@ -209,7 +209,7 @@ function awqlRead ()
     echo -n "$prompt"
 
      # Reset terminal to current state when we exit
-    trap "stty $(stty -g)" EXIT
+    trap "stty $(stty -g); exit" EXIT
 
     # Disable echo and special characters, set input timeout to 0.2 seconds
     stty -echo -icanon time 2

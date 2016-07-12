@@ -563,6 +563,7 @@ function awqlSelectQuery ()
         fi
 
         # Validate field's name
+        field="$(trim "$field")"
         if [[ -z "${tableFields["$field"]}" ]]; then
             echo "${AWQL_QUERY_ERROR_UNKNOWN_FIELD} named '${field}'"
             return 2
