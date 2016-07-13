@@ -29,14 +29,14 @@ function __aggregateRows ()
         return 1
     fi
     declare -A aggregates="$2"
-    if [[ 0 -eq "${#aggregates[@]}" ]]; then
+    local groupBy="$3"
+    if [[ 0 -eq "${#aggregates[@]}" && -z "$groupBy" ]]; then
         echo "$file"
         return 0
     fi
-    local groupBy="$3"
 
     local extendedFile=""
-    declare -a aggregateOptions=()
+    declare -a aggregateOptions=("-v omitHeader=1")
     if [[ -n "$groupBy" ]]; then
         extendedFile+="${AWQL_AGGREGATE_GROUP}${groupBy// /-}"
         aggregateOptions+=("-v groupByColumns=\"$groupBy\"")
@@ -81,7 +81,8 @@ function __aggregateRows ()
         return 0
     fi
 
-    awk ${aggregateOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/aggregate.awk" "$file" > "$wrkFile"
+    # Move header line in working file and add aggregated data
+    head -1 "$file" > "$wrkFile" && awk ${aggregateOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/aggregate.awk" "$file" >> "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
     fi
@@ -119,8 +120,7 @@ function __limitRows ()
     fi
 
     # Keep only first line for column names and lines in bounces
-    declare -a limitOptions=()
-    limitOptions+=("-v withHeader=1")
+    declare -a limitOptions=("-v withHeader=1")
     if [[ ${limitRange} -eq 2 ]]; then
         limitOptions+=("-v rowOffset=${limit[0]}")
         limitOptions+=("-v rowCount=${limit[1]}")
@@ -165,10 +165,8 @@ function __sortingRows ()
     fi
 
     # Input field separator
-    declare -a sortOptions=()
-    sortOptions+=("-t,")
-
     local sort=""
+    declare -a sortOptions=("-t,")
     declare -i pos=0
     for (( pos=0; pos < ${numberOrders}; pos++ )); do
         declare -a order="(${orders[${pos}]})"
@@ -184,7 +182,7 @@ function __sortingRows ()
         sortOptions+=("$sort")
     done
 
-    # Remove header line for sorting, use the default language for output, and forces sorting to be bytewise
+    # Temporary remove header line for sorting, use the default language for output, and forces sorting to be bytewise
     head -1 "$file" > "$wrkFile" && sed 1d "$file" | LC_ALL=C sort ${sortOptions[@]} >> "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
