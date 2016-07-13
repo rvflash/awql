@@ -323,3 +323,13 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 ## Require
 
 Bash 4.3.11+
+
+### On OS X
+
+We need a modern bash and gawk.
+
+```bash
+# /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+# brew install bash
+# brew install gawk
+```
