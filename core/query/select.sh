@@ -439,8 +439,8 @@ function awqlSelectQuery ()
         # Missing during content
         echo "${AWQL_QUERY_ERROR_DURING}"
         return 2
-    elif [[ ${components["${AWQL_QUERY_ERROR_LIMIT}"]+rv} && -z "${components["${AWQL_QUERY_ERROR_LIMIT}"]}" ]]; then
-        # Missing during content
+    elif [[ ${components["${AWQL_REQUEST_LIMIT}"]+rv} && -z "${components["${AWQL_REQUEST_LIMIT}"]}" ]]; then
+        # Missing limit content
         echo "${AWQL_QUERY_ERROR_LIMIT}"
         return 2
     fi

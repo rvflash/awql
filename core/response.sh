@@ -29,51 +29,13 @@ function __aggregateRows ()
         return 1
     fi
     declare -A aggregates="$2"
-    if [[ 0 -eq "${#aggregates[@]}" ]]; then
+    local groupBy="$3"
+    if [[ 0 -eq "${#aggregates[@]}" && -z "$groupBy" ]]; then
         echo "$file"
         return 0
     fi
-    local groupBy="$3"
 
-    local extendedFile=""
-    declare -a aggregateOptions=()
-    if [[ -n "$groupBy" ]]; then
-        extendedFile+="${AWQL_AGGREGATE_GROUP}${groupBy// /-}"
-        aggregateOptions+=("-v groupByColumns=\"$groupBy\"")
-    fi
-
-    local type="" fields=""
-    for type in "${!aggregates[@]}"; do
-        fields="${aggregates["${type}"]}"
-        if [[ -z "$fields" ]]; then
-            return 1
-        fi
-        case "$type" in
-            "${AWQL_AGGREGATE_AVG}")
-                aggregateOptions+=("-v avgColumns=\"$fields\"")
-                ;;
-            "${AWQL_AGGREGATE_DISTINCT}")
-                aggregateOptions+=("-v distinctColumns=\"$fields\"")
-                ;;
-            "${AWQL_AGGREGATE_COUNT}")
-                aggregateOptions+=("-v countColumns=\"$fields\"")
-                ;;
-            "${AWQL_AGGREGATE_MAX}")
-                aggregateOptions+=("-v maxColumns=\"$fields\"")
-                ;;
-            "${AWQL_AGGREGATE_MIN}")
-                aggregateOptions+=("-v minColumns=\"$fields\"")
-                ;;
-            "${AWQL_AGGREGATE_SUM}")
-                aggregateOptions+=("-v sumColumns=\"$fields\"")
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-        extendedFile+="${type}${fields// /-}"
-    done
-
+    local extendedFile="$(checksum "${AWQL_AGGREGATE_GROUP}${groupBy// /-} ${aggregates[@]}")"
     local wrkFile="${file//${AWQL_FILE_EXT}/___${extendedFile}${AWQL_FILE_EXT}}"
     if [[ -f "$wrkFile" ]]; then
         # Job already done
@@ -81,12 +43,20 @@ function __aggregateRows ()
         return 0
     fi
 
-    awk ${aggregateOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/aggregate.awk" "$file" > "$wrkFile"
+    # Move header line in working file and add aggregated data
+    head -1 "$file" > "$wrkFile" && awk -v omitHeader=1 -v groupByColumns="$groupBy" \
+                                        -v avgColumns="${aggregates["${AWQL_AGGREGATE_AVG}"]}" \
+                                        -v distinctColumns="${aggregates["${AWQL_AGGREGATE_DISTINCT}"]}" \
+                                        -v countColumns="${aggregates["${AWQL_AGGREGATE_COUNT}"]}" \
+                                        -v maxColumns="${aggregates["${AWQL_AGGREGATE_MAX}"]}" \
+                                        -v minColumns="${aggregates["${AWQL_AGGREGATE_MIN}"]}" \
+                                        -v sumColumns="${aggregates["${AWQL_AGGREGATE_SUM}"]}" \
+                                        -f "${AWQL_TERM_TABLES_DIR}/aggregate.awk" "$file" >> "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
+    else
+        echo "$wrkFile"
     fi
-
-    echo "$wrkFile"
 }
 
 ##
@@ -119,8 +89,7 @@ function __limitRows ()
     fi
 
     # Keep only first line for column names and lines in bounces
-    declare -a limitOptions=()
-    limitOptions+=("-v withHeader=1")
+    declare -a limitOptions=("-v withHeader=1")
     if [[ ${limitRange} -eq 2 ]]; then
         limitOptions+=("-v rowOffset=${limit[0]}")
         limitOptions+=("-v rowCount=${limit[1]}")
@@ -131,9 +100,9 @@ function __limitRows ()
     awk ${limitOptions[@]} -f "${AWQL_TERM_TABLES_DIR}/limit.awk" "$file" > "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
+    else
+        echo "$wrkFile"
     fi
-
-    echo "$wrkFile"
 }
 
 ##
@@ -165,10 +134,8 @@ function __sortingRows ()
     fi
 
     # Input field separator
-    declare -a sortOptions=()
-    sortOptions+=("-t,")
-
     local sort=""
+    declare -a sortOptions=("-t,")
     declare -i pos=0
     for (( pos=0; pos < ${numberOrders}; pos++ )); do
         declare -a order="(${orders[${pos}]})"
@@ -184,13 +151,13 @@ function __sortingRows ()
         sortOptions+=("$sort")
     done
 
-    # Remove header line for sorting, use the default language for output, and forces sorting to be bytewise
+    # Temporary remove header line for sorting, use the default language for output, and forces sorting to be bytewise
     head -1 "$file" > "$wrkFile" && sed 1d "$file" | LC_ALL=C sort ${sortOptions[@]} >> "$wrkFile"
     if [[ $? -ne 0 ]]; then
         return 1
+    else
+        echo "$wrkFile"
     fi
-
-    echo "$wrkFile"
 }
 
 ##
@@ -300,21 +267,18 @@ function awqlResponse ()
                 echo "${AWQL_INTERNAL_ERROR_AGGREGATES}"
                 return 1
             fi
-
             # Manage order clause
             file="$(__sortingRows "$file" "${request["${AWQL_REQUEST_ORDER}"]}")"
             if [[ $? -ne 0 ]]; then
                 echo "${AWQL_INTERNAL_ERROR_ORDER}"
                 return 1
             fi
-
             # Manage limit clause
             file="$(__limitRows "$file" "${request["${AWQL_REQUEST_LIMIT}"]}")"
             if [[ $? -ne 0 ]]; then
                 echo "${AWQL_INTERNAL_ERROR_LIMIT}"
                 return 1
             fi
-
             # Update the file size
             fileSize="$(wc -l < "$file")"
         fi
