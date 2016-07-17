@@ -182,7 +182,7 @@ function awqlRead ()
 
     # Terminal size
     declare -i windowWidth
-    windowWidth=$(windowSize "width")
+    windowWidth="$(windowSize "width")"
     if [[ $? -ne 0 ]]; then
         echo "InternalError.USE_ONLY_IN_TERMINAL"
         return 1
