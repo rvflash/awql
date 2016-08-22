@@ -1,0 +1,39 @@
+ConversionCategoryName           : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+ConversionTypeName               : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+ConversionTrackerId              : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+Slot                             : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Engagements                      : ClickType ConversionCategoryName ConversionTrackerId ConversionTypeName
+AveragePosition                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile25Rate              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile100Rate             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+EngagementRate                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Impressions                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionTypes                 : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Clicks                           : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpe                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+InteractionRate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Ctr                              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Cost                             : ConversionCategoryName ConversionTrackerId ConversionTypeName
+Interactions                     : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpm                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpv                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCpc                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViewRate                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCpm                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewCtr                    : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewImpressions            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurability          : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableCost         : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewMeasurableImpressions  : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ActiveViewViewability            : ConversionCategoryName ConversionTrackerId ConversionTypeName
+AverageCost                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoViews                       : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile75Rate              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+VideoQuartile50Rate              : ConversionCategoryName ConversionTrackerId ConversionTypeName
+ClickType                        : Engagements
+ValuePerAllConversion            : Slot
+AllConversionRate                : Slot
+AllConversions                   : Slot
+AllConversionValue               : Slot
+CostPerAllConversion             : Slot
+CrossDeviceConversions           : Slot
