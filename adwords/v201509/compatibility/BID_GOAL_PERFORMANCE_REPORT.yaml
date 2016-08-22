@@ -1,7 +1,0 @@
-HourOfDay                                      : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
-CrossDeviceConversions                         : HourOfDay
-CostPerAllConversion                           : HourOfDay
-AllConversionValue                             : HourOfDay
-ValuePerAllConversion                          : HourOfDay
-AllConversions                                 : HourOfDay
-AllConversionRate                              : HourOfDay
