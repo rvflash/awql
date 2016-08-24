@@ -1,0 +1,30 @@
+ConversionCategoryName           : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+ConversionTypeName               : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoQuartile100Rate VideoQuartile25Rate VideoQuartile50Rate VideoQuartile75Rate VideoViewRate VideoViews
+Engagements                      : ClickType ConversionCategoryName ConversionTypeName
+VideoQuartile100Rate             : ConversionCategoryName ConversionTypeName
+Interactions                     : ConversionCategoryName ConversionTypeName
+InteractionRate                  : ConversionCategoryName ConversionTypeName
+Impressions                      : ConversionCategoryName ConversionTypeName
+Clicks                           : ConversionCategoryName ConversionTypeName
+EngagementRate                   : ConversionCategoryName ConversionTypeName
+Ctr                              : ConversionCategoryName ConversionTypeName
+AverageCpv                       : ConversionCategoryName ConversionTypeName
+AverageCpm                       : ConversionCategoryName ConversionTypeName
+AverageCpe                       : ConversionCategoryName ConversionTypeName
+InteractionTypes                 : ConversionCategoryName ConversionTypeName
+AverageCost                      : ConversionCategoryName ConversionTypeName
+AverageCpc                       : ConversionCategoryName ConversionTypeName
+VideoQuartile25Rate              : ConversionCategoryName ConversionTypeName
+ActiveViewMeasurableImpressions  : ConversionCategoryName ConversionTypeName
+ActiveViewCpm                    : ConversionCategoryName ConversionTypeName
+ActiveViewCtr                    : ConversionCategoryName ConversionTypeName
+ActiveViewImpressions            : ConversionCategoryName ConversionTypeName
+ActiveViewMeasurability          : ConversionCategoryName ConversionTypeName
+ActiveViewMeasurableCost         : ConversionCategoryName ConversionTypeName
+Cost                             : ConversionCategoryName ConversionTypeName
+VideoViews                       : ConversionCategoryName ConversionTypeName
+ActiveViewViewability            : ConversionCategoryName ConversionTypeName
+VideoViewRate                    : ConversionCategoryName ConversionTypeName
+VideoQuartile75Rate              : ConversionCategoryName ConversionTypeName
+VideoQuartile50Rate              : ConversionCategoryName ConversionTypeName
+ClickType                        : Engagements

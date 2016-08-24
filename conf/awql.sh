@@ -3,9 +3,12 @@
 # Environment
 declare -r AWQL_SUCCESS_STATUS="OK"
 declare -r AWQL_ERROR_STATUS="FAILED"
-declare -r AWQL_USER_NAME="$(logname)"
-declare -r AWQL_USER_HOME="$(sudo -u ${AWQL_USER_NAME} -H sh -c 'echo "$HOME"')"
 declare -r AWQL_OS="$(uname -s)"
+declare -r AWQL_USER_HOME="$(sh -c 'echo "$HOME"')" # Manages users that are not sudoers by removing: sudo -H -u $(logname)
+if [[ -z "$AWQL_USER_HOME" ]]; then
+    echo "Error.MISSING_USER_HOME"
+    exit 1
+fi
 
 # Workspace
 declare -r -i AWQL_HISTORY_SIZE=250
@@ -37,7 +40,7 @@ declare -r AWQL_AUTH_INIT_FILE="${AWQL_AUTH_DIR}/init.sh"
 declare -r AWQL_API_ID_REGEX="^[[:digit:]]{3}-[[:digit:]]{3}-[[:digit:]]{4}$"
 declare -r AWQL_API_VERSION_REGEX="^v[[:digit:]]{6}$"
 declare -r AWQL_API_URL_REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-declare -r AWQL_API_LAST_VERSION="v201605"
+declare -r AWQL_API_LAST_VERSION="v201607"
 declare -r AWQL_API_DOC_EXTRA_FILE_NAME="extra.yaml"
 declare -r AWQL_API_DOC_FIELDS_FILE_NAME="fields.yaml"
 declare -r AWQL_API_DOC_KEYS_FILE_NAME="keys.yaml"
