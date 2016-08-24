@@ -271,7 +271,7 @@ Installation successfull. Open a new terminal or reload your bash environment. E
 -T for Google Adwords access token
 -D for Google developer token
 -e for AWQL query, if not set here, a prompt will be launch
--V Google API version, by default 'v201605'
+-V Google API version, by default 'v201607'
 -b batch mode to print results using comma as the column separator
 -c used to enable cache
 -d used to enable debug mode, print real query as status line
