@@ -15,7 +15,7 @@ fi
 declare -r -i AWQL_HISTORY_SIZE=250
 declare -r -i AWQL_API_RETRY_NB=3
 declare -r AWQL_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-declare -r AWQL_WRK_DIR="/tmp/awql/$(date +%Y%m%d)"
+declare -r AWQL_WRK_DIR="/tmp/awql/${AWQL_USER_NAME}/$(date +%Y%m%d)"
 declare -r AWQL_USER_DIR="${AWQL_USER_HOME}/.awql"
 declare -r AWQL_ADWORDS_DIR="${AWQL_ROOT_DIR}/adwords"
 declare -r AWQL_VIEWS_DIR_NAME="views"
