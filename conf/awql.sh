@@ -4,7 +4,8 @@
 declare -r AWQL_SUCCESS_STATUS="OK"
 declare -r AWQL_ERROR_STATUS="FAILED"
 declare -r AWQL_OS="$(uname -s)"
-declare -r AWQL_USER_HOME="$(sh -c 'echo "$HOME"')" # Manages users that are not sudoers by removing: sudo -H -u $(logname)
+declare -r AWQL_USER_NAME="$(logname)"
+declare -r AWQL_USER_HOME="$(eval echo "~${AWQL_USER_NAME}")" # Manages users that are not sudoers by removing: sudo -H -u ${AWQL_USER_NAME} sh -c 'echo "$HOME"'
 if [[ -z "$AWQL_USER_HOME" ]]; then
     echo "Error.MISSING_USER_HOME"
     exit 1
