@@ -162,10 +162,12 @@ function __reviseLine ()
 # @return void
 function __restoreTerm()
 {
+    declare -i withoutExit="$1"
+
     stty "${AWQL_READ_TERM}";
 
-    declare -i withoutExit="$1"
     if [[ ${withoutExit} -eq 0 ]]; then
+        echo
         exit 0
     fi
 }
@@ -371,10 +373,6 @@ function awqlRead ()
                 # Query ending
                 if [[ -n "$file" ]]; then
                     # Add current line in file history
-                    if [[ "${historyIndex}" -lt ${historySize} ]]; then
-                        # Remove the old position in historic in order to put this line as the last command
-                        sed -e $((${historyIndex} + 1))d "$file" > "${file}-e" && mv "${file}-e" "$file"
-                    fi
                     echo "$reply" >> "$file"
                 fi
                 # Go to new line to display response
