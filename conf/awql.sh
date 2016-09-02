@@ -15,7 +15,7 @@ fi
 declare -r -i AWQL_HISTORY_SIZE=250
 declare -r -i AWQL_API_RETRY_NB=3
 declare -r AWQL_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-declare -r AWQL_WRK_DIR="/tmp/awql/$(date +%Y%m%d)"
+declare -r AWQL_WRK_DIR="/tmp/awql/${AWQL_USER_NAME}/$(date +%Y%m%d)"
 declare -r AWQL_USER_DIR="${AWQL_USER_HOME}/.awql"
 declare -r AWQL_ADWORDS_DIR="${AWQL_ROOT_DIR}/adwords"
 declare -r AWQL_VIEWS_DIR_NAME="views"
@@ -30,7 +30,7 @@ declare -r AWQL_CONF_DIR="${AWQL_ROOT_DIR}/conf"
 declare -r AWQL_AUTH_DIR="${AWQL_INC_DIR}/auth"
 declare -r AWQL_TOKEN_FILE_NAME="token.json"
 declare -r AWQL_REQUEST_FILE_NAME="request.yaml"
-declare -r AWQL_FILE_EXT=".awql"
+declare -r AWQL_FILE_EXT=".csv"
 declare -r AWQL_HTTP_RESPONSE_EXT=".rsp"
 declare -r AWQL_TERM_TABLES_DIR="${AWQL_ROOT_DIR}/vendor/termtables"
 declare -r AWQL_BASH_PACKAGES_DIR="${AWQL_ROOT_DIR}/vendor/bash-packages"

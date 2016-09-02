@@ -9,6 +9,8 @@ if [[ -z "${AWQL_ROOT_DIR}" ]]; then
     source "${AWQL_BASH_PACKAGES_DIR}/math.sh"
 fi
 
+declare -r AWQL_READ_TERM="$(stty -g)"
+
 ##
 # Erase all the screen on go on top on the screen
 # @return string
@@ -155,6 +157,22 @@ function __reviseLine ()
 }
 
 ##
+# Reset terminal to current state when we exit
+# @param int $1 Disable exit
+# @return void
+function __restoreTerm()
+{
+    declare -i withoutExit="$1"
+
+    stty "${AWQL_READ_TERM}";
+
+    if [[ ${withoutExit} -eq 0 ]]; then
+        echo
+        exit 0
+    fi
+}
+
+##
 # Read lines from the standard input and split it into fields.
 # Manage history in file, completion with tab, navigation with arrow keys and backspace
 # @see http://www.termsys.demon.co.uk/vtansi.htm
@@ -208,8 +226,8 @@ function awqlRead ()
     # Launch prompt by sending introduction message
     echo -n "$prompt"
 
-     # Reset terminal to current state when we exit
-    trap "stty $(stty -g); exit" EXIT
+    # Ash or Dash do not trap signals with EXIT
+    trap __restoreTerm EXIT INT TERM
 
     # Disable echo and special characters, set input timeout to 0.2 seconds
     stty -echo -icanon time 2
@@ -355,10 +373,6 @@ function awqlRead ()
                 # Query ending
                 if [[ -n "$file" ]]; then
                     # Add current line in file history
-                    if [[ "${historyIndex}" -lt ${historySize} ]]; then
-                        # Remove the old position in historic in order to put this line as the last command
-                        sed -e $((${historyIndex} + 1))d "$file" > "${file}-e" && mv "${file}-e" "$file"
-                    fi
                     echo "$reply" >> "$file"
                 fi
                 # Go to new line to display response
@@ -411,6 +425,8 @@ function awqlRead ()
         fi
     done
 
-    # Protect and export
+    # Manages all exit cases
+    __restoreTerm 1
+    # Protects and exports the query
     eval "${readerVarName}=\"${reply//\"/\\\"}\""
 }
