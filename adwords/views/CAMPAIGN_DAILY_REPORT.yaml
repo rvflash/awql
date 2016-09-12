@@ -1,7 +1,0 @@
-ORIGIN    : SELECT Date,HourOfDay,Device,CampaignId,CampaignName,CampaignStatus,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,SearchImpressionShare FROM CAMPAIGN_PERFORMANCE_REPORT WHERE Impressions > 0 DURING LAST_30_DAYS ORDER BY Date ASC
-NAMES     : Date Hour Device Id Name Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
-FIELDS    : Date HourOfDay Device CampaignId CampaignName CampaignStatus Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition SearchImpressionShare
-TABLE     : CAMPAIGN_PERFORMANCE_REPORT
-WHERE     : Impressions > 0
-DURING    : LAST_30_DAYS
-ORDER     : Date ASC

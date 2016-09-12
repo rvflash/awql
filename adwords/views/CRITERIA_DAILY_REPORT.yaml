@@ -1,6 +1,0 @@
-ORIGIN    : SELECT Date,AdGroupId,Id,CampaignId,Status,Criteria,CriteriaDestinationUrl,FinalUrls,FinalMobileUrls,TrackingUrlTemplate,UrlCustomParameters,CpcBid,TopOfPageCpc,IsNegative FROM CRITERIA_PERFORMANCE_REPORT DURING LAST_30_DAYS ORDER BY Date ASC
-NAMES     : Date AdGroupId Id CampaignId Status Criteria CriteriaDestinationUrl FinalUrls FinalMobileUrls TrackingUrlTemplate UrlCustomParameters CpcBid TopOfPageCpc IsNegative
-FIELDS    : Date AdGroupId Id CampaignId Status Criteria CriteriaDestinationUrl FinalUrls FinalMobileUrls TrackingUrlTemplate UrlCustomParameters CpcBid TopOfPageCpc IsNegative
-TABLE     : CRITERIA_PERFORMANCE_REPORT
-DURING    : LAST_30_DAYS
-ORDER     : Date ASC

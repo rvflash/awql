@@ -1,6 +1,0 @@
-ORIGIN    : SELECT AdGroupId,Id,CampaignId,CpcBid,TrackingUrlTemplate,BenchmarkAverageMaxCpc,BenchmarkCtr,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,SearchImpressionShare FROM PRODUCT_PARTITION_REPORT DURING TODAY ORDER BY Clicks ASC
-NAMES     : AdGroupId Id CampaignId CpcBid TrackingUrlTemplate BenchmarkAverageMaxCpc BenchmarkCtr Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc SearchImpressionShare
-FIELDS    : AdGroupId Id CampaignId CpcBid TrackingUrlTemplate BenchmarkAverageMaxCpc BenchmarkCtr Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc SearchImpressionShare
-TABLE     : PRODUCT_PARTITION_REPORT
-DURING    : TODAY
-ORDER     : Clicks ASC

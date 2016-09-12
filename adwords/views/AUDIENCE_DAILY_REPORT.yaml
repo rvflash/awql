@@ -1,6 +1,0 @@
-ORIGIN    : SELECT Date,AdGroupId,Id,CampaignId,Criteria,Status,Impressions,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,AveragePosition,BidModifier FROM AUDIENCE_PERFORMANCE_REPORT DURING LAST_30_DAYS ORDER BY Date ASC
-NAMES     : Date AdGroupId Id CampaignId Criteria Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition BidModifier
-FIELDS    : Date AdGroupId Id CampaignId Criteria Status Impressions Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc AveragePosition BidModifier
-TABLE     : AUDIENCE_PERFORMANCE_REPORT
-DURING    : LAST_30_DAYS
-ORDER     : Date ASC
