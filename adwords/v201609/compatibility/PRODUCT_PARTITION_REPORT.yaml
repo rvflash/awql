@@ -1,0 +1,6 @@
+ClickType               : BenchmarkAverageMaxCpc BenchmarkCtr SearchClickShare SearchImpressionShare
+BenchmarkCtr            : ClickType Device
+Device                  : BenchmarkAverageMaxCpc BenchmarkCtr
+BenchmarkAverageMaxCpc  : ClickType Device
+SearchImpressionShare   : ClickType
+SearchClickShare        : ClickType

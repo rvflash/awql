@@ -1,0 +1,27 @@
+ExternalConversionSource         : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv Clicks Cost CostPerConversion Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions ValuePerConversion VideoViewRate VideoViews
+ConversionCategoryName           : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoViewRate VideoViews
+ConversionTrackerId              : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoViewRate VideoViews
+ConversionTypeName               : ActiveViewCpm ActiveViewCtr ActiveViewImpressions ActiveViewMeasurability ActiveViewMeasurableCost ActiveViewMeasurableImpressions ActiveViewViewability AverageCost AverageCpc AverageCpe AverageCpm AverageCpv Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoViewRate VideoViews
+InteractionTypes                 : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Interactions                     : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpv                       : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpm                       : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpc                       : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCost                      : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+InteractionRate                  : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Cost                             : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Impressions                      : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpe                       : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Engagements                      : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+VideoViewRate                    : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+VideoViews                       : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Ctr                              : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewViewability            : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewMeasurableImpressions  : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewMeasurableCost         : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewMeasurability          : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewImpressions            : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewCtr                    : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ActiveViewCpm                    : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+EngagementRate                   : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Clicks                           : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
