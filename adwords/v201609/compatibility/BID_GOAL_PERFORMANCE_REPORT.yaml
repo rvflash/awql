@@ -1,0 +1,15 @@
+ExternalConversionSource                       : AverageCpc AverageCpm AveragePosition Clicks Cost CostPerConversion Ctr Impressions ValuePerConversion
+HourOfDay                                      : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Ctr                                            : ExternalConversionSource
+Clicks                                         : ExternalConversionSource
+CrossDeviceConversions                         : HourOfDay
+CostPerAllConversion                           : HourOfDay
+Cost                                           : ExternalConversionSource
+ValuePerAllConversion                          : HourOfDay
+AveragePosition                                : ExternalConversionSource
+AverageCpm                                     : ExternalConversionSource
+AverageCpc                                     : ExternalConversionSource
+AllConversionValue                             : HourOfDay
+AllConversions                                 : HourOfDay
+AllConversionRate                              : HourOfDay
+Impressions                                    : ExternalConversionSource

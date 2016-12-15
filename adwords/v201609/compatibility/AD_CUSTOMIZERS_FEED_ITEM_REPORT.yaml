@@ -1,0 +1,28 @@
+ExternalConversionSource   : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost CostPerConversion Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions ValuePerConversion VideoViewRate VideoViews
+ConversionTypeName         : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoViewRate VideoViews
+ConversionTrackerId        : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoViewRate VideoViews
+ConversionCategoryName     : AverageCost AverageCpc AverageCpe AverageCpm AverageCpv AveragePosition Clicks Cost Ctr EngagementRate Engagements Impressions InteractionRate InteractionTypes Interactions VideoViewRate VideoViews
+Slot                       : AllConversionRate AllConversionValue AllConversions CostPerAllConversion CrossDeviceConversions ValuePerAllConversion
+Clicks                     : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+InteractionRate            : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Interactions               : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+InteractionTypes           : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Engagements                : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+EngagementRate             : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Ctr                        : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Cost                       : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+Impressions                : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AveragePosition            : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+VideoViews                 : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpv                 : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpm                 : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+VideoViewRate              : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpe                 : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCpc                 : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+AverageCost                : ConversionCategoryName ConversionTrackerId ConversionTypeName ExternalConversionSource
+ValuePerAllConversion      : Slot
+AllConversionRate          : Slot
+AllConversions             : Slot
+AllConversionValue         : Slot
+CrossDeviceConversions     : Slot
+CostPerAllConversion       : Slot

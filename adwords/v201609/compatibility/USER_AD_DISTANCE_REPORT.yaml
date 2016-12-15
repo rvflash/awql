@@ -1,0 +1,10 @@
+ExternalConversionSource  : AverageCpc AverageCpm AveragePosition Clicks Cost CostPerConversion Ctr Impressions ValuePerConversion
+ConversionTypeName        : AverageCpc AverageCpm AveragePosition Clicks Cost Ctr Impressions
+ConversionCategoryName    : AverageCpc AverageCpm AveragePosition Clicks Cost Ctr Impressions
+Cost                      : ConversionCategoryName ConversionTypeName ExternalConversionSource
+AverageCpc                : ConversionCategoryName ConversionTypeName ExternalConversionSource
+AverageCpm                : ConversionCategoryName ConversionTypeName ExternalConversionSource
+AveragePosition           : ConversionCategoryName ConversionTypeName ExternalConversionSource
+Ctr                       : ConversionCategoryName ConversionTypeName ExternalConversionSource
+Impressions               : ConversionCategoryName ConversionTypeName ExternalConversionSource
+Clicks                    : ConversionCategoryName ConversionTypeName ExternalConversionSource
