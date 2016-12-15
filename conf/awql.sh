@@ -41,7 +41,7 @@ declare -r AWQL_AUTH_INIT_FILE="${AWQL_AUTH_DIR}/init.sh"
 declare -r AWQL_API_ID_REGEX="^[[:digit:]]{3}-[[:digit:]]{3}-[[:digit:]]{4}$"
 declare -r AWQL_API_VERSION_REGEX="^v[[:digit:]]{6}$"
 declare -r AWQL_API_URL_REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-declare -r AWQL_API_LAST_VERSION="v201607"
+declare -r AWQL_API_LAST_VERSION="v201609"
 declare -r AWQL_API_DOC_EXTRA_FILE_NAME="extra.yaml"
 declare -r AWQL_API_DOC_FIELDS_FILE_NAME="fields.yaml"
 declare -r AWQL_API_DOC_KEYS_FILE_NAME="keys.yaml"
