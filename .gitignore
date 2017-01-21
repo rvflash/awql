@@ -1,1 +1,3 @@
-conf/auth.yaml
+awql
+driver/driver_test.go
+vendor/github.com/rvflash/*/vendor/github.com
