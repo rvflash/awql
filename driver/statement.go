@@ -2,19 +2,94 @@ package driver
 
 import (
 	"database/sql/driver"
+	"fmt"
+	"hash/fnv"
+	"strconv"
 	"strings"
+	"time"
 
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
 )
 
-// Execer is an interface that may be implemented by a Stmt.
+// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
+var doubleDash = " --"
+
+// Stmt is a prepared statement.
+type Stmt struct {
+	si *awql.Stmt
+	db *db.Database
+	p  parser.Stmt
+}
+
+// Bind applies the required argument replacements on the query.
+func (s *Stmt) Bind(args []driver.Value) error {
+	// Binds all arguments on the query.
+	if err := s.si.Bind(args); err != nil {
+		return err
+	}
+	// Parses the statement to manage it as expected by Google Adwords.
+	stmts, err := parser.NewParser(strings.NewReader(s.si.SrcQuery)).Parse()
+	if err != nil {
+		return err
+	}
+	if len(stmts) > 1 {
+		return ErrMultipleQueries
+	}
+	s.p = stmts[0]
+
+	return nil
+}
+
+// Close closes the statement.
+func (s *Stmt) Close() error {
+	return s.si.Close()
+}
+
+// NumInput returns the number of placeholder parameters.
+func (s *Stmt) NumInput() int {
+	return s.si.NumInput()
+}
+
+// Exec executes a query that doesn't return rows, such as an INSERT or UPDATE.
+func (s *Stmt) Exec(args []driver.Value) (driver.Result, error) {
+	// Binds all arguments.
+	if err := s.Bind(args); err != nil {
+		return nil, err
+	}
+	// Executes query.
+	switch s.p.(type) {
+	case parser.CreateViewStmt:
+		return NewCreateViewStmt(s).Exec()
+	}
+	return s.si.Exec(args)
+}
+
+// Query sends request to Google Adwords API and retrieves its content.
+func (s *Stmt) Query(args []driver.Value) (driver.Rows, error) {
+	// Binds all arguments.
+	if err := s.Bind(args); err != nil {
+		return nil, err
+	}
+	// Executes query.
+	switch s.p.(type) {
+	case parser.DescribeStmt:
+		return NewDescribeStmt(s).Query()
+	case parser.ShowStmt:
+		return NewShowStmt(s).Query()
+	case parser.SelectStmt:
+		return NewSelectStmt(s).Query()
+	}
+	return nil, ErrQuery
+}
+
+// Execer is an interface that may be implemented by a CreateViewStmt.
 type Execer interface {
 	Exec() (driver.Result, error)
 }
 
-// Queryer is an interface that should be implemented by a Stmt.
+// Queryer is an interface that should be implemented by a Stmt with rows as result.
 type Queryer interface {
 	Query() (driver.Rows, error)
 }
@@ -70,14 +145,15 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 		}
 		return cols
 	}
+	names := fieldCols(stmt.FullMode())
 
 	// fieldData returns the field properties.
-	var fieldData = func(f db.Field, pk string, full bool) []string {
+	var fieldData = func(f db.Field, pk string, full bool) []driver.Value {
 		isPk := false
 		if f.Name() == pk {
 			isPk = true
 		}
-		data := []string{
+		data := []driver.Value{
 			f.Name(), f.Kind(), formatKey(f.IsSegment(), isPk),
 			formatBool(f.SupportsZeroImpressions()),
 		}
@@ -91,6 +167,22 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 		return data
 	}
 
+	// fieldKind returns for each column, their kind.
+	var fieldKind = func(cols []string) []string {
+		kind := make([]string, len(cols))
+		for i, c := range cols {
+			switch c {
+			case "Supports_Zero_Impressions", "Enum":
+				kind[i] = "ENUM"
+			case "Not_compatible_with":
+				kind[i] = "LIST"
+			default:
+				kind[i] = "STRING"
+			}
+		}
+		return kind
+	}
+
 	// Filters on one column.
 	if cols := stmt.Columns(); len(cols) > 0 {
 		fd, err := tb.Field(cols[0].Name())
@@ -98,25 +190,26 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 			return nil, err
 		}
 		return &Rows{
-			cols: fieldCols(stmt.FullMode()),
-			data: &awql.Rows{
-				Size: 1,
-				Data: [][]string{fieldData(fd, tb.AggregateFieldName(), stmt.FullMode())},
-			},
+			cols: names,
+			kind: fieldKind(names),
+			data: [][]driver.Value{fieldData(fd, tb.AggregateFieldName(), stmt.FullMode())},
+			size: 1,
 		}, nil
 	}
 
 	// Gets properties of each columns of the table.
 	cols := tb.Columns()
 	size := len(cols)
-	rows := make([][]string, size)
+	rows := make([][]driver.Value, size)
 	for p, fd := range cols {
 		rows[p] = fieldData(fd.(db.Field), tb.AggregateFieldName(), stmt.FullMode())
 	}
 
 	return &Rows{
-		cols: fieldCols(stmt.FullMode()),
-		data: &awql.Rows{Size: uint(size), Data: rows},
+		cols: names,
+		kind: fieldKind(names),
+		data: rows,
+		size: size,
 	}, nil
 }
 
@@ -157,7 +250,7 @@ func NewSelectStmt(stmt *Stmt) Queryer {
 // It internally calls the Awql driver, aggregates, sorts and limits the results.
 func (s *SelectStmt) Query() (driver.Rows, error) {
 	// Casts statement.
-	stmt := s.p.(parser.SelectStmt)
+	stmt := s.p.(*parser.SelectStatement)
 
 	// Replaces the display name of columns by their names or alias if exist.
 	var fieldCols = func(columns []parser.DynamicField) []string {
@@ -172,33 +265,236 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		return cols
 	}
 
+	// Adds more detail on each columns (kind, etc.).
+	t, err := s.db.Table(stmt.SourceName())
+	if err != nil {
+		return nil, err
+	}
+	kind := make([]string, len(stmt.Fields))
+	for i, c := range stmt.Fields {
+		// Converts parser.DynamicField to db.Field.
+		f, err := t.Field(c.Name())
+		if err != nil {
+			return nil, err
+		}
+		stmt.Fields[i] = f
+
+		// Gets data's kind to display.
+		if method, use := f.UseFunction(); use {
+			if method == "COUNT" {
+				kind[i] = "DOUBLE_TO_INT"
+			} else {
+				kind[i] = "DOUBLE"
+			}
+		} else {
+			kind[i] = strings.ToUpper(f.Kind())
+		}
+	}
+
 	// Keeps only accepted Adwords Awql grammar as query.
-	s.si.SrcQuery = stmt.String()
+	s.si.SrcQuery = stmt.LegacyString()
 
 	// Requests the Adwords API without any args, binding already done.
 	rows, err := s.si.Query(nil)
 	if err != nil {
 		return nil, err
 	}
-
+	// Aggregates rows by columns if needed.
+	data, err := aggregateData(stmt, rows.(*awql.Rows))
+	if err != nil {
+		return nil, err
+	}
 	// Initialises the result set.
 	rs := &Rows{
 		cols: fieldCols(stmt.Columns()),
-		data: rows.(*awql.Rows),
+		data: data,
+		kind: kind,
+		size: len(data),
 	}
-	// @todo
-	// Aggregates rows by columns.
-	rs.Aggregate(stmt.Columns(), stmt.GroupList())
-
 	// Sorts rows by columns.
-	rs.Sort(stmt.OrderList())
-
+	if len(stmt.OrderList()) > 0 {
+		rs.less = sortFuncs(stmt)
+		rs.Sort()
+	}
 	// Limits the result set.
 	if rc, ok := stmt.PageSize(); ok {
 		rs.Limit(stmt.StartIndex(), rc)
 	}
-
 	return rs, nil
+}
+
+// aggregateData
+func aggregateData(stmt parser.SelectStmt, rows *awql.Rows) ([][]driver.Value, error) {
+	// parseTime parses a string and returns its time representation by using the layout.
+	var parseTime = func(layout, s string) (time.Time, error) {
+		if s == doubleDash {
+			return time.Time{}, nil
+		}
+		return time.Parse(layout, s)
+	}
+	// cast gives the type equivalences of API adwords type of data.
+	var cast = func(s, kind string) (driver.Value, error) {
+		switch strings.ToUpper(kind) {
+		case "INT", "INTEGER", "LONG", "MONEY":
+			return strconv.ParseInt(s, 10, 64)
+		case "DOUBLE":
+			return strconv.ParseFloat(s, 64)
+		case "DATE":
+			return parseTime("2006-01-02", s)
+		case "DATETIME":
+			return parseTime("2006/01/02 15:04:05", s)
+		}
+		return s, nil
+	}
+	// hash returns a numeric hash for the given string.
+	var hash = func(s string) uint64 {
+		h := fnv.New64a()
+		h.Write([]byte(s))
+		return h.Sum64()
+	}
+	// useAggregate returns true if at least one columns uses a aggregate function.
+	var useAggregate = func(stmt parser.SelectStmt) bool {
+		for _, c := range stmt.Columns() {
+			if c.Distinct() {
+				return true
+			}
+			if _, use := c.UseFunction(); use {
+				return true
+			}
+		}
+		return false
+	}
+	distinctLine := useAggregate(stmt)
+
+	// Bounds
+	groupSize := len(stmt.GroupList())
+	columnSize := len(stmt.Columns())
+
+	// Builds a map with group values as key.
+	var data map[string][]driver.Value
+	data = make(map[string][]driver.Value)
+	for p, f := range rows.Data {
+		// Picks the aggregate values.
+		var group []uint64
+		if groupSize > 0 {
+			for _, gb := range stmt.GroupList() {
+				group = append(group, hash(f[gb.Position()-1]))
+			}
+		} else if !distinctLine {
+			group = append(group, uint64(p))
+		}
+		key := fmt.Sprint(group)
+
+		// Converts string slice of the row as expected by SQL driver.
+		row := make([]driver.Value, columnSize)
+		for i, c := range stmt.Columns() {
+			if method, ok := c.UseFunction(); ok {
+				// Retrieves the aggregate value if already set.
+				var v, cv float64
+				if r, ok := data[key]; ok {
+					v = r[i].(float64)
+				}
+				if method == "COUNT" {
+					v++
+				} else {
+					// Casts to float the column value.
+					var err error
+					cv, err = strconv.ParseFloat(f[i], 64)
+					if err != nil {
+						return nil, err
+					}
+					// Applies the method on it.
+					switch method {
+					case "AVG":
+						// ((previous average x number of elements seen) + current value) / current number of elements
+						fi := float64(i)
+						v = ((v * fi) + cv) / (fi + 1)
+					case "MAX":
+						if v < cv {
+							v = cv
+						}
+					case "MIN":
+						if v > cv {
+							v = cv
+						}
+					case "SUM":
+						v += cv
+					default:
+						return nil, fmt.Errorf("unknown method named %s", method)
+					}
+				}
+				row[i] = v
+			} else {
+				v, err := cast(f[i], c.(db.Field).Kind())
+				if err != nil {
+					return nil, err
+				}
+				row[i] = v
+			}
+		}
+		data[key] = row
+	}
+
+	// Builds the result set.
+	rs := make([][]driver.Value, len(data))
+	var i int
+	for _, r := range data {
+		rs[i] = r
+		i++
+	}
+	return rs, nil
+}
+
+// lessFunc
+type lessFunc func(p1, p2 []driver.Value) bool
+
+func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
+	orders = make([]lessFunc, len(stmt.OrderList()))
+	if len(orders) == 0 {
+		return
+	}
+
+	for i, o := range stmt.OrderList() {
+		pos := o.Position() - 1
+		f := stmt.Columns()[pos].(db.Field)
+		orders[i] = func(p1, p2 []driver.Value) bool {
+			// Casts values to compare it.
+			var kind string
+			if _, use := f.UseFunction(); use {
+				kind = "DOUBLE"
+			} else {
+				// Gets raw type from Google API. Manages `Long` or `long`.
+				kind = strings.ToUpper(f.Kind())
+			}
+			switch kind {
+			case "INT", "INTEGER", "LONG", "MONEY":
+				v1, v2 := p1[pos].(int64), p2[pos].(int64)
+				if o.SortDescending() {
+					return v1 > v2
+				}
+				return v1 < v2
+			case "DOUBLE":
+				v1, v2 := p1[pos].(float64), p2[pos].(float64)
+				if o.SortDescending() {
+					return v1 > v2
+				}
+				return v1 < v2
+			case "DATE", "DATETIME":
+				v1, v2 := p1[pos].(time.Time), p2[pos].(time.Time)
+				if o.SortDescending() {
+					return !v1.Before(v2)
+				}
+				return v1.Before(v2)
+			default:
+				v1, v2 := p1[pos].(string), p2[pos].(string)
+				if o.SortDescending() {
+					return v1 > v2
+				}
+				return v1 < v2
+			}
+		}
+	}
+	return
 }
 
 // ShowStmt represents a Show statement.
@@ -218,6 +514,7 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	// Casts statement.
 	stmt := s.p.(parser.ShowStmt)
 
+	// fieldCols returns the columns names.
 	var fieldCols = func(version string, full bool) []string {
 		cols := []string{"Tables_in_" + version}
 		if full {
@@ -225,8 +522,9 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 		}
 		return cols
 	}
-	var fieldData = func(t db.DataTable, full bool) []string {
-		data := []string{t.SourceName()}
+	// fieldData returns the field properties.
+	var fieldData = func(t db.DataTable, full bool) []driver.Value {
+		data := []driver.Value{t.SourceName()}
 		if full {
 			kind := "BASE TABLE"
 			if t.IsView() {
@@ -235,6 +533,19 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 			data = append(data, kind)
 		}
 		return data
+	}
+	// fieldKind returns for each column, their kind.
+	var fieldKind = func(cols []string) []string {
+		kind := make([]string, len(cols))
+		for i, c := range cols {
+			switch c {
+			case "Table_type":
+				kind[i] = "ENUM"
+			default:
+				kind[i] = "STRING"
+			}
+		}
+		return kind
 	}
 
 	var tables []db.DataTable
@@ -264,13 +575,15 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	if size == 0 {
 		return &Rows{}, nil
 	}
-	rows := make([][]string, size)
+	rows := make([][]driver.Value, size)
 	for i := 0; i < size; i++ {
 		rows[i] = fieldData(tables[i], stmt.FullMode())
 	}
-
+	cols := fieldCols(s.db.Version, stmt.FullMode())
 	return &Rows{
-		cols: fieldCols(s.db.Version, stmt.FullMode()),
-		data: &awql.Rows{Size: uint(size), Data: rows},
+		cols: cols,
+		kind: fieldKind(cols),
+		data: rows,
+		size: size,
 	}, nil
 }

@@ -21,7 +21,8 @@ func TestScanner_Scan(t *testing.T) {
 		{s: `1.0`, t: awql.DECIMAL, l: `1.0`},
 		{s: `2.0b`, t: awql.DECIMAL, l: `2.0`},
 		{s: `\G`, t: awql.G_MODIFIER, l: `\G`},
-		{s: `\g`, t: awql.ILLEGAL, l: `\`},
+		{s: `\g`, t: awql.G_MODIFIER, l: `\g`},
+		{s: `\p`, t: awql.ILLEGAL, l: `\`},
 
 		// Misc characters
 		{s: `*`, t: awql.ASTERISK, l: `*`},

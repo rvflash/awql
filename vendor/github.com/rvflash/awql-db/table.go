@@ -1,4 +1,4 @@
-package awql_db
+package awqldb
 
 import (
 	"fmt"
@@ -22,7 +22,6 @@ type DataTable interface {
 	AggregateFieldName() string
 	Field(name string) (Field, error)
 	IsView() bool
-	fmt.Stringer
 }
 
 // Table represents a data table.
@@ -48,7 +47,7 @@ func (t Table) Columns() []awql.DynamicField {
 	return fields
 }
 
-// FieldByName returns the field with this column name or an error.
+// Field returns the field with this column name or an error.
 func (t Table) Field(name string) (Field, error) {
 	for _, c := range t.Cols {
 		if c.Head == name {
@@ -122,7 +121,6 @@ func (t Table) String() string {
 	if t.IsView() {
 		s += t.View.String()
 	}
-
 	return s
 }
 
@@ -287,7 +285,7 @@ func (c Condition) String() string {
 	return s
 }
 
-// Values returns the filtering value.
+// Value returns the filtering value.
 func (c Condition) Value() ([]string, bool) {
 	return c.ColumnValue, c.IsValueLiteral
 }
@@ -429,6 +427,12 @@ func (t View) FieldByName(column string) (Field, error) {
 		}
 	}
 	return nil, ErrUnknownColumn
+}
+
+// LegacyString returns an empty string.
+// To skip. Method of awql.DataStmt interface not implemented.
+func (t View) LegacyString() string {
+	return ""
 }
 
 // GroupList returns the group by columns.

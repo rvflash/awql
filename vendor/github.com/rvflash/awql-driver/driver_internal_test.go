@@ -54,7 +54,7 @@ func TestAwqlDriver_Open(t *testing.T) {
 				adwordsID: "123-456-7890", developerToken: "dEve1op3er7okeN",
 				oAuth: &Auth{
 					AuthKey{
-						ClientId:     "1234567890-c1i3n7iD.apps.googleusercontent.com",
+						ClientID:     "1234567890-c1i3n7iD.apps.googleusercontent.com",
 						ClientSecret: "c1ien753cr37", RefreshToken: "1/R3Fr35h-70k3n",
 					},
 					AuthToken{
@@ -111,7 +111,7 @@ var authTests = []struct {
 	{
 		&Auth{
 			AuthKey{
-				ClientId:     "1234567890-c1i3n7iD.apps.googleusercontent.com",
+				ClientID:     "1234567890-c1i3n7iD.apps.googleusercontent.com",
 				ClientSecret: "c1ien753cr37", RefreshToken: "1/R3Fr35h-70k3n",
 			},
 			AuthToken{TokenType: "Bearer", AccessToken: "ya29.AcC3s57okeN", Expiry: time.Now().Add(tokenExpiryDuration)},

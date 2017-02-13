@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Error messages.
 var (
 	ErrQuery        = NewQueryError("missing")
 	ErrQueryBinding = NewQueryError("binding not match")
@@ -16,32 +17,32 @@ var (
 	ErrDevToken     = NewConnectionError("developer token")
 )
 
-// In case of error, Google Adwords API provides more information in a XML response
-// @example
-// <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-// <reportDownloadError>
-// 	<ApiError>
-// 		<type>ReportDefinitionError.CUSTOMER_SERVING_TYPE_REPORT_MISMATCH</type>
-// 		<trigger></trigger>
-// 		<fieldPath>selector</fieldPath>
-// 	</ApiError>
-// </reportDownloadError>
+// APIError represents a Google Report Download Error.
+// It voluntary ignores trigger field.
 //
-// ApiError represents a Google Report Download Error.
-// Voluntary ignores trigger field.
-type ApiError struct {
+// In case of error, Google Adwords API provides more information in a XML response:
+//
+// 	<reportDownloadError>
+// 		<ApiError>
+//			<type>ReportDefinitionError.CUSTOMER_SERVING_TYPE_REPORT_MISMATCH</type>
+//			<trigger></trigger>
+//			<fieldPath>selector</fieldPath>
+// 		</ApiError>
+//	</reportDownloadError>
+//
+type APIError struct {
 	Type    string `xml:"ApiError>type"`
 	Trigger string `xml:"ApiError>trigger"`
 	Field   string `xml:"ApiError>fieldPath"`
 }
 
-// NewApiError parses a XML document that represents a download report error.
+// NewAPIError parses a XML document that represents a download report error.
 // It returns the given message as error.
-func NewApiError(d []byte) error {
+func NewAPIError(d []byte) error {
 	if len(d) == 0 {
 		return ErrNoDsn
 	}
-	e := &ApiError{}
+	e := &APIError{}
 	err := xml.Unmarshal(d, e)
 	if err != nil {
 		e.Type = err.Error()
@@ -50,7 +51,7 @@ func NewApiError(d []byte) error {
 }
 
 // String returns a representation of the api error.
-func (e *ApiError) Error() string {
+func (e *APIError) Error() string {
 	switch e.Field {
 	case "":
 		if e.Trigger == "" || e.Trigger == "<null>" {

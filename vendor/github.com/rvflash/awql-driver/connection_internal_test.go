@@ -31,7 +31,7 @@ func TestAwqlConn_Close(t *testing.T) {
 func TestAwqlConn_Begin(t *testing.T) {
 	for _, ct := range connTests {
 		if _, err := ct.conn.Begin(); err != driver.ErrSkip {
-			t.Errorf("Expected driver.ErrSkip when we begin a transaction, not supported by this driver, received", err)
+			t.Errorf("Expected driver.ErrSkip when we begin a transaction, received %v", err)
 		}
 	}
 }
@@ -40,7 +40,7 @@ func TestAwqlConn_Begin(t *testing.T) {
 func TestAwqlConn_Prepare(t *testing.T) {
 	for _, ct := range connTests {
 		if _, err := ct.conn.Prepare(ct.query); err != ct.err {
-			t.Errorf("Expected driver.ErrSkip when we begin a transaction, not supported by this driver, received", err)
+			t.Errorf("Expected driver.ErrSkip when we begin a transaction, received %v", err)
 		}
 	}
 }

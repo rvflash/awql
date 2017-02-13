@@ -1,35 +1,35 @@
-package awql_db_test
+package awqldb_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/rvflash/awql-db"
+	db "github.com/rvflash/awql-db"
 )
 
-func TestNewDb(t *testing.T) {
-	db := awql_db.NewDb("v201609", "")
-	if err := db.Load(); err != nil {
-		t.Errorf("Expected no error on loading tables and views properties, received %s", err)
+func TestOpen(t *testing.T) {
+	d, err := db.Open("v201609")
+	if err != nil {
+		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
 	}
-	if _, err := db.Table("AD_PERFORMANCE_REPORT"); err != nil {
+	if _, err := d.Table("AD_PERFORMANCE_REPORT"); err != nil {
 		t.Errorf("Expected a table named AD_PERFORMANCE_REPORT, received %s", err)
 	}
-	if tables := db.TablesPrefixedBy("CAMPAIGN"); len(tables) != 8 {
+	if tables := d.TablesPrefixedBy("CAMPAIGN"); len(tables) != 8 {
 		t.Error("Expected only 8 tables prefixed by 'CAMPAIGN'")
 	}
-	if tables := db.TablesSuffixedBy("_REPORT"); len(tables) != 45 {
+	if tables := d.TablesSuffixedBy("_REPORT"); len(tables) != 45 {
 		t.Error("Expected only 45 tables suffixed by '_REPORT'")
 	}
-	if tables := db.TablesContains("NEGATIVE"); len(tables) != 3 {
+	if tables := d.TablesContains("NEGATIVE"); len(tables) != 3 {
 		t.Error("Expected only 3 tables with 'NEGATIVE' in its name")
 	}
-	if tables := db.TablesWithColumn("TrackingUrlTemplate"); len(tables) != 13 {
+	if tables := d.TablesWithColumn("TrackingUrlTemplate"); len(tables) != 13 {
 		t.Error("Expected 13 tables using TrackingUrlTemplate as column")
 	}
 }
 
-func TestIsSupported(t *testing.T) {
+func TestDatabase_HasVersion(t *testing.T) {
 	var vTests = []struct {
 		v  string
 		ok bool
@@ -39,24 +39,27 @@ func TestIsSupported(t *testing.T) {
 		{"v201609", true},
 	}
 
+	d, err := db.Open("")
+	if err != nil {
+		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
+	}
 	for i, vt := range vTests {
-		if ok := awql_db.IsSupported(vt.v); vt.ok != ok {
+		if ok := d.HasVersion(vt.v); vt.ok != ok {
 			t.Errorf("%d. Expected '%t' with '%s', received '%t'", i, vt.ok, vt.v, ok)
 		}
 	}
 }
 
-func ExampleSupportedVersions() {
-	fmt.Println(awql_db.SupportedVersions())
+func ExampleDatabase_SupportedVersions() {
+	d, _ := db.Open("")
+	fmt.Println(d.SupportedVersions())
 	// Output: [v201609]
 }
 
 func ExampleDatabase_Tables() {
-	db := awql_db.NewDb("v201609", "")
-	// Ignores the errors for the demo.
-	db.Load()
-
-	tb, _ := db.Tables()
+	// Ignores errors for the demo.
+	d, _ := db.Open("v201609")
+	tb, _ := d.Tables()
 	for _, t := range tb {
 		fmt.Println(t.SourceName())
 	}

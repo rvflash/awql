@@ -7,7 +7,7 @@ import (
 
 // Rows is an iterator over an executed query's results.
 type Rows struct {
-	Position, Size uint
+	Position, Size int
 	Data           [][]string
 }
 

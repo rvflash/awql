@@ -1,8 +1,14 @@
 # Awql Parser
 
- Parser for parsing AWQL SELECT, DESCRIBE, SHOW and CREATE VIEW statements.
+[![GoDoc](https://godoc.org/github.com/rvflash/awql-parser?status.svg)](https://godoc.org/github.com/rvflash/awql-parser)
+[![Build Status](https://img.shields.io/travis/rvflash/awql-parser.svg)](https://travis-ci.org/rvflash/awql-parser)
+[![Code Coverage](https://img.shields.io/codecov/c/github/rvflash/awql-parser.svg)](http://codecov.io/github/rvflash/awql-parser?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rvflash/awql-parser)](https://goreportcard.com/report/github.com/rvflash/awql-parser)
+
+
+Parser for parsing AWQL SELECT, DESCRIBE, SHOW and CREATE VIEW statements.
  
- Only the first statement is supported by Adwords API, the others are proposed by the AWQL command line tool.
+Only the first statement is supported by Adwords API, the others are proposed by the AWQL command line tool.
  
 ## Examples
  

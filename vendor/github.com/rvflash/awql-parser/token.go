@@ -18,7 +18,7 @@ const (
 	EOF
 	DIGIT      // [0-9]
 	DECIMAL    // [0-9.]
-	G_MODIFIER // \G
+	G_MODIFIER // \G ou \g
 
 	// Literals
 	IDENTIFIER  // base element

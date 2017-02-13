@@ -5,12 +5,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/rvflash/awql/config"
+	"github.com/rvflash/awql/conf"
 	"github.com/rvflash/awql/io"
 )
 
 func main() {
-	conf := config.New()
+	conf := conf.New()
 	if err := conf.Init(); err != nil {
 		exit(err)
 	}
@@ -34,9 +34,9 @@ func exit(err error) {
 	}
 	// An error occurred, exits with the appropriate behavior.
 	switch err.(type) {
-	case *config.FlagError:
+	case *conf.FlagError:
 		fmt.Println(err)
-		config.Usage()
+		conf.Usage()
 		os.Exit(1)
 	default:
 		log.Fatal(err)

@@ -80,14 +80,28 @@ func (w *StatsWriter) Flush() {
 		// Statement using exec mode.
 		w.t1 = time.Now()
 	}
+
 	// Outputs statistics about the result set.
 	var format string
-	if w.affected {
+	switch {
+	case w.affected:
+		// Exec query like CREATE VIEW.
 		format = "Query OK, %d rows affected (%.3f sec)\n\n"
-	} else {
-		format = "%d rows in set (%.3f sec)\n\n"
+		fallthrough
+	case w.size > 0:
+		if format == "" {
+			format = "%d row"
+			if w.size > 1 {
+				// Manages the plural :)
+				format += "s"
+			}
+			format += " in set (%.3f sec)\n\n"
+		}
+		w.w.WriteString(fmt.Sprintf(format, w.size, w.t1.Sub(w.t0).Seconds()))
+	default:
+		format = "Empty set (%.3f sec)\n\n"
+		w.w.WriteString(fmt.Sprintf(format, w.t1.Sub(w.t0).Seconds()))
 	}
-	w.w.WriteString(fmt.Sprintf(format, w.size, w.t1.Sub(w.t0).Seconds()))
 	w.w.Flush()
 }
 
@@ -113,7 +127,7 @@ func (w *StatsWriter) WriteHead(record []string) error {
 type AsciiWriter struct {
 	t *termtables.Table
 	w *bufio.Writer
-	s Writer
+	s PositionWriter
 }
 
 func NewAsciiWriter(w io.Writer) Writer {
@@ -130,7 +144,10 @@ func (w *AsciiWriter) Error() error {
 
 func (w *AsciiWriter) Flush() {
 	// Outputs the terminal table.
-	fmt.Fprint(w.w, w.t.Render())
+	if w.s.Position() > 1 {
+		// Do not print anything if the data table is empty.
+		fmt.Fprint(w.w, w.t.Render())
+	}
 	// Writes any buffered data.
 	w.w.Flush()
 	// Outputs statistics about it.

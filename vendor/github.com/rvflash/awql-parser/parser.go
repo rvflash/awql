@@ -182,11 +182,11 @@ func (p *Parser) ParseCreateView() (CreateViewStmt, error) {
 	}
 
 	// And finally, the query source of the view.
-	if selectStmt, err := p.ParseSelect(); err != nil {
+	selectStmt, err := p.ParseSelect()
+	if err != nil {
 		return nil, err
-	} else {
-		stmt.View = selectStmt.(*SelectStatement)
 	}
+	stmt.View = selectStmt.(*SelectStatement)
 
 	// Checks if the nomber of view's columns match with the source.
 	if vcs := len(stmt.Fields); vcs > 0 {
@@ -263,7 +263,7 @@ func (p *Parser) ParseShow() (ShowStmt, error) {
 	return stmt, nil
 }
 
-// Parse parses a AWQL SELECT statement.
+// ParseSelect parses a AWQL SELECT statement.
 func (p *Parser) ParseSelect() (SelectStmt, error) {
 	// First token should be a "SELECT" keyword.
 	if tk, literal := p.scanIgnoreWhitespace(); tk != SELECT {
@@ -334,11 +334,11 @@ func (p *Parser) ParseSelect() (SelectStmt, error) {
 		// Next we may find an alias name for the column.
 		if tk, _ := p.scanIgnoreWhitespace(); tk == AS {
 			// By using the "AS" keyword.
-			if tk, literal := p.scanIgnoreWhitespace(); tk != IDENTIFIER {
+			tk, literal := p.scanIgnoreWhitespace()
+			if tk != IDENTIFIER {
 				return nil, NewXParserError(ErrMsgBadField, literal)
-			} else {
-				field.ColumnAlias = literal
 			}
+			field.ColumnAlias = literal
 		} else if tk == IDENTIFIER {
 			// Or without keyword.
 			field.ColumnAlias = literal
@@ -361,30 +361,32 @@ func (p *Parser) ParseSelect() (SelectStmt, error) {
 	}
 
 	// Next we should read the table name.
-	if tk, literal := p.scanIgnoreWhitespace(); tk != IDENTIFIER {
+	tk, literal := p.scanIgnoreWhitespace()
+	if tk != IDENTIFIER {
 		return nil, NewXParserError(ErrMsgBadSrc, literal)
-	} else {
-		stmt.TableName = literal
 	}
+	stmt.TableName = literal
 
 	// Newt we may read a "WHERE" keyword.
 	if tk, _ := p.scanIgnoreWhitespace(); tk == WHERE {
 		for {
 			// Parse each condition, begin by the column name.
 			cond := &Where{Column: &Column{}}
-			if tk, literal := p.scanIgnoreWhitespace(); tk != IDENTIFIER {
-				return nil, NewXParserError(ErrMsgBadField, literal)
-			} else {
-				cond.ColumnName = literal
-			}
-			// Expects the operator.
-			if tk, literal := p.scanIgnoreWhitespace(); !isOperator(tk) {
-				return nil, NewXParserError(ErrMsgSyntax, literal)
-			} else {
-				cond.Sign = literal
-			}
-			// And the value of the condition.ValueLiteral | String | ValueLiteralList | StringList
 			tk, literal := p.scanIgnoreWhitespace()
+			if tk != IDENTIFIER {
+				return nil, NewXParserError(ErrMsgBadField, literal)
+			}
+			cond.ColumnName = literal
+
+			// Expects the operator.
+			tk, literal = p.scanIgnoreWhitespace()
+			if !isOperator(tk) {
+				return nil, NewXParserError(ErrMsgSyntax, literal)
+			}
+			cond.Sign = literal
+
+			// And the value of the condition.ValueLiteral | String | ValueLiteralList | StringList
+			tk, literal = p.scanIgnoreWhitespace()
 			switch tk {
 			case DECIMAL, DIGIT, VALUE_LITERAL:
 				cond.IsValueLiteral = true
@@ -459,11 +461,12 @@ func (p *Parser) ParseSelect() (SelectStmt, error) {
 				return nil, NewXParserError(ErrMsgBadGroup, literal)
 			}
 			// Check if the column exists as field.
-			if groupBy, err := stmt.searchColumn(literal); err != nil {
+			groupBy, err := stmt.searchColumn(literal)
+			if err != nil {
 				return nil, NewXParserError(ErrMsgBadGroup, err.Error())
-			} else {
-				stmt.GroupBy = append(stmt.GroupBy, groupBy)
 			}
+			stmt.GroupBy = append(stmt.GroupBy, groupBy)
+
 			// If the next token is not a comma then break the loop.
 			if tk, _ := p.scanIgnoreWhitespace(); tk != COMMA {
 				p.unscan()
@@ -486,13 +489,15 @@ func (p *Parser) ParseSelect() (SelectStmt, error) {
 			if tk != IDENTIFIER && tk != DIGIT {
 				return nil, NewXParserError(ErrMsgBadOrder, literal)
 			}
+
 			// Check if the column exists as field.
 			orderBy := &Order{}
-			if column, err := stmt.searchColumn(literal); err != nil {
+			column, err := stmt.searchColumn(literal)
+			if err != nil {
 				return nil, err
-			} else {
-				orderBy.ColumnPosition = column
 			}
+			orderBy.ColumnPosition = column
+
 			// Then, we may find a DESC or ASC keywords.
 			if tk, _ = p.scanIgnoreWhitespace(); tk == DESC {
 				orderBy.SortDesc = true
@@ -523,12 +528,12 @@ func (p *Parser) ParseSelect() (SelectStmt, error) {
 
 		// If the next token is a comma then we should get the row count.
 		if tk, _ := p.scanIgnoreWhitespace(); tk == COMMA {
-			if tk, literal := p.scanIgnoreWhitespace(); tk != DIGIT {
+			tk, literal := p.scanIgnoreWhitespace()
+			if tk != DIGIT {
 				return nil, NewXParserError(ErrMsgBadLimit, stmt.RowCount)
-			} else {
-				stmt.Offset = offset
-				stmt.RowCount, _ = strconv.Atoi(literal)
 			}
+			stmt.Offset = offset
+			stmt.RowCount, _ = strconv.Atoi(literal)
 		} else {
 			// No row count value, so the offset is finally the row count.
 			stmt.RowCount = offset

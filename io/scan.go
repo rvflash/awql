@@ -8,17 +8,13 @@ import (
 
 	"github.com/chzyer/readline"
 	parser "github.com/rvflash/awql-parser"
-	"github.com/rvflash/awql/config"
+	"github.com/rvflash/awql/conf"
 )
 
 const (
 	// Shell prompts
 	Prompt          = "awql> "
 	PromptMultiLine = "   -> "
-
-	// Ends of statement.
-	StdEnd      = ";"
-	VerticalEnd = "\\g"
 
 	// Commands
 	ShortCmdClear = "c"
@@ -70,22 +66,23 @@ type ScanSeeker interface {
 
 // Stdin represents a basic input.
 type CommandLine struct {
-	c config.Config
+	c conf.Settings
 	d *sql.DB
 }
 
 // NewCommandLine returns a basic input.
-func NewCommandLine(conf config.Config) ScanSeeker {
+func NewCommandLine(conf conf.Settings) ScanSeeker {
 	return &CommandLine{c: conf}
 }
 
 // Scan starts the engine with only the query query to execute from args.
 func (e *CommandLine) Scan() (err error) {
-	// Sends statement to Advanced Awql driver.
+	// Opens the Awql connection.
 	e.d, err = sql.Open("aawql", e.c.Dsn())
 	if err != nil {
 		return
 	}
+	// Sends statement to Advanced Awql driver.
 	return e.Seek(e.c.ExecuteStmt())
 }
 
@@ -129,10 +126,15 @@ func (e *CommandLine) Seek(s string) error {
 			// Get the column names.
 			cols, err := rs.Columns()
 			if err != nil {
+				// No more connection, an other error?
 				fmt.Println(err)
 				continue
-			}
-			if err := w.WriteHead(cols); err != nil {
+			} else if len(cols) == 0 {
+				// No data set.
+				w.Flush()
+				continue
+			} else if err := w.WriteHead(cols); err != nil {
+				// Unable to write header.
 				return err
 			}
 
@@ -168,7 +170,7 @@ type Terminal struct {
 }
 
 // NewTerm returns an instance of Terminal.
-func NewTerminal(conf config.Config) ScanSeeker {
+func NewTerminal(conf conf.Settings) ScanSeeker {
 	return &Terminal{CommandLine{c: conf}}
 }
 
@@ -182,6 +184,7 @@ func (e *Terminal) Scan() error {
 		Prompt:                 Prompt,
 		HistoryFile:            e.c.HistoryFile(),
 		DisableAutoSaveHistory: true,
+		InterruptPrompt:        "^C", // CTRL + C
 	})
 	if err != nil {
 		return fmt.Errorf("ToolError.INVALID_TERM (%s)", err)
@@ -199,27 +202,31 @@ func (e *Terminal) Scan() error {
 		// Expects one statement or command.
 		q, err := e.readLine(reader)
 		if err != nil {
-			// Terminal error or command aborted.
-			// @todo Improves management by fetching error type.
-			e.printAborted()
-			return nil
+			if err == readline.ErrInterrupt {
+				e.printAborted()
+				return nil
+			}
+			return err
 		}
+
+		// Internal tool commands.
 		if cmd, ok := useCommand(q); ok {
 			// List of commands that the tool itself interprets.
-			if cmd.cmd == ShortCmdClear {
-				// Clears the current input statement.
-				continue
-			} else if cmd.cmd == ShortCmdHelp {
-				// Prints help.
-				e.printHelp()
-			} else {
+			if cmd.cmd == ShortCmdExit {
 				// Quits the tool.
 				e.printExit()
 				break
+			} else if cmd.cmd == ShortCmdHelp {
+				// Prints help message.
+				e.printHelp()
 			}
-		} else {
-			// Sends statement to Advanced Awql driver.
-			return e.Seek(q)
+			// Clears the current statement.
+			continue
+		}
+
+		// Sends statement to Advanced Awql driver.
+		if err := e.Seek(q); err != nil {
+			return err
 		}
 	}
 
@@ -256,13 +263,13 @@ func (e *Terminal) printHelp() {
 
 // printWelcome writes to standard output the help.
 func (e *Terminal) printWelcome() {
-	fmt.Println("Welcome to the AWQL monitor. Commands end with ; or \\g.")
+	fmt.Println("Welcome to the AWQL monitor. Commands end with ; or \\G.")
 	if e.c.SupportsZeroImpressions() {
 		fmt.Println("Your AWQL connection supports zero impressions.")
 	} else {
 		fmt.Println("Your AWQL connection implicitly excludes zero impressions.")
 	}
-	fmt.Printf("Adwords API version: %s\n\n", e.c.ApiVersion())
+	fmt.Printf("Adwords API version: %s\n\n", e.c.APIVersion())
 	fmt.Println("Reading table information for completion of table and column names.")
 	fmt.Println("You can turn off this feature to get a quicker startup with -A")
 	fmt.Println("")
@@ -305,12 +312,13 @@ func (e *Terminal) readLine(reader *readline.Instance) (string, error) {
 	}
 }
 
-// withStmtEnd returns true if the statement ends with ";" or "\g".
+// withStmtEnd returns true if the statement ends with ";" or "\G".
 func withStmtEnd(q string) bool {
 	switch {
 	case
-		strings.HasSuffix(q, StdEnd),
-		strings.HasSuffix(q, VerticalEnd):
+		strings.HasSuffix(q, `;`),
+		strings.HasSuffix(q, `\g`),
+		strings.HasSuffix(q, `\G`):
 		return true
 	}
 	return false

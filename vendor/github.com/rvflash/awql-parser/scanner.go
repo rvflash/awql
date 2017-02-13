@@ -3,6 +3,7 @@ package awqlparse
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -84,9 +85,9 @@ func (s *Scanner) Scan() (Token, string) {
 		s.unread()
 		return INFERIOR, string(r)
 	case '\\':
-		// Deal with \G
-		if r := s.read(); r == 'G' {
-			return G_MODIFIER, "\\G"
+		// Deal with \G or lowercase version.
+		if r := s.read(); r == 'G' || r == 'g' {
+			return G_MODIFIER, fmt.Sprintf("\\%c", r)
 		}
 		s.unread()
 	case ';':

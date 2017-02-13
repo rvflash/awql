@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	tokenUrl            = "https://accounts.google.com/o/oauth2/token"
+	tokenURL            = "https://accounts.google.com/o/oauth2/token"
 	tokenTimeout        = time.Duration(4 * time.Second)
 	tokenExpiryDelta    = 10 * time.Second
 	tokenExpiryDuration = 60 * time.Minute
@@ -73,9 +73,9 @@ func (c *Conn) authenticate() error {
 // }
 func (c *Conn) downloadToken() (io.ReadCloser, error) {
 	rq, err := http.NewRequest(
-		"POST", tokenUrl,
+		"POST", tokenURL,
 		strings.NewReader(url.Values{
-			"client_id":     {c.oAuth.ClientId},
+			"client_id":     {c.oAuth.ClientID},
 			"client_secret": {c.oAuth.ClientSecret},
 			"refresh_token": {c.oAuth.RefreshToken},
 			"grant_type":    {"refresh_token"},

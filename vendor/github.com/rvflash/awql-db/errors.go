@@ -1,10 +1,14 @@
-package awql_db
+package awqldb
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // DatabaseError represents an database error.
 type DatabaseError struct {
 	s string
+	a interface{}
 }
 
 // NewDatabaseError returns an error about the database.
@@ -12,8 +16,16 @@ func NewDatabaseError(text string) error {
 	return &DatabaseError{s: formatError(text)}
 }
 
+// NewDatabaseError returns an error about the database.
+func NewXDatabaseError(text string, arg interface{}) error {
+	return &DatabaseError{s: formatError(text), a: arg}
+}
+
 // Error returns the error message.
 func (e *DatabaseError) Error() string {
+	if e.a != nil {
+		return fmt.Sprintf("ParserError.%v (%v)", e.s, e.a)
+	}
 	return "DatabaseError." + e.s
 }
 
