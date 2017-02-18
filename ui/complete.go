@@ -51,8 +51,22 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	return
 }
 
-func (c *completer) createCompleter(line []rune, pos int) (newLine [][]rune, length int) {
-	return
+func (c *completer) createCompleter(line []rune, pos int) ([][]rune, int) {
+	str := string(line[:pos])
+	t := stringSplitBySpace(str)
+
+	var i int
+	var s string
+	for i, s = range t {
+		if strings.EqualFold("SELECT", s) {
+			break
+		}
+	}
+	if i > 0 {
+		pos = pos - strings.Index(str, s)
+		return c.selectCompleter([]rune(strings.Join(t[i:], " ")), pos)
+	}
+	return nil, 0
 }
 
 // describeCompleter
