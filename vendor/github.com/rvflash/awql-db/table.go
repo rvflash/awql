@@ -20,6 +20,7 @@ const (
 type DataTable interface {
 	awql.CreateViewStmt
 	AggregateFieldName() string
+	ColumnsPrefixedBy(pattern string) []awql.DynamicField
 	Field(name string) (Field, error)
 	IsView() bool
 }
@@ -45,6 +46,16 @@ func (t Table) Columns() []awql.DynamicField {
 		fields[i] = f
 	}
 	return fields
+}
+
+// ColumnsPrefixedBy returns the list of table's columns prefixed by this pattern.
+func (t Table) ColumnsPrefixedBy(pattern string) (columns []awql.DynamicField) {
+	for _, c := range t.Cols {
+		if strings.HasPrefix(c.Head, pattern) {
+			columns = append(columns, c)
+		}
+	}
+	return
 }
 
 // Field returns the field with this column name or an error.
@@ -403,6 +414,16 @@ func (t View) Columns() []awql.DynamicField {
 		fields[i] = f
 	}
 	return fields
+}
+
+// ColumnsPrefixedBy returns the list of table's columns prefixed by this pattern.
+func (t View) ColumnsPrefixedBy(pattern string) (columns []awql.DynamicField) {
+	for _, c := range t.Cols {
+		if strings.HasPrefix(c.Head, pattern) {
+			columns = append(columns, c)
+		}
+	}
+	return
 }
 
 // ConditionList returns the condition list.

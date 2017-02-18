@@ -155,6 +155,17 @@ func (d *Database) AddView(stmt awql.CreateViewStmt) error {
 	return nil
 }
 
+// ColumnNamesPrefixedBy returns a list of column names prefixed by its pattern.
+// If the pattern is empty, all column names are returned.
+func (d *Database) ColumnNamesPrefixedBy(pattern string) (columns []string) {
+	for s := range d.fd {
+		if strings.HasPrefix(s, pattern) {
+			columns = append(columns, s)
+		}
+	}
+	return
+}
+
 // Load loads all dependencies of the database.
 func (d *Database) Load() error {
 	if d.ready {
