@@ -2,9 +2,8 @@ package ui
 
 import (
 	"bytes"
-	"strings"
-
 	"regexp"
+	"strings"
 
 	db "github.com/rvflash/awql-db"
 	parser "github.com/rvflash/awql-parser"
@@ -16,34 +15,38 @@ type completer struct {
 }
 
 func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
-	if l := len(line); l == 0 || l < pos {
+	l := len(line)
+	if l == 0 || l < pos {
 		return
 	}
 	// Gets the main method name.
 	var buf bytes.Buffer
-	for i, r := range line {
+	for i := 0; i < l; i++ {
 		if i == pos {
 			// Current position of the cursor reached.
 			break
 		}
-		if r == ' ' {
+		if line[i] == ' ' {
 			if buf.Len() == 0 {
 				// Trims left space
 				continue
 			}
 			break
 		}
-		buf.WriteRune(r)
+		buf.WriteRune(line[i])
 	}
-	switch strings.ToUpper(buf.String()) {
-	case "CREATE":
-		return c.createCompleter(line, pos)
-	case "DESC", "DESCRIBE":
-		return c.describeCompleter(line, pos)
-	case "SELECT":
-		return c.selectCompleter(line, pos)
-	case "SHOW":
-		return c.showCompleter(line, pos)
+	if s := buf.String(); len(s) < l {
+		// Expected: `METHOD `
+		switch strings.ToUpper(s) {
+		case "CREATE":
+			return c.createCompleter(line, pos)
+		case "DESC", "DESCRIBE":
+			return c.describeCompleter(line, pos)
+		case "SELECT":
+			return c.selectCompleter(line, pos)
+		case "SHOW":
+			return c.showCompleter(line, pos)
+		}
 	}
 	return
 }
@@ -54,7 +57,7 @@ func (c *completer) createCompleter(line []rune, pos int) (newLine [][]rune, len
 
 // describeCompleter
 func (c *completer) describeCompleter(line []rune, pos int) ([][]rune, int) {
-	t := splitRunesBySpace(line[:pos])
+	t := stringSplitBySpace(string(line[:pos]))
 	l := len(t)
 	if l < 2 {
 		// Expected: `[DESC ]`
@@ -101,27 +104,34 @@ const (
 )
 
 func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
+	// isColumnName returns true if the string is only literal `[0-9A-Za-z]`.
+	var isColumnName = func(s string) bool {
+		if ok, _ := regexp.MatchString("[[:alnum:]]", s); ok {
+			return !strings.EqualFold("AS", s)
+		}
+		return false
+	}
+
 	// columns parses the columns list to returns the column names.
 	// It also returns true as second parameter if the completion is still enable.
-	var columns = func(s string) (list []string, complete bool) {
+	var columns = func(s string) (list []string, incomplete bool) {
 		for _, s := range strings.Split(s, ",") {
-			p := strings.Split(s, " ")
+			p := stringSplitBySpace(s)
 			l := len(p)
-			ok, _ := regexp.MatchString("[[:alnum:]]", p[l-1])
-			if ok && !strings.EqualFold("AS", p[l-1]) {
+			if l > 0 && isColumnName(p[l-1]) {
 				list = append(list, p[l-1])
-				complete = l == 1
-			} else {
-				complete = false
 			}
+			incomplete = l < 2
 		}
 		return
 	}
 
 	// withCompletion splits a string and returns true if the last element can be completed.
 	var withCompletion = func(s, split string) bool {
+		// Splits by the given pattern.
 		v := strings.Split(s, split)
-		return len(strings.Split(strings.TrimSpace(v[len(v)-1]), " ")) == 1
+		// Splits around each instance of one or more consecutive white space characters.
+		return len(stringSplitBySpace(v[len(v)-1])) < 2
 	}
 
 	// keyword fetches current and previous word to verify if it's a keyword.
@@ -135,6 +145,12 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 		}
 		if strings.EqualFold("DURING", c) {
 			return during, true
+		}
+		if strings.EqualFold("GROUP", c) {
+			return void, true
+		}
+		if strings.EqualFold("ORDER", c) {
+			return void, true
 		}
 		if strings.EqualFold("BY", c) {
 			if strings.EqualFold("GROUP", p) {
@@ -151,14 +167,18 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	}
 
 	// Parses the statement to find the kind of completion to do.
-	t := splitRunesBySpace(line[:pos])
+	t := stringSplitBySpace(string(line[:pos]))
 	l := len(t)
+	if l < 2 {
+		return nil, 0
+	}
+	// Without table as context, statement begins with list of all columns.
 	tk := allColumn
 
 	var bs, bw, bg, bo bytes.Buffer
 	var tb, s string
 	for i := 1; i < l; i++ {
-		// Searches term like FROM, WHERE, etc.
+		// Searches keyword like FROM, WHERE, etc.
 		nk, ok := keyword(t[i], t[i-1])
 		if ok {
 			// Keyword found. Checks if statement is not ending.
@@ -171,24 +191,23 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 
 		switch tk {
 		case table:
-			if tb != "" && s != "" {
-				// Too much name for this table!
-				tk = void
-			} else {
+			if tb == "" {
 				tb = s
+			} else {
+				tk = void
 			}
 		case allColumn:
 			// Concatenates strings between SELECT and FROM
-			bs.WriteString(s)
+			bs.WriteString(" " + s)
 		case column:
 			// Concatenates strings after WHERE, until the next SQL keyword.
-			bw.WriteString(s)
+			bw.WriteString(" " + s)
 		case groupColumn:
 			// Concatenates strings after GROUP BY, until the next SQL keyword.
-			bg.WriteString(s)
+			bg.WriteString(" " + s)
 		case orderColumn:
 			// Concatenates strings after ORDER BY, until the next SQL keyword.
-			bo.WriteString(s)
+			bo.WriteString(" " + s)
 		case during:
 			if strings.Contains(s, ",") {
 				tk = void
@@ -201,8 +220,6 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	if tk == allColumn && !ok {
 		tk = void
 	}
-
-	// @debug ioutil.WriteFile("/tmp/rv", []byte(fmt.Sprintf("%v-%v\n", tk, s)), 0644)
 
 	// Searches for candidate to complete the statement.
 	var v []string
@@ -241,7 +258,7 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 
 // showCompleter
 func (c *completer) showCompleter(line []rune, pos int) ([][]rune, int) {
-	t := splitRunesBySpace(line[:pos])
+	t := stringSplitBySpace(string(line[:pos]))
 	l := len(t)
 	if l < 4 {
 		// Expected: `[SHOW TABLES WITH ]`
@@ -259,46 +276,45 @@ func (c *completer) showCompleter(line []rune, pos int) ([][]rune, int) {
 		cpos++
 	}
 	if cpos == l {
-		// Expected: `[SHOW FULL TABLES WITH ]`// Expected: `[SHOW FULL TABLES WITH ]`
+		// Expected: `[SHOW FULL TABLES WITH ]`
 		return nil, 0
 	}
 	return stringsAsCandidate(c.db.ColumnNamesPrefixedBy(t[cpos]), len(t[cpos]))
 }
 
 // listTableColumns returns the name of column's table prefixed by this pattern.
-func (c *completer) listTableColumns(tb db.DataTable, prefix string) []string {
+func (c *completer) listTableColumns(tb db.DataTable, prefix string) (names []string) {
 	var columns []parser.DynamicField
 	if prefix == "" {
 		columns = tb.Columns()
 	} else {
 		columns = tb.ColumnsPrefixedBy(prefix)
 	}
-	var names []string
 	names = make([]string, len(columns))
 	for i, c := range columns {
 		names[i] = c.Name()
 	}
-	return names
+	return
 }
 
 // listTables returns the name of all known tables prefixed by this pattern.
-func (c *completer) listTables(prefix string) []string {
-	var err error
+func (c *completer) listTables(prefix string) (names []string) {
 	var tables []db.DataTable
 	if prefix == "" {
+		var err error
 		tables, err = c.db.Tables()
+		if err != nil {
+			return nil
+		}
+
 	} else {
 		tables = c.db.TablesPrefixedBy(prefix)
 	}
-	if err != nil {
-		return nil
-	}
-	var names []string
 	names = make([]string, len(tables))
 	for i, t := range tables {
 		names[i] = t.SourceName()
 	}
-	return names
+	return
 }
 
 // listDurings returns the during values beginning by the prefix.
@@ -313,9 +329,13 @@ func listDurings(prefix string) []string {
 	return stringsPrefixedBy(during, prefix)
 }
 
-// splitRunesBySpace returns a slice of string by splitting a slice of runes by space.
-func splitRunesBySpace(r []rune) []string {
-	return strings.Split(strings.TrimLeft(string(r), " "), " ")
+// stringSplitBySpace returns a slice of string by splitting it by space.
+func stringSplitBySpace(s string) []string {
+	v := strings.Fields(s)
+	if strings.HasSuffix(s, " ") {
+		v = append(v, "")
+	}
+	return v
 }
 
 // stringAsCandidate returns a slice of runes with candidates for auto-completion.
