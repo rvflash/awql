@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/rvflash/awql/conf"
-	"github.com/rvflash/awql/io"
+	"github.com/rvflash/awql/ui"
 )
 
 func main() {
@@ -15,11 +15,11 @@ func main() {
 		exit(err)
 	}
 	// Launch the environment.
-	var src io.Scanner
+	var src ui.Scanner
 	if conf.IsInteractive() {
-		src = io.NewTerminal(conf)
+		src = ui.NewTerminal(conf)
 	} else {
-		src = io.NewCommandLine(conf)
+		src = ui.NewCommandLine(conf)
 	}
 	if err := src.Scan(); err != nil {
 		exit(err)

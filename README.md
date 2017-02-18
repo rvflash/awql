@@ -1,5 +1,11 @@
 # AWQL - The AWQL Command-Line Tool
 
+[![GoDoc](https://godoc.org/github.com/rvflash/awql?status.svg)](https://godoc.org/github.com/rvflash/awql)
+[![Build Status](https://img.shields.io/travis/rvflash/awql.svg)](https://travis-ci.org/rvflash/awql)
+[![Code Coverage](https://img.shields.io/codecov/c/github/rvflash/awql.svg)](http://codecov.io/github/rvflash/awql?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rvflash/awql)](https://goreportcard.com/report/github.com/rvflash/awql)
+
+
 Allows to request Google Adwords API reports with AWQL language.
 It is a simple SQL shell with input line editing capabilities. It supports interactive and non-interactive use.
 When used interactively, query results are presented in an ASCII-table format.
@@ -19,27 +25,27 @@ In order to improve the portability of this tool, since the v2.0.0, Awql is no l
 ### Usage
 
 ```bash
-~ $ awql -i "123-456-7890"
-~ Welcome to the AWQL monitor. Commands end with ; or \g.
-~ Your AWQL connection implicitly excludes zero impressions.
-~ Adwords API version: v201609
-~ 
-~ Reading table information for completion of table and column names.
-~ You can turn off this feature to get a quicker startup with -A
-~ 
-~ Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-~ 
-~ awql> SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5;
-~ +--------------+---------+--------------+------------+-----------+--------------------+
-~ | Campaign     | Clicks  | Impressions  | Cost       | Budget    | Tracking template  |
-~ +--------------+---------+--------------+------------+-----------+--------------------+
-~ | @3 #sp       | 526     | 42006        | 456020000  | 33000000  |                    |
-~ | Sports #1    | 0       | 0            | 0          | 33000000  |                    |
-~ | Lingerie #1  | 0       | 0            | 0          | 33000000  |                    |
-~ | Enfant #1    | 4       | 310          | 1210000    | 1000000   |                    |
-~ | Mode #1      | 196     | 13168        | 242870000  | 26000000  |                    |
-~ +--------------+---------+--------------+------------+-----------+--------------------+
-~ 5 rows in set (0.322 sec)
+$ awql -i "123-456-7890"
+Welcome to the AWQL monitor. Commands end with ; or \G.
+Your AWQL connection implicitly excludes zero impressions.
+Adwords API version: v201609
+
+Reading table information for completion of table and column names.
+You can turn off this feature to get a quicker startup with -A
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+awql> SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5;
++--------------+---------+--------------+------------+-----------+--------------------+
+| Campaign     | Clicks  | Impressions  | Cost       | Budget    | Tracking template  |
++--------------+---------+--------------+------------+-----------+--------------------+
+| @3 #sp       | 526     | 42006        | 456020000  | 33000000  |                    |
+| Sports #1    | 0       | 0            | 0          | 33000000  |                    |
+| Lingerie #1  | 0       | 0            | 0          | 33000000  |                    |
+| Enfant #1    | 4       | 310          | 1210000    | 1000000   |                    |
+| Mode #1      | 196     | 13168        | 242870000  | 26000000  |                    |
++--------------+---------+--------------+------------+-----------+--------------------+
+5 rows in set (0.322 sec)
 ```
  
  

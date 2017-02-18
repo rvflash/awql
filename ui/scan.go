@@ -1,4 +1,4 @@
-package io
+package ui
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
+	db "github.com/rvflash/awql-db"
 	parser "github.com/rvflash/awql-parser"
 	"github.com/rvflash/awql/conf"
 )
@@ -179,13 +180,23 @@ func (e *Terminal) Scan() error {
 	// Prints to standard output the welcome message.
 	e.printWelcome()
 
-	// Initializes the line reader.
-	reader, err := readline.NewEx(&readline.Config{
+	rc := &readline.Config{
 		Prompt:                 Prompt,
 		HistoryFile:            e.c.HistoryFile(),
 		DisableAutoSaveHistory: true,
 		InterruptPrompt:        "^C", // CTRL + C
-	})
+	}
+	// Uses automatic rehashing.
+	if e.c.WithAutoRehash() {
+		ac, err := e.completer()
+		if err != nil {
+			return err
+		}
+		rc.AutoComplete = ac
+	}
+
+	// Initializes the line reader.
+	reader, err := readline.NewEx(rc)
 	if err != nil {
 		return fmt.Errorf("ToolError.INVALID_TERM (%s)", err)
 	}
@@ -231,6 +242,14 @@ func (e *Terminal) Scan() error {
 	}
 
 	return nil
+}
+
+func (e *Terminal) completer() (readline.AutoCompleter, error) {
+	lx, err := db.Open(e.c.APIVersion() + "|" + e.c.DatabaseDir())
+	if err != nil {
+		return nil, err
+	}
+	return &completer{lx}, nil
 }
 
 // printAborted writes the unhappy end message.
