@@ -14,6 +14,7 @@ type completer struct {
 	db *db.Database
 }
 
+// Do
 func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	l := len(line)
 	if l == 0 || l < pos {
@@ -51,6 +52,7 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	return
 }
 
+// createCompleter
 func (c *completer) createCompleter(line []rune, pos int) ([][]rune, int) {
 	str := string(line[:pos])
 	t := stringSplitBySpace(str)
@@ -117,6 +119,7 @@ const (
 	during            // During values
 )
 
+// selectCompleter
 func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	// isColumnName returns true if the string is only literal `[0-9A-Za-z]`.
 	var isColumnName = func(s string) bool {

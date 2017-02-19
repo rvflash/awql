@@ -293,7 +293,6 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 
 	// Keeps only accepted Adwords Awql grammar as query.
 	s.si.SrcQuery = stmt.LegacyString()
-
 	// Requests the Adwords API without any args, binding already done.
 	rows, err := s.si.Query(nil)
 	if err != nil {

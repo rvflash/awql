@@ -11,11 +11,12 @@ It is a simple SQL shell with input line editing capabilities. It supports inter
 When used interactively, query results are presented in an ASCII-table format.
 When used non-interactively, the result is presented in comma-separated format. The output format or many other tricks can be changed using command options.
 
+
 ## Installation
 
-In order to improve the portability of this tool, since the v2.0.0, Awql is no longer developed with Bash and Awk but entirely with Go.
+In order to improve the portability of this tool, since the v1.0.0, Awql is no longer developed in Bash and Awk but entirely in Go.
 
-'awql' requires Go 1.7.1 or later.
+`awql` requires Go 1.7.1 or later.
 
 ```bash
 ~ $ go get -u github.com/rvflash/awql
