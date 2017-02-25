@@ -1,8 +1,6 @@
 package driver
 
-import (
-	"strings"
-)
+import "strings"
 
 // Error messages.
 var (
@@ -10,12 +8,27 @@ var (
 	ErrQuery           = NewQueryError("unsupported query")
 )
 
+// CacheError represents a cache error.
+type CacheError struct {
+	s string
+}
+
+// NewCacheError returns an error of type Cache with the given text.
+func NewCacheError(text string) error {
+	return &CacheError{formatError(text)}
+}
+
+// Error outputs a query error message.
+func (e *CacheError) Error() string {
+	return "CacheError." + e.s
+}
+
 // QueryError represents a query error.
 type QueryError struct {
 	s string
 }
 
-// NewQueryError returns an error of type Internal with the given text.
+// NewQueryError returns an error of type Query with the given text.
 func NewQueryError(text string) error {
 	return &QueryError{formatError(text)}
 }

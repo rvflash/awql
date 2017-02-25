@@ -6,9 +6,11 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"time"
 
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
+	cache "github.com/rvflash/csv-cache"
 )
 
 // Driver implements all methods to pretend as a sql database driver.
@@ -23,25 +25,22 @@ func init() {
 }
 
 // Open returns a new connection to the database.
-// @see DatabaseDir:WithCache|AdwordsId[:ApiVersion:SupportsZeroImpressions]|DeveloperToken[|ClientId][|ClientSecret][|RefreshToken]
-// @example /data/base/dir:false|123-456-7890:v201607:true|dEve1op3er7okeN|1234567890-c1i3n7iD.com|c1ien753cr37|1/R3Fr35h-70k3n
+// @see DatabaseDir:CacheDir:WithCache|AdwordsId[:ApiVersion:SupportsZeroImpressions]|DeveloperToken[|ClientId][|ClientSecret][|RefreshToken]
+// @example /data/base/dir:/cache/dir:false|123-456-7890:v201607:true|dEve1op3er7okeN|1234567890-c1i3n7iD.com|c1ien753cr37|1/R3Fr35h-70k3n
 func (d *AdvancedDriver) Open(dsn string) (driver.Conn, error) {
-	// Gets the API version to use.
-	var apiVersion = func(s string) string {
-		d := strings.Split(strings.Split(s, awql.DsnSep)[0], awql.DsnOptSep)
-		if len(d) > 1 {
-			return d[1]
-		}
-		return awql.APIVersion
-	}
 	// Extracts database directory and caching option.
-	var dbCache = func(s string) (dir string, caching bool) {
+	var dbCache = func(s string) (db, cache string, caching bool) {
 		d := strings.Split(s, awql.DsnOptSep)
-		if len(d) > 1 {
-			caching, _ = strconv.ParseBool(d[1])
+		switch len(d) {
+		case 3:
+			caching, _ = strconv.ParseBool(d[2])
+			fallthrough
+		case 2:
+			cache = d[1]
+			fallthrough
+		case 1:
+			db = d[0]
 		}
-		dir = d[0]
-
 		return
 	}
 	// Validates the data source name.
@@ -49,7 +48,21 @@ func (d *AdvancedDriver) Open(dsn string) (driver.Conn, error) {
 	if len(src) != 2 {
 		return nil, driver.ErrBadConn
 	}
-	dbd, wc := dbCache(src[0])
+	dbd, cached, wc := dbCache(src[0])
+
+	// Initializes the cache to save result sets inside.
+	ttl := 10 * time.Minute
+	if wc {
+		ttl = 24 * time.Hour
+	}
+	c := cache.New(cached, ttl)
+	if wc {
+		// Cache enabled, only removes outdated files.
+		c.FlushAll()
+	} else {
+		// Cache disabled, removes all existing file caches.
+		c.DeleteAll()
+	}
 
 	// Wraps the Awql driver.
 	dd := &awql.Driver{}
@@ -58,19 +71,30 @@ func (d *AdvancedDriver) Open(dsn string) (driver.Conn, error) {
 		return nil, err
 	}
 
+	// Gets the API version to use.
+	var idVersion = func(s string) (string, string) {
+		d := strings.Split(strings.Split(s, awql.DsnSep)[0], awql.DsnOptSep)
+		if len(d) > 1 {
+			return d[0], d[1]
+		}
+		return d[0], awql.APIVersion
+	}
+	id, v := idVersion(src[1])
+
 	// Loads all information about the database.
-	awqlDb, err := db.Open(apiVersion(src[1]) + "|" + dbd)
+	awqlDb, err := db.Open(v + "|" + dbd)
 	if err != nil {
 		return nil, err
 	}
-	return &Conn{cn: conn.(*awql.Conn), c: wc, db: awqlDb}, nil
+	return &Conn{cn: conn.(*awql.Conn), fc: c, db: awqlDb, id: id}, nil
 }
 
 // Conn represents a connection to a database and implements driver.Conn.
 type Conn struct {
 	cn *awql.Conn
 	db *db.Database
-	c  bool
+	fc *cache.Cache
+	id string
 }
 
 // Close marks this connection as no longer in use.
@@ -89,7 +113,7 @@ func (c *Conn) Prepare(q string) (driver.Stmt, error) {
 		// No query to prepare.
 		return nil, io.EOF
 	}
-	return &Stmt{si: &awql.Stmt{Db: c.cn, SrcQuery: q}, db: c.db}, nil
+	return &Stmt{si: &awql.Stmt{Db: c.cn, SrcQuery: q}, db: c.db, fc: c.fc, id: c.id}, nil
 }
 
 // Result is the result of a query execution.

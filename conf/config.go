@@ -85,7 +85,9 @@ func (c *Context) Dsn() string {
 	dsn.DeveloperToken = c.tk.DeveloperToken
 	dsn.RefreshToken = c.tk.RefreshToken
 
-	return driver.NewDsn(c.DatabaseDir(), dsn.String(), c.WithCache()).String()
+	return driver.NewDsn(
+		c.DatabaseDir(), dsn.String(), c.CacheDir(), c.WithCache(),
+	).String()
 }
 
 // ExecuteStmt returns the statement to execute.
@@ -168,12 +170,12 @@ func (c *Context) WithCache() bool {
 	return *c.opts.Caching
 }
 
-// filePath returns the path to the conf file.
+// filePath returns the path to the config file.
 func (c *Context) filePath() string {
 	if c.homeDir == "" {
 		return ""
 	}
-	return filepath.Join(c.homeDir, "conf")
+	return filepath.Join(c.homeDir, "config")
 }
 
 // mkDirHome creates if not already exists the home directory.
@@ -187,31 +189,26 @@ func (c *Context) mkDirHome() error {
 	if err != nil {
 		return err
 	}
-	// If not exists, create the home directory of Awql tool.
-	path := filepath.Join(usr.HomeDir, ".awql")
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.Mkdir(path, os.ModePerm); err != nil {
-			// Unable to create directory: .awql
+	// If not exists, create the user home directory of Awql tool: .awql
+	c.homeDir = filepath.Join(usr.HomeDir, ".awql")
+	if _, err := os.Stat(c.homeDir); os.IsNotExist(err) {
+		if err := os.Mkdir(c.homeDir, os.ModePerm); err != nil {
 			return err
 		}
-		c.homeDir = path
-
-		if err := os.Mkdir(c.CacheDir(), os.ModePerm); err != nil {
-			// Unable to create directory: .awql/cache
-			return err
-		}
-	} else {
-		c.homeDir = path
+	}
+	// Tries to create the cache directory: .awql/cache
+	if err := os.Mkdir(c.CacheDir(), os.ModePerm); !os.IsExist(err) {
+		return err
 	}
 	return nil
 }
 
-// Valid returns true if the conf file exists.
+// Valid returns true if the config file exists.
 func (c *Context) useDefaultAuth() bool {
 	if c.homeDir == "" {
 		return false
 	}
-	// Checks if conf file exists.
+	// Checks if config file exists.
 	_, err := os.Stat(c.filePath())
 
 	return err == nil

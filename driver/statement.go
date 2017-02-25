@@ -11,6 +11,7 @@ import (
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
+	cache "github.com/rvflash/csv-cache"
 )
 
 // Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
@@ -20,6 +21,8 @@ var doubleDash = " --"
 type Stmt struct {
 	si *awql.Stmt
 	db *db.Database
+	fc *cache.Cache
+	id string
 	p  parser.Stmt
 }
 
@@ -293,13 +296,26 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 
 	// Keeps only accepted Adwords Awql grammar as query.
 	s.si.SrcQuery = stmt.LegacyString()
-	// Requests the Adwords API without any args, binding already done.
-	rows, err := s.si.Query(nil)
-	if err != nil {
-		return nil, err
+
+	// Builds a unique hash for this query / Adwords ID.
+	hash, _ := s.si.Hash()
+	hash += "-" + s.id
+
+	// Tries to retrieve data in cache.
+	var records [][]string
+	if records, err = s.fc.Get(hash); err != nil {
+		// Requests the Adwords API without any args, binding already done.
+		rows, err := s.si.Query(nil)
+		if err != nil {
+			return nil, err
+		}
+		records = rows.(*awql.Rows).Data
+		// Saves the data in cache.
+		go s.fc.Set(&cache.Item{Key: hash, Value: records})
 	}
+
 	// Aggregates rows by columns if needed.
-	data, err := aggregateData(stmt, rows.(*awql.Rows))
+	data, err := aggregateData(stmt, records)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +339,7 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 }
 
 // aggregateData
-func aggregateData(stmt parser.SelectStmt, rows *awql.Rows) ([][]driver.Value, error) {
+func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value, error) {
 	// parseTime parses a string and returns its time representation by using the layout.
 	var parseTime = func(layout, s string) (time.Time, error) {
 		if s == doubleDash {
@@ -372,7 +388,7 @@ func aggregateData(stmt parser.SelectStmt, rows *awql.Rows) ([][]driver.Value, e
 	// Builds a map with group values as key.
 	var data map[string][]driver.Value
 	data = make(map[string][]driver.Value)
-	for p, f := range rows.Data {
+	for p, f := range records {
 		// Picks the aggregate values.
 		var group []uint64
 		if groupSize > 0 {
