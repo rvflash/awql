@@ -1,41 +1,38 @@
 package driver
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Error messages.
 var (
-	ErrMultipleQueries = NewQueryError("unsupported multi queries")
-	ErrQuery           = NewQueryError("unsupported query")
+	ErrMultipleQueries = NewError("unsupported multi queries")
+	ErrQuery           = NewError("unsupported query")
 )
 
-// CacheError represents a cache error.
-type CacheError struct {
+// Error represents a internal error.
+type Error struct {
 	s string
+	a interface{}
 }
 
-// NewCacheError returns an error of type Cache with the given text.
-func NewCacheError(text string) error {
-	return &CacheError{formatError(text)}
+// NewDriverError returns an error of type Driver with the given text.
+func NewError(text string) error {
+	return &Error{s: formatError(text)}
+}
+
+// NewDriverError returns an error of type Driver with the given text.
+func NewXError(text string, arg interface{}) error {
+	return &Error{s: formatError(text), a: arg}
 }
 
 // Error outputs a query error message.
-func (e *CacheError) Error() string {
-	return "CacheError." + e.s
-}
-
-// QueryError represents a query error.
-type QueryError struct {
-	s string
-}
-
-// NewQueryError returns an error of type Query with the given text.
-func NewQueryError(text string) error {
-	return &QueryError{formatError(text)}
-}
-
-// Error outputs a query error message.
-func (e *QueryError) Error() string {
-	return "QueryError." + e.s
+func (e *Error) Error() string {
+	if e.a != nil {
+		return fmt.Sprintf("DriverError.%v (%v)", e.s, e.a)
+	}
+	return "DriverError." + e.s
 }
 
 // formatError returns a string in upper case with underscore instead of space.
