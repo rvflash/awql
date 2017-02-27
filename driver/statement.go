@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"hash/fnv"
@@ -14,8 +15,100 @@ import (
 	cache "github.com/rvflash/csv-cache"
 )
 
-// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
-var doubleDash = " --"
+// Generic patterns.
+const (
+	// Google can prefix a value by auto: or just return auto to symbolize an automatic strategy.
+	auto      = "auto"
+	autoValue = auto + ": "
+
+	// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
+	doubleDash = " --"
+)
+
+// AutoNullFloat64 represents a float64 that may be null or defined as auto valuer.
+type AutoNullFloat64 struct {
+	NullFloat64 sql.NullFloat64
+	Auto        bool
+}
+
+// Value implements the driver Valuer interface.
+func (n AutoNullFloat64) Value() (driver.Value, error) {
+	var v string
+	if n.Auto {
+		if !n.NullFloat64.Valid {
+			return auto, nil
+		}
+		v = autoValue
+	}
+	if !n.NullFloat64.Valid {
+		return doubleDash, nil
+	}
+	v += strconv.FormatFloat(n.NullFloat64.Float64, 'f', 2, 64)
+
+	return v, nil
+}
+
+// AutoNullInt64 represents a int64 that may be null or defined as auto valuer.
+type AutoNullInt64 struct {
+	NullInt64 sql.NullInt64
+	Auto      bool
+}
+
+// Value implements the driver Valuer interface.
+func (n AutoNullInt64) Value() (driver.Value, error) {
+	var v string
+	if n.Auto {
+		if !n.NullInt64.Valid {
+			return auto, nil
+		}
+		v = autoValue
+	}
+	if !n.NullInt64.Valid {
+		return doubleDash, nil
+	}
+	v += strconv.FormatInt(n.NullInt64.Int64, 10)
+
+	return v, nil
+}
+
+// Float64Int represents a float64 that may be rounded by using its precision.
+type Float64 struct {
+	Float64   float64
+	Precision int
+}
+
+// Value implements the driver Valuer interface.
+func (n Float64) Value() (driver.Value, error) {
+	return strconv.FormatFloat(n.Float64, 'f', n.Precision, 64), nil
+}
+
+// NullString represents a string that may be null.
+type NullString struct {
+	String string
+	Valid  bool // Valid is true if String is not NULL
+}
+
+// Value implements the driver Valuer interface.
+func (n NullString) Value() (driver.Value, error) {
+	if !n.Valid {
+		return doubleDash, nil
+	}
+	return n.String, nil
+}
+
+// NullTime represents a Time that may be not set.
+type Time struct {
+	Time   time.Time
+	Layout string
+}
+
+// Value implements the driver Valuer interface.
+func (n Time) Value() (driver.Value, error) {
+	if n.Time.IsZero() {
+		return doubleDash, nil
+	}
+	return n.Time.Format(n.Layout), nil
+}
 
 // Stmt is a prepared statement.
 type Stmt struct {
@@ -170,22 +263,6 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 		return data
 	}
 
-	// fieldKind returns for each column, their kind.
-	var fieldKind = func(cols []string) []string {
-		kind := make([]string, len(cols))
-		for i, c := range cols {
-			switch c {
-			case "Supports_Zero_Impressions", "Enum":
-				kind[i] = "ENUM"
-			case "Not_compatible_with":
-				kind[i] = "LIST"
-			default:
-				kind[i] = "STRING"
-			}
-		}
-		return kind
-	}
-
 	// Filters on one column.
 	if cols := stmt.Columns(); len(cols) > 0 {
 		fd, err := tb.Field(cols[0].Name())
@@ -194,7 +271,6 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 		}
 		return &Rows{
 			cols: names,
-			kind: fieldKind(names),
 			data: [][]driver.Value{fieldData(fd, tb.AggregateFieldName(), stmt.FullMode())},
 			size: 1,
 		}, nil
@@ -210,7 +286,6 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 
 	return &Rows{
 		cols: names,
-		kind: fieldKind(names),
 		data: rows,
 		size: size,
 	}, nil
@@ -249,6 +324,12 @@ func NewSelectStmt(stmt *Stmt) Queryer {
 	return &SelectStmt{stmt}
 }
 
+// Hash builds a unique hash for this query and this Adwords ID.
+func (s *SelectStmt) Hash() string {
+	hash, _ := s.si.Hash()
+	return hash + "-" + s.id
+}
+
 // Query executes a SELECT query
 // It internally calls the Awql driver, aggregates, sorts and limits the results.
 func (s *SelectStmt) Query() (driver.Rows, error) {
@@ -273,37 +354,26 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	kind := make([]string, len(stmt.Fields))
 	for i, c := range stmt.Fields {
 		// Converts parser.DynamicField to db.Field.
 		f, err := t.Field(c.Name())
 		if err != nil {
 			return nil, err
 		}
-		stmt.Fields[i] = f
-
-		// Gets data's kind to display.
-		if method, use := f.UseFunction(); use {
-			if method == "COUNT" {
-				kind[i] = "DOUBLE_TO_INT"
-			} else {
-				kind[i] = "DOUBLE"
-			}
-		} else {
-			kind[i] = strings.ToUpper(f.Kind())
-		}
+		// Casts to db.Column to merge it with statement properties.
+		col := f.(db.Column)
+		col.Unique = stmt.Fields[i].Distinct()
+		col.Label = stmt.Fields[i].Alias()
+		col.Method, _ = stmt.Fields[i].UseFunction()
+		stmt.Fields[i] = col
 	}
 
 	// Keeps only accepted Adwords Awql grammar as query.
 	s.si.SrcQuery = stmt.LegacyString()
 
-	// Builds a unique hash for this query / Adwords ID.
-	hash, _ := s.si.Hash()
-	hash += "-" + s.id
-
 	// Tries to retrieve data in cache.
 	var records [][]string
-	if records, err = s.fc.Get(hash); err != nil {
+	if records, err = s.fc.Get(s.Hash()); err != nil {
 		// Requests the Adwords API without any args, binding already done.
 		rows, err := s.si.Query(nil)
 		if err != nil {
@@ -311,7 +381,7 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		}
 		records = rows.(*awql.Rows).Data
 		// Saves the data in cache.
-		go s.fc.Set(&cache.Item{Key: hash, Value: records})
+		go s.fc.Set(&cache.Item{Key: s.Hash(), Value: records})
 	}
 
 	// Aggregates rows by columns if needed.
@@ -323,7 +393,6 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	rs := &Rows{
 		cols: fieldCols(stmt.Columns()),
 		data: data,
-		kind: kind,
 		size: len(data),
 	}
 	// Sorts rows by columns.
@@ -338,28 +407,82 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	return rs, nil
 }
 
-// aggregateData
+// aggregateData aggregates records as expected by the statement.
 func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value, error) {
-	// parseTime parses a string and returns its time representation by using the layout.
-	var parseTime = func(layout, s string) (time.Time, error) {
-		if s == doubleDash {
-			return time.Time{}, nil
+	// autoValue trims prefixes `auto` and returns a cleaned string.
+	// Also indicates with the second parameter, if it's a automatic value or not.
+	var autoValued = func(s string) (v string, ok bool) {
+		if ok = strings.HasPrefix(s, auto); !ok {
+			v = s
+			return
 		}
-		return time.Parse(layout, s)
+		// Trims the prefix `auto: `
+		if v = strings.TrimPrefix(s, autoValue); v == s {
+			// Removes only `auto` as prefix
+			v = strings.TrimPrefix(s, auto)
+		}
+		return
+	}
+	// parseFloat64 parse a string and returns it as double.
+	var parseFloat64 = func(s string) (d AutoNullFloat64, err error) {
+		if s == doubleDash {
+			// Not set, null value.
+			return
+		}
+		if s, d.Auto = autoValued(s); s == "" {
+			// Not set, null and automatic value.
+			return
+		}
+		if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
+			d.NullFloat64.Valid = true
+		}
+		return
+	}
+	// parseFloat64 parse a string and returns it as integer.
+	var parseInt64 = func(s string) (d AutoNullInt64, err error) {
+		if s == doubleDash {
+			// Not set, null value.
+			return
+		}
+		if s, d.Auto = autoValued(s); s == "" {
+			// Not set, null and automatic value.
+			return
+		}
+		if d.NullInt64.Int64, err = strconv.ParseInt(s, 10, 64); err == nil {
+			d.NullInt64.Valid = true
+		}
+		return
+	}
+	// parseTime parses a string and returns its time representation by using the layout.
+	var parseTime = func(layout, s string) (Time, error) {
+		if s == doubleDash {
+			// Not set, null value.
+			return Time{Time: time.Time{}}, nil
+		}
+		t, err := time.Parse(layout, s)
+
+		return Time{Time: t, Layout: layout}, err
+	}
+	// parseString parses a string and returns a NullString.
+	var parseString = func(s string) (NullString, error) {
+		if s == doubleDash {
+			return NullString{}, nil
+		}
+		return NullString{Valid: true, String: s}, nil
 	}
 	// cast gives the type equivalences of API adwords type of data.
 	var cast = func(s, kind string) (driver.Value, error) {
 		switch strings.ToUpper(kind) {
-		case "INT", "INTEGER", "LONG", "MONEY":
-			return strconv.ParseInt(s, 10, 64)
+		case "BID", "INT", "INTEGER", "LONG", "MONEY":
+			return parseInt64(s)
 		case "DOUBLE":
-			return strconv.ParseFloat(s, 64)
+			return parseFloat64(s)
 		case "DATE":
 			return parseTime("2006-01-02", s)
 		case "DATETIME":
 			return parseTime("2006/01/02 15:04:05", s)
 		}
-		return s, nil
+		return parseString(s)
 	}
 	// hash returns a numeric hash for the given string.
 	var hash = func(s string) uint64 {
@@ -405,38 +528,49 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		for i, c := range stmt.Columns() {
 			if method, ok := c.UseFunction(); ok {
 				// Retrieves the aggregate value if already set.
-				var v, cv float64
+				var v Float64
 				if r, ok := data[key]; ok {
-					v = r[i].(float64)
+					v = r[i].(Float64)
 				}
 				if method == "COUNT" {
-					v++
-				} else {
-					// Casts to float the column value.
-					var err error
-					cv, err = strconv.ParseFloat(f[i], 64)
-					if err != nil {
-						return nil, err
+					// Increments the counter.
+					v.Float64++
+					row[i] = v
+					continue
+				}
+				// Casts to float the current column's value.
+				cv, err := parseFloat64(f[i])
+				if err != nil {
+					return nil, err
+				}
+				if !cv.NullFloat64.Valid {
+					// Nil value, skip it.
+					row[i] = v
+					continue
+				}
+				// Applies the aggregate method on it valid value.
+				switch method {
+				case "AVG":
+					// ((previous average x number of elements seen) + current value) /
+					// current number of elements
+					fi := float64(i)
+					v.Float64 = ((v.Float64 * fi) + cv.NullFloat64.Float64) / (fi + 1)
+				case "MAX":
+					if v.Float64 < cv.NullFloat64.Float64 {
+						v.Float64 = cv.NullFloat64.Float64
 					}
-					// Applies the method on it.
-					switch method {
-					case "AVG":
-						// ((previous average x number of elements seen) + current value) / current number of elements
-						fi := float64(i)
-						v = ((v * fi) + cv) / (fi + 1)
-					case "MAX":
-						if v < cv {
-							v = cv
-						}
-					case "MIN":
-						if v > cv {
-							v = cv
-						}
-					case "SUM":
-						v += cv
-					default:
-						return nil, fmt.Errorf("unknown method named %s", method)
+				case "MIN":
+					if v.Float64 > cv.NullFloat64.Float64 {
+						v.Float64 = cv.NullFloat64.Float64
 					}
+				case "SUM":
+					v.Float64 += cv.NullFloat64.Float64
+				default:
+					return nil, NewXError("unknown method", method)
+				}
+				// Determines the precision to use in order to round it.
+				if strings.ToUpper(c.(db.Field).Kind()) == "DOUBLE" {
+					v.Precision = 2
 				}
 				row[i] = v
 			} else {
@@ -471,41 +605,41 @@ func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
 
 	for i, o := range stmt.OrderList() {
 		pos := o.Position() - 1
-		f := stmt.Columns()[pos].(db.Field)
 		orders[i] = func(p1, p2 []driver.Value) bool {
-			// Casts values to compare it.
-			var kind string
-			if _, use := f.UseFunction(); use {
-				kind = "DOUBLE"
-			} else {
-				// Gets raw type from Google API. Manages `Long` or `long`.
-				kind = strings.ToUpper(f.Kind())
-			}
-			switch kind {
-			case "INT", "INTEGER", "LONG", "MONEY":
-				v1, v2 := p1[pos].(int64), p2[pos].(int64)
+			switch p1[pos].(type) {
+			case AutoNullInt64:
+				v1, v2 := p1[pos].(AutoNullInt64), p2[pos].(AutoNullInt64)
 				if o.SortDescending() {
-					return v1 > v2
+					return v1.NullInt64.Int64 > v2.NullInt64.Int64
 				}
-				return v1 < v2
-			case "DOUBLE":
-				v1, v2 := p1[pos].(float64), p2[pos].(float64)
+				return v1.NullInt64.Int64 < v2.NullInt64.Int64
+			case AutoNullFloat64:
+				v1, v2 := p1[pos].(AutoNullFloat64), p2[pos].(AutoNullFloat64)
 				if o.SortDescending() {
-					return v1 > v2
+					return v1.NullFloat64.Float64 > v2.NullFloat64.Float64
 				}
-				return v1 < v2
-			case "DATE", "DATETIME":
-				v1, v2 := p1[pos].(time.Time), p2[pos].(time.Time)
+				return v1.NullFloat64.Float64 < v2.NullFloat64.Float64
+			case Float64:
+				v1, v2 := p1[pos].(Float64), p2[pos].(Float64)
 				if o.SortDescending() {
-					return !v1.Before(v2)
+					return v1.Float64 > v2.Float64
 				}
-				return v1.Before(v2)
+				return v1.Float64 < v2.Float64
+			case Time:
+				v1, v2 := p1[pos].(Time), p2[pos].(Time)
+				if o.SortDescending() {
+					return !v1.Time.Before(v2.Time)
+				}
+				return v1.Time.Before(v2.Time)
+			case NullString:
+				v1, v2 := p1[pos].(NullString), p2[pos].(NullString)
+				if o.SortDescending() {
+					return v1.String > v2.String
+				}
+				return v1.String < v2.String
 			default:
-				v1, v2 := p1[pos].(string), p2[pos].(string)
-				if o.SortDescending() {
-					return v1 > v2
-				}
-				return v1 < v2
+				// Type of value do not managed by sort order.
+				return false
 			}
 		}
 	}
@@ -549,19 +683,6 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 		}
 		return data
 	}
-	// fieldKind returns for each column, their kind.
-	var fieldKind = func(cols []string) []string {
-		kind := make([]string, len(cols))
-		for i, c := range cols {
-			switch c {
-			case "Table_type":
-				kind[i] = "ENUM"
-			default:
-				kind[i] = "STRING"
-			}
-		}
-		return kind
-	}
 
 	var tables []db.DataTable
 	if p, ok := stmt.LikePattern(); ok {
@@ -597,7 +718,6 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	cols := fieldCols(s.db.Version, stmt.FullMode())
 	return &Rows{
 		cols: cols,
-		kind: fieldKind(cols),
 		data: rows,
 		size: size,
 	}, nil
