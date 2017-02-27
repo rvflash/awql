@@ -4,16 +4,15 @@ import (
 	"database/sql/driver"
 	"io"
 	"sort"
-	"time"
 )
 
 // Rows is an iterator over an executed query's results.
 // It implements sort and driver.Rows interfaces.
 type Rows struct {
-	data       [][]driver.Value
-	less       []lessFunc
-	cols, kind []string
-	size, pos  int
+	data      [][]driver.Value
+	less      []lessFunc
+	cols      []string
+	size, pos int
 }
 
 // Len
@@ -65,23 +64,18 @@ func (r *Rows) Next(dest []driver.Value) error {
 	if r.pos == r.size {
 		return io.EOF
 	}
-	// formatTime  returns a textual representation of the time value formatted
-	// according to layout.
-	var formatTime = func(layout string, t time.Time) string {
-		if t.IsZero() {
-			return doubleDash
-		}
-		return t.Format(layout)
-	}
 	for i := 0; i < len(r.cols); i++ {
-		// Overrides the data's kind to display it as expected.
-		switch r.kind[i] {
-		case "DOUBLE_TO_INT":
-			dest[i] = int64(r.data[r.pos][i].(float64))
-		case "DATETIME":
-			dest[i] = formatTime("2006/01/02 15:04:05", r.data[r.pos][i].(time.Time))
-		case "DATE":
-			dest[i] = formatTime("2006-01-02", r.data[r.pos][i].(time.Time))
+		switch r.data[r.pos][i].(type) {
+		case AutoNullInt64:
+			dest[i], _ = r.data[r.pos][i].(AutoNullInt64).Value()
+		case AutoNullFloat64:
+			dest[i], _ = r.data[r.pos][i].(AutoNullFloat64).Value()
+		case Float64:
+			dest[i], _ = r.data[r.pos][i].(Float64).Value()
+		case Time:
+			dest[i], _ = r.data[r.pos][i].(Time).Value()
+		case NullString:
+			dest[i], _ = r.data[r.pos][i].(NullString).Value()
 		default:
 			dest[i] = r.data[r.pos][i]
 		}
