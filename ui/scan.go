@@ -8,8 +8,10 @@ import (
 
 	"github.com/chzyer/readline"
 	db "github.com/rvflash/awql-db"
+	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
 	"github.com/rvflash/awql/conf"
+	"github.com/rvflash/awql/driver"
 )
 
 const (
@@ -159,6 +161,10 @@ func (e *CommandLine) Seek(s string) error {
 			if err := w.Error(); err != nil {
 				return err
 			}
+
+			if err := rs.Err(); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -237,7 +243,14 @@ func (e *Terminal) Scan() error {
 
 		// Sends statement to Advanced Awql driver.
 		if err := e.Seek(q); err != nil {
-			return err
+			switch err.(type) {
+			case
+				*driver.Error, *parser.ParserError,
+				*awql.APIError, *awql.QueryError:
+				fmt.Println(err)
+			default:
+				return err
+			}
 		}
 	}
 

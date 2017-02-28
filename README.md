@@ -35,7 +35,7 @@ You can turn off this feature to get a quicker startup with -A
 
 Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
-awql> SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 5;
+awql> select CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate from CAMPAIGN_PERFORMANCE_REPORT limit 5;
 +--------------+---------+--------------+------------+-----------+--------------------+
 | Campaign     | Clicks  | Impressions  | Cost       | Budget    | Tracking template  |
 +--------------+---------+--------------+------------+-----------+--------------------+
@@ -88,7 +88,7 @@ $ awql> desc CAMPAIGN_SHARED_SET_REPORT;
 #### SELECT ... \G
 
 ```bash
-$ awql> SELECT CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 1\G
+$ awql> select CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplate from CAMPAIGN_PERFORMANCE_REPORT limit 1\G
 **************************** 1. row ****************************
        CampaignName: Campagne Shopping
              Clicks: 276526
@@ -115,7 +115,7 @@ $ awql> desc full CAMPAIGN_PERFORMANCE_REPORT EnhancedCpcEnabled;
 #### SHOW [FULL] TABLES [LIKE 'pattern']
 
 ```bash
-$ awql> SHOW TABLES LIKE "CAMPAIGN%";
+$ awql> show tables like "CAMPAIGN%";
 +-------------------------------------------------+
 | Tables_in_v201609                               |
 +-------------------------------------------------+
@@ -161,7 +161,7 @@ $ awql> show full tables with Url;
 #### SELECT ... LIMIT [offset,] row_count
 
 ```bash
-$ awql> SELECT CampaignName, Clicks, Impressions, Cost, TrackingUrlTemplate FROM CAMPAIGN_PERFORMANCE_REPORT LIMIT 3;
+$ awql> select CampaignName, Clicks, Impressions, Cost, TrackingUrlTemplate from CAMPAIGN_PERFORMANCE_REPORT order by 3 limit 3;
 +-------------+---------+--------------+------------+--------------------+
 | Campaign    | Clicks  | Impressions  | Cost       | Tracking template  |
 +-------------+---------+--------------+------------+--------------------+
