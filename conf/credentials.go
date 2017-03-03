@@ -33,7 +33,7 @@ func NewTmpCredentials(access, developer string) *Credentials {
 	}
 }
 
-// Get retrieves authenticate properties from console.
+// AskCredentials retrieves authenticate properties from console.
 func AskCredentials() *Credentials {
 	// Welcome to the process to install Awql.
 	fmt.Println("Thanks for using the Awql Command-Line Tool.")

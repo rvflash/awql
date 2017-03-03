@@ -14,15 +14,16 @@ import (
 	"github.com/rvflash/awql/driver"
 )
 
+// Shell commands and prompts.
 const (
-	// Shell prompts
-	Prompt          = "awql> "
-	PromptMultiLine = "   -> "
+	// Prompts
+	prompt          = "awql> "
+	promptMultiLine = "   -> "
 
 	// Commands
-	ShortCmdClear = "c"
-	ShortCmdHelp  = "h"
-	ShortCmdExit  = "q"
+	shortCmdClear = "c"
+	shortCmdHelp  = "h"
+	shortCmdExit  = "q"
 )
 
 // Command represents a command.
@@ -36,7 +37,7 @@ func (c Command) ShortForm() string {
 	return `\` + c.cmd
 }
 
-// String returns a readable representation of a command.
+// String returns a readable representation of the command.
 // It implements fmt.String() interface.
 // Output:
 // clear      (\c) Clear the current input statement.
@@ -44,30 +45,38 @@ func (c Command) String() string {
 	return fmt.Sprintf("%-10s (%s) %s", c.text, c.ShortForm(), c.usage)
 }
 
-// Set of available commands that the tool itself interprets.
-var CmdClear = Command{"clear", ShortCmdClear, "Clear the current input statement."}
-var CmdHelp = Command{"help", ShortCmdHelp, "Display this help."}
-var CmdExit = Command{"exit", ShortCmdExit, "Exit awql. Same as quit."}
-var CmdQuit = Command{"quit", ShortCmdExit, "Quit awql command line tool."}
+// CmdClear explains that this command clears the current statement.
+var CmdClear = Command{"clear", shortCmdClear, "Clear the current input statement."}
+
+// CmdHelp explains that this command gives help about the tool.
+var CmdHelp = Command{"help", shortCmdHelp, "Display this help."}
+
+// CmdExit explains that this command as the same result that the quit command.
+var CmdExit = Command{"exit", shortCmdExit, "Exit awql. Same as quit."}
+
+// CmdQuit explains that this quits the prompt.
+var CmdQuit = Command{"quit", shortCmdExit, "Quit awql command line tool."}
+
+// Commands list all available commands that the tool itself interprets.
 var Commands = [4]Command{CmdClear, CmdHelp, CmdExit, CmdQuit}
 
-// Scanner
+// Scanner is an interface used by Scan.
 type Scanner interface {
 	Scan() error
 }
 
-// Seeker
+// Seeker is an interface used by Seek.
 type Seeker interface {
 	Seek(s string) error
 }
 
-// ScanSeeker
+// ScanSeeker is an interface witch implements Scan and Seek.
 type ScanSeeker interface {
 	Scanner
 	Seeker
 }
 
-// Stdin represents a basic input.
+// CommandLine represents a basic input.
 type CommandLine struct {
 	c conf.Settings
 	d *sql.DB
@@ -89,7 +98,7 @@ func (e *CommandLine) Scan() (err error) {
 	return e.Seek(e.c.ExecuteStmt())
 }
 
-// Seek
+// Seek executes the given statement and write its records.
 func (e *CommandLine) Seek(s string) error {
 	// Executes each query one after the other.
 	stmts, err := parser.NewParser(strings.NewReader(s)).Parse()
@@ -171,12 +180,12 @@ func (e *CommandLine) Seek(s string) error {
 	return nil
 }
 
-// Terminal represents a terminal as stdin.
+// Terminal represents a terminal as stdin (shell).
 type Terminal struct {
 	CommandLine
 }
 
-// NewTerm returns an instance of Terminal.
+// NewTerminal returns an instance of Terminal.
 func NewTerminal(conf conf.Settings) ScanSeeker {
 	return &Terminal{CommandLine{c: conf}}
 }
@@ -187,7 +196,7 @@ func (e *Terminal) Scan() error {
 	e.printWelcome()
 
 	rc := &readline.Config{
-		Prompt:                 Prompt,
+		Prompt:                 prompt,
 		HistoryFile:            e.c.HistoryFile(),
 		DisableAutoSaveHistory: true,
 		InterruptPrompt:        "^C", // CTRL + C
@@ -229,11 +238,11 @@ func (e *Terminal) Scan() error {
 		// Internal tool commands.
 		if cmd, ok := useCommand(q); ok {
 			// List of commands that the tool itself interprets.
-			if cmd.cmd == ShortCmdExit {
+			if cmd.cmd == shortCmdExit {
 				// Quits the tool.
 				e.printExit()
 				break
-			} else if cmd.cmd == ShortCmdHelp {
+			} else if cmd.cmd == shortCmdHelp {
 				// Prints help message.
 				e.printHelp()
 			}
@@ -257,6 +266,7 @@ func (e *Terminal) Scan() error {
 	return nil
 }
 
+// completer returns if possible the auto-completion to offer.
 func (e *Terminal) completer() (readline.AutoCompleter, error) {
 	lx, err := db.Open(e.c.APIVersion() + "|" + e.c.DatabaseDir())
 	if err != nil {
@@ -326,12 +336,12 @@ func (e *Terminal) readLine(reader *readline.Instance) (string, error) {
 
 		// Continue until the end of the query.
 		if !withLineEnd(line) {
-			reader.SetPrompt(PromptMultiLine)
+			reader.SetPrompt(promptMultiLine)
 			continue
 		}
 
 		// Resets the environment for the next read line.
-		reader.SetPrompt(Prompt)
+		reader.SetPrompt(prompt)
 
 		// Computes all lines in one.
 		q := strings.Join(lines, " ")
@@ -374,7 +384,7 @@ func withCommandEnd(q string) bool {
 	return false
 }
 
-// command returns the command matching the given term.
+// useCommand returns the command matching the given term.
 // If it exists, it returns the second parameter to true.
 func useCommand(q string) (*Command, bool) {
 	for i, c := range Commands {
