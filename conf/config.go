@@ -10,6 +10,7 @@ import (
 	"github.com/rvflash/awql/driver"
 )
 
+// Options represents all available parameters.
 type Options interface {
 	AccountID() string
 	APIVersion() string
@@ -22,6 +23,7 @@ type Options interface {
 	WithCache() bool
 }
 
+// Settings represents all configurable options.
 type Settings interface {
 	Options
 	Dsn() string
@@ -38,7 +40,7 @@ type Context struct {
 	opts    *Flag
 }
 
-// NewCredentials returns an instance of Credentials.
+// New returns an instance of Credentials.
 func New() *Context {
 	return &Context{opts: Parse()}
 }
@@ -48,7 +50,7 @@ func (c *Context) AccountID() string {
 	return *c.opts.AccountID
 }
 
-// AccountID returns the API version.
+// APIVersion returns the API version.
 func (c *Context) APIVersion() string {
 	return *c.opts.APIVersion
 }
@@ -61,7 +63,7 @@ func (c *Context) CacheDir() string {
 	return filepath.Join(c.homeDir, "cache")
 }
 
-// DatabaseFile returns the path to the database.
+// DatabaseDir returns the path to the database.
 func (c *Context) DatabaseDir() string {
 	dir, err := filepath.Abs("vendor/github.com/rvflash/awql-db/src")
 	if err != nil {
@@ -95,7 +97,7 @@ func (c *Context) ExecuteStmt() string {
 	return *c.opts.Query
 }
 
-// HistoryFilePath returns the path to the history file.
+// HistoryFile returns the path to the history file.
 func (c *Context) HistoryFile() string {
 	if c.homeDir == "" {
 		return ""
@@ -103,7 +105,7 @@ func (c *Context) HistoryFile() string {
 	return filepath.Join(c.homeDir, "history")
 }
 
-// Set retrieves and saves the default authenticate information.
+// Init retrieves and saves the default authenticate information.
 func (c *Context) Init() error {
 	// Checks for required flags.
 	if err := c.opts.Check(); err != nil {
@@ -203,7 +205,7 @@ func (c *Context) mkDirHome() error {
 	return nil
 }
 
-// Valid returns true if the config file exists.
+// useDefaultAuth returns true if the config file exists.
 func (c *Context) useDefaultAuth() bool {
 	if c.homeDir == "" {
 		return false

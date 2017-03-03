@@ -17,12 +17,12 @@ const (
 	UsageQuery          = "Execute AWQL statement"
 )
 
-// CmdError represents an error for the command-line tool.
+// FlagError represents an error for the command-line tool.
 type FlagError struct {
 	s string
 }
 
-// NewCmdError returns an error of the parse error.
+// NewFlagError returns an error of the parse error.
 func NewFlagError(text string) error {
 	return &FlagError{s: text}
 }

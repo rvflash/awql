@@ -100,7 +100,7 @@ func (r *Rows) Limit(offset, rowCount int) {
 	r.size = rowCount
 }
 
-// Sort
+// Sort sorts rows as expected by less functions.
 func (r *Rows) Sort() {
 	sort.Sort(r)
 }
