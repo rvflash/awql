@@ -28,7 +28,7 @@ $ go get -u github.com/rvflash/awql
 $ awql -i "123-456-7890"
 Welcome to the AWQL monitor. Commands end with ; or \G.
 Your AWQL connection implicitly excludes zero impressions.
-Adwords API version: v201609
+Adwords API version: v201702
     
 Reading table information for completion of table and column names.
 You can turn off this feature to get a quicker startup with -A
@@ -67,7 +67,7 @@ Otherwise, with options `-T` to set the Google OAuth access token and `-D` to se
 * `*` can be used as shorthand to select all columns from all views
 * Caching data in order to don't request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * By default, all calls implicitly excludes zero impressions. This behavior can be changed with the option `-z`.
-
+* Uses
 
 ## SQL methods adding to AWQL grammar
 
@@ -124,7 +124,7 @@ $ awql> desc full CAMPAIGN_PERFORMANCE_REPORT EnhancedCpcEnabled;
 ```bash
 $ awql> show tables like "CAMPAIGN%";
 +-------------------------------------------------+
-| Tables_in_v201609                               |
+| Tables_in_v201702                               |
 +-------------------------------------------------+
 | CAMPAIGN_AD_SCHEDULE_TARGET_REPORT              |
 | CAMPAIGN_LOCATION_TARGET_REPORT                 |
@@ -132,10 +132,9 @@ $ awql> show tables like "CAMPAIGN%";
 | CAMPAIGN_NEGATIVE_LOCATIONS_REPORT              |
 | CAMPAIGN_NEGATIVE_PLACEMENTS_PERFORMANCE_REPORT |
 | CAMPAIGN_PERFORMANCE_REPORT                     |
-| CAMPAIGN_PLATFORM_TARGET_REPORT                 |
 | CAMPAIGN_SHARED_SET_REPORT                      |
 +-------------------------------------------------+
-8 rows in set (0.001 sec)
+7 rows in set (0.001 sec)
 ```
 
 The FULL modifier is supported such that SHOW FULL TABLES displays a second output column with the type of table.
@@ -143,7 +142,7 @@ The FULL modifier is supported such that SHOW FULL TABLES displays a second outp
 ```bash
 $ awql> show full tables like "ADGROUP%";
 +----------------------------+------------+
-| Tables_in_v201609          | Table_type |
+| Tables_in_v201702          | Table_type |
 +----------------------------+------------+
 | ADGROUP_PERFORMANCE_REPORT | BASE TABLE |
 +----------------------------+------------+
@@ -156,7 +155,7 @@ $ awql> show full tables like "ADGROUP%";
 ```bash
 $ awql> show full tables with Url;
 +--------------------------+------------+
-| Tables_in_v201609        | Table_type |
+| Tables_in_v201702        | Table_type |
 +--------------------------+------------+
 | KEYWORDLESS_QUERY_REPORT | BASE TABLE |
 | URL_PERFORMANCE_REPORT   | BASE TABLE |

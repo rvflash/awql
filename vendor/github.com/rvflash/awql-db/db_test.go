@@ -37,11 +37,12 @@ func TestDatabase_HasVersion(t *testing.T) {
 		{"", false},
 		{"v201607", false},
 		{"v201609", true},
+		{"v201702", true},
 	}
 
 	d, err := db.Open("")
 	if err != nil {
-		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
+		t.Fatalf("Expected no error with no version in DSN, received %s", err)
 	}
 	for i, vt := range vTests {
 		if ok := d.HasVersion(vt.v); vt.ok != ok {
@@ -53,12 +54,12 @@ func TestDatabase_HasVersion(t *testing.T) {
 func ExampleDatabase_SupportedVersions() {
 	d, _ := db.Open("")
 	fmt.Println(d.SupportedVersions())
-	// Output: [v201609]
+	// Output: [v201609 v201702]
 }
 
 func ExampleDatabase_Tables() {
 	// Ignores errors for the demo.
-	d, _ := db.Open("v201609")
+	d, _ := db.Open("v201702")
 	tb, _ := d.Tables()
 	for _, t := range tb {
 		fmt.Println(t.SourceName())
@@ -80,7 +81,6 @@ func ExampleDatabase_Tables() {
 	// CAMPAIGN_NEGATIVE_LOCATIONS_REPORT
 	// CAMPAIGN_NEGATIVE_PLACEMENTS_PERFORMANCE_REPORT
 	// CAMPAIGN_PERFORMANCE_REPORT
-	// CAMPAIGN_PLATFORM_TARGET_REPORT
 	// CAMPAIGN_SHARED_SET_REPORT
 	// CLICK_PERFORMANCE_REPORT
 	// CREATIVE_CONVERSION_REPORT
