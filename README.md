@@ -29,7 +29,7 @@ $ awql -i "123-456-7890"
 Welcome to the AWQL monitor. Commands end with ; or \G.
 Your AWQL connection implicitly excludes zero impressions.
 Adwords API version: v201609
-
+    
 Reading table information for completion of table and column names.
 You can turn off this feature to get a quicker startup with -A
 
@@ -48,11 +48,18 @@ awql> select CampaignName, Clicks, Impressions, Cost, Amount, TrackingUrlTemplat
 5 rows in set (0.322 sec)
 ```
  
- 
+### Quick start
+
+Set up credentials, on the first execution of the tool, by filling the mandatory fields (client ID, refresh token, etc.).
+For more information about how to create a access token to Google Adwords, see the [wiki on Google OAuth 2.0](https://github.com/rvflash/awql/wiki/Installation).
+
+Otherwise, with options `-T` to set the Google OAuth access token and `-D` to set the Google OAuth developer token, you can run AWQL queries in single shot mode, until the expriration on the token.  
+
+
 ## Features
 
 * Auto-refreshed the Google access token with the Google OAuth2 services.
-* When used interactively, adds the management of historic of queries with arrow keys.
+* When used interactively, adds the management of historic of queries with arrow keys. Can be disable with option `-A`.
 * Adds to AWQL grammar for requesting Adwords reports the following SQL clauses to `SELECT` statement: `LIMIT`, `GROUP BY` and `ORDER BY`.
 * Also offers the SQL methods `DESC [FULL]`, `SHOW [FULL] TABLES [LIKE|WITH]` and `CREATE [OR REPLACE] VIEW`.
 * Adds management of `\G` modifier to display result vertically (each column on a line)

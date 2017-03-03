@@ -8,10 +8,17 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/apcera/termtables"
+	"unicode/utf8"
 )
 
+// Ascii table separators.
+const (
+	asciiBorderX = "-"
+	asciiBorderY = "|"
+	asciiBorderI = "+"
+)
+
+// Writer
 type Writer interface {
 	Error() error
 	Flush()
@@ -19,41 +26,48 @@ type Writer interface {
 	WriteHead(record []string) error
 }
 
+// Positioner
 type Positioner interface {
 	Position() int
 }
 
+// PositionWriter
 type PositionWriter interface {
 	Positioner
 	Writer
 }
 
+// CsvWriter
 type CsvWriter struct {
 	w *csv.Writer
 }
 
+// NewCsvWriter
 func NewCsvWriter(w io.Writer) Writer {
 	return &CsvWriter{w: csv.NewWriter(w)}
 }
 
+// Error
 func (w *CsvWriter) Error() error {
 	return w.w.Error()
 }
 
-// Write any buffered data to the underlying writer.
+// Flush writes any buffered data to the underlying writer.
 func (w *CsvWriter) Flush() {
 	w.w.Flush()
 }
 
+// Write
 func (w *CsvWriter) Write(record []string) error {
 	return w.w.Write(record)
 }
 
+// WriteHead
 func (w *CsvWriter) WriteHead(record []string) error {
 	return w.Write(record)
 }
 
-// Data
+// StatsWriter
 type StatsWriter struct {
 	w        *bufio.Writer
 	affected bool
@@ -61,6 +75,7 @@ type StatsWriter struct {
 	t0, t1   time.Time
 }
 
+// NewStatsWriter
 func NewStatsWriter(w io.Writer, exec bool) PositionWriter {
 	return &StatsWriter{
 		w:        bufio.NewWriter(w),
@@ -69,6 +84,7 @@ func NewStatsWriter(w io.Writer, exec bool) PositionWriter {
 	}
 }
 
+// Error
 func (w *StatsWriter) Error() error {
 	return nil
 }
@@ -110,6 +126,7 @@ func (w *StatsWriter) Position() int {
 	return w.size + 1
 }
 
+// Write
 func (w *StatsWriter) Write(record []string) error {
 	// Increments the number of rows in the result set.
 	w.size++
@@ -117,6 +134,7 @@ func (w *StatsWriter) Write(record []string) error {
 	return nil
 }
 
+// WriteHead
 func (w *StatsWriter) WriteHead(record []string) error {
 	// Stops the timer, data has been retrieved.
 	w.t1 = time.Now()
@@ -124,29 +142,34 @@ func (w *StatsWriter) WriteHead(record []string) error {
 	return nil
 }
 
+// AsciiWriter
 type AsciiWriter struct {
-	t *termtables.Table
-	w *bufio.Writer
-	s PositionWriter
+	w        *bufio.Writer
+	s        PositionWriter
+	fmt, sep string
 }
 
+// NewAsciiWriter
 func NewAsciiWriter(w io.Writer) Writer {
 	return &AsciiWriter{
-		t: termtables.CreateTable(),
-		w: bufio.NewWriter(w),
-		s: NewStatsWriter(w, false),
+		w:   bufio.NewWriter(w),
+		s:   NewStatsWriter(w, false),
+		fmt: asciiBorderY,
+		sep: asciiBorderI,
 	}
 }
 
+// Error
 func (w *AsciiWriter) Error() error {
 	return w.s.Error()
 }
 
+// Flush
 func (w *AsciiWriter) Flush() {
 	// Outputs the terminal table.
 	if w.s.Position() > 1 {
-		// Do not print anything if the data table is empty.
-		fmt.Fprint(w.w, w.t.Render())
+		// Prints the end of the table only if it contains at less one line.
+		fmt.Fprint(w.w, w.sep)
 	}
 	// Writes any buffered data.
 	w.w.Flush()
@@ -154,18 +177,49 @@ func (w *AsciiWriter) Flush() {
 	w.s.Flush()
 }
 
+// Write
 func (w *AsciiWriter) Write(record []string) error {
-	w.t.AddRow(sliceConv(record)...)
+	// Prints the records
+	data := make([]interface{}, len(record))
+	for i, v := range record {
+		data[i] = v
+	}
+	fmt.Fprintf(w.w, w.fmt, data...)
 
 	return w.s.Write(record)
 }
 
+// WriteHead writes the table header and defines column sizes.
 func (w *AsciiWriter) WriteHead(record []string) error {
-	w.t.AddHeaders(sliceConv(record)...)
+	// Defines the format to use as separator line for a column.
+	var fmtColumn = func(size int, end string) string {
+		return " %-" + strconv.Itoa(size) + "v" + end
+	}
+	// Builds the ascii table
+	data := make([]interface{}, len(record))
+	var size int
+	for i := range record {
+		// Converts string's slice to slice of interface.
+		data[i] = record[i]
+		// Defines the columns size surround by space.
+		size = utf8.RuneCountInString(record[i]) + 1
+		// Defines the format to use to display each line.
+		w.fmt += fmtColumn(size, asciiBorderY)
+		// Builds the line to separate each records
+		w.sep += strings.Repeat(asciiBorderX, size+1) + asciiBorderI
+	}
+	// Finalizes the formats.
+	w.fmt += "\n"
+	w.sep += "\n"
+	// Prints the table's head.
+	fmt.Fprintf(w.w, w.sep)
+	fmt.Fprintf(w.w, w.fmt, data...)
+	fmt.Fprintf(w.w, w.sep)
 
 	return w.s.WriteHead(record)
 }
 
+// VAsciiWriter
 type VAsciiWriter struct {
 	w    *bufio.Writer
 	s    PositionWriter
@@ -173,6 +227,7 @@ type VAsciiWriter struct {
 	head []string
 }
 
+// NewVAsciiWriter
 func NewVAsciiWriter(w io.Writer) Writer {
 	return &VAsciiWriter{
 		w: bufio.NewWriter(w),
@@ -180,10 +235,12 @@ func NewVAsciiWriter(w io.Writer) Writer {
 	}
 }
 
+// Error
 func (w *VAsciiWriter) Error() error {
 	return w.s.Error()
 }
 
+// Flush
 func (w *VAsciiWriter) Flush() {
 	// Writes any buffered data.
 	w.w.Flush()
@@ -191,6 +248,7 @@ func (w *VAsciiWriter) Flush() {
 	w.s.Flush()
 }
 
+// Write
 func (w *VAsciiWriter) Write(record []string) error {
 	// Prints the separator line.
 	head := strings.Repeat("*", 28)
@@ -204,26 +262,21 @@ func (w *VAsciiWriter) Write(record []string) error {
 	return w.s.Write(record)
 }
 
+// WriteHead
 func (w *VAsciiWriter) WriteHead(record []string) error {
 	// Saves the column names.
-	w.head = record
 
 	// Get the length of the header column to define output format.
 	max := 0
-	for _, c := range record {
-		if size := len(c); size > max {
+	size := len(record)
+	w.head = make([]string, size)
+	for i := 0; i < size; i++ {
+		w.head[i] = strings.TrimSpace(record[i])
+		if size := len(w.head[i]); size > max {
 			max = size
 		}
 	}
 	w.fmt = "%" + strconv.Itoa(max) + "v: %v\n"
-	return w.s.WriteHead(record)
-}
 
-// sliceConv converts []string to []interface {}.
-func sliceConv(src []string) []interface{} {
-	dest := make([]interface{}, len(src))
-	for i, v := range src {
-		dest[i] = v
-	}
-	return dest
+	return w.s.WriteHead(record)
 }

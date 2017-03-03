@@ -1,13 +1,13 @@
 package driver
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"hash/fnv"
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
@@ -15,108 +15,13 @@ import (
 	cache "github.com/rvflash/csv-cache"
 )
 
-// Generic patterns.
-const (
-	// Google can prefix a value by auto: or just return auto to symbolize an automatic strategy.
-	auto      = "auto"
-	autoValue = auto + ": "
-
-	// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
-	doubleDash = " --"
-)
-
-// AutoNullFloat64 represents a float64 that may be null or defined as auto valuer.
-type AutoNullFloat64 struct {
-	NullFloat64 sql.NullFloat64
-	Auto        bool
-}
-
-// Value implements the driver Valuer interface.
-func (n AutoNullFloat64) Value() (driver.Value, error) {
-	var v string
-	if n.Auto {
-		if !n.NullFloat64.Valid {
-			return auto, nil
-		}
-		v = autoValue
-	}
-	if !n.NullFloat64.Valid {
-		return doubleDash, nil
-	}
-	v += strconv.FormatFloat(n.NullFloat64.Float64, 'f', 2, 64)
-
-	return v, nil
-}
-
-// AutoNullInt64 represents a int64 that may be null or defined as auto valuer.
-type AutoNullInt64 struct {
-	NullInt64 sql.NullInt64
-	Auto      bool
-}
-
-// Value implements the driver Valuer interface.
-func (n AutoNullInt64) Value() (driver.Value, error) {
-	var v string
-	if n.Auto {
-		if !n.NullInt64.Valid {
-			return auto, nil
-		}
-		v = autoValue
-	}
-	if !n.NullInt64.Valid {
-		return doubleDash, nil
-	}
-	v += strconv.FormatInt(n.NullInt64.Int64, 10)
-
-	return v, nil
-}
-
-// Float64Int represents a float64 that may be rounded by using its precision.
-type Float64 struct {
-	Float64   float64
-	Precision int
-}
-
-// Value implements the driver Valuer interface.
-func (n Float64) Value() (driver.Value, error) {
-	return strconv.FormatFloat(n.Float64, 'f', n.Precision, 64), nil
-}
-
-// NullString represents a string that may be null.
-type NullString struct {
-	String string
-	Valid  bool // Valid is true if String is not NULL
-}
-
-// Value implements the driver Valuer interface.
-func (n NullString) Value() (driver.Value, error) {
-	if !n.Valid {
-		return doubleDash, nil
-	}
-	return n.String, nil
-}
-
-// NullTime represents a Time that may be not set.
-type Time struct {
-	Time   time.Time
-	Layout string
-}
-
-// Value implements the driver Valuer interface.
-func (n Time) Value() (driver.Value, error) {
-	if n.Time.IsZero() {
-		return doubleDash, nil
-	}
-	return n.Time.Format(n.Layout), nil
-}
-
 // Stmt is a prepared statement.
 type Stmt struct {
 	si *awql.Stmt
 	db *db.Database
 	fc *cache.Cache
-	id string
 	p  parser.Stmt
+	id string
 }
 
 // Bind applies the required argument replacements on the query.
@@ -233,61 +138,100 @@ func (s *DescribeStmt) Query() (driver.Rows, error) {
 		return ""
 	}
 
-	// fieldCols returns the columns names.
-	var fieldCols = func(full bool) []string {
-		cols := []string{"Field", "Type", "Key", "Supports_Zero_Impressions"}
-		if full {
-			cols = append(cols, "Enum", "Not_compatible_with")
+	// fieldNames returns the columns names.
+	var fieldNames = func(sizes []int) (cols []string) {
+		size := len(sizes)
+		if size == 0 {
+			return
+		}
+		cols = make([]string, size)
+		switch size {
+		case 6:
+			// Full mode
+			cols[4] = fmtColumnName("Enum", sizes[4])
+			cols[5] = fmtColumnName("Not_compatible_with", sizes[5])
+			fallthrough
+		case 4:
+			// Default behavior
+			cols[0] = fmtColumnName("Field", sizes[0])
+			cols[1] = fmtColumnName("Type", sizes[1])
+			cols[2] = fmtColumnName("Key", sizes[2])
+			cols[3] = fmtColumnName("Supports_Zero_Impressions", sizes[3])
 		}
 		return cols
 	}
-	names := fieldCols(stmt.FullMode())
 
 	// fieldData returns the field properties.
-	var fieldData = func(f db.Field, pk string, full bool) []driver.Value {
-		isPk := false
-		if f.Name() == pk {
-			isPk = true
+	var aggregateData = func(fields []parser.DynamicField, pk string, full bool) (data [][]driver.Value, sizes []int) {
+		size := len(fields)
+		if size == 0 {
+			return
 		}
-		data := []driver.Value{
-			f.Name(), f.Kind(), formatKey(f.IsSegment(), isPk),
-			formatBool(f.SupportsZeroImpressions()),
-		}
+		colSize := 4
 		if full {
-			data = append(
-				data,
-				strings.Join(f.ValueList(), ", "),
-				strings.Join(f.NotCompatibleColumns(), ", "),
-			)
+			colSize = 6
 		}
-		return data
+		sizes = make([]int, colSize)
+		data = make([][]driver.Value, size)
+
+		// Computes information for each requested columns.
+		for i := 0; i < size; i++ {
+			f := fields[i].(db.Field)
+			data[i] = make([]driver.Value, colSize)
+			switch colSize {
+			case 6:
+				// Full mode
+				// > Enum list
+				s := strings.Join(f.ValueList(), ", ")
+				data[i][4] = s
+				sizes[4] = maxLen(s, sizes[4])
+				// > Not compatible columns
+				u := strings.Join(f.NotCompatibleColumns(), ", ")
+				data[i][5] = u
+				sizes[5] = maxLen(u, sizes[5])
+				fallthrough
+			case 4:
+				// Default behavior
+				// > Column name
+				n := f.Name()
+				data[i][0] = n
+				sizes[0] = maxLen(n, sizes[0])
+				// > Type of field
+				t := f.Kind()
+				data[i][1] = t
+				sizes[1] = maxLen(t, sizes[1])
+				// > Key field
+				k := formatKey(f.IsSegment(), f.Name() == pk)
+				data[i][2] = k
+				sizes[2] = maxLen(k, sizes[2])
+				// > Zero impressions
+				z := formatBool(f.SupportsZeroImpressions())
+				data[i][3] = z
+				sizes[3] = maxLen(z, sizes[3])
+			}
+		}
+
+		return data, sizes
 	}
 
-	// Filters on one column.
+	var colSize []int
+	var data [][]driver.Value
 	if cols := stmt.Columns(); len(cols) > 0 {
+		// Gets properties on one specific column.
 		fd, err := tb.Field(cols[0].Name())
 		if err != nil {
 			return nil, err
 		}
-		return &Rows{
-			cols: names,
-			data: [][]driver.Value{fieldData(fd, tb.AggregateFieldName(), stmt.FullMode())},
-			size: 1,
-		}, nil
-	}
-
-	// Gets properties of each columns of the table.
-	cols := tb.Columns()
-	size := len(cols)
-	rows := make([][]driver.Value, size)
-	for p, fd := range cols {
-		rows[p] = fieldData(fd.(db.Field), tb.AggregateFieldName(), stmt.FullMode())
+		data, colSize = aggregateData([]parser.DynamicField{fd}, tb.AggregateFieldName(), stmt.FullMode())
+	} else {
+		// Gets properties of each columns of the table.
+		data, colSize = aggregateData(tb.Columns(), tb.AggregateFieldName(), stmt.FullMode())
 	}
 
 	return &Rows{
-		cols: names,
-		data: rows,
-		size: size,
+		cols: fieldNames(colSize),
+		data: data,
+		size: len(data),
 	}, nil
 }
 
@@ -337,14 +281,16 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	stmt := s.p.(*parser.SelectStatement)
 
 	// Replaces the display name of columns by their names or alias if exist.
-	var fieldCols = func(columns []parser.DynamicField) []string {
+	var fieldNames = func(columns []parser.DynamicField, sizes []int) []string {
 		cols := make([]string, len(columns))
-		for p, c := range columns {
+		for i, c := range columns {
 			if c.Alias() != "" {
-				cols[p] = c.Alias()
+				cols[i] = c.Alias()
 			} else {
-				cols[p] = c.Name()
+				cols[i] = c.Name()
 			}
+			// Formats the column name in order to reflect the maximum length of the column.
+			cols[i] = fmtColumnName(cols[i], sizes[i])
 		}
 		return cols
 	}
@@ -385,13 +331,13 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	}
 
 	// Aggregates rows by columns if needed.
-	data, err := aggregateData(stmt, records)
+	data, colSize, err := aggregateData(stmt, records)
 	if err != nil {
 		return nil, err
 	}
 	// Initialises the result set.
 	rs := &Rows{
-		cols: fieldCols(stmt.Columns()),
+		cols: fieldNames(stmt.Columns(), colSize),
 		data: data,
 		size: len(data),
 	}
@@ -408,7 +354,9 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 }
 
 // aggregateData aggregates records as expected by the statement.
-func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value, error) {
+// Returns aggregated lines with maximum size of each column.
+// An error occurred if we fail to parse records.
+func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value, []int, error) {
 	// autoValue trims prefixes `auto` and returns a cleaned string.
 	// Also indicates with the second parameter, if it's a automatic value or not.
 	var autoValued = func(s string) (v string, ok bool) {
@@ -511,6 +459,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	// Builds a map with group values as key.
 	var data map[string][]driver.Value
 	data = make(map[string][]driver.Value)
+	cs := make([]int, columnSize)
 	for p, f := range records {
 		// Picks the aggregate values.
 		var group []uint64
@@ -541,7 +490,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 				// Casts to float the current column's value.
 				cv, err := parseFloat64(f[i])
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				if !cv.NullFloat64.Valid {
 					// Nil value, skip it.
@@ -566,7 +515,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 				case "SUM":
 					v.Float64 += cv.NullFloat64.Float64
 				default:
-					return nil, NewXError("unknown method", method)
+					return nil, nil, NewXError("unknown method", method)
 				}
 				// Determines the precision to use in order to round it.
 				if strings.ToUpper(c.(db.Field).Kind()) == "DOUBLE" {
@@ -576,10 +525,13 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 			} else {
 				v, err := cast(f[i], c.(db.Field).Kind())
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				row[i] = v
 			}
+
+			// Calculates the size of the column in order to keep its max length.
+			cs[i] = maxLen(f[i], cs[i])
 		}
 		data[key] = row
 	}
@@ -591,7 +543,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		rs[i] = r
 		i++
 	}
-	return rs, nil
+	return rs, cs, nil
 }
 
 // lessFunc
@@ -663,25 +615,21 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	// Casts statement.
 	stmt := s.p.(parser.ShowStmt)
 
-	// fieldCols returns the columns names.
-	var fieldCols = func(version string, full bool) []string {
-		cols := []string{"Tables_in_" + version}
-		if full {
-			cols = append(cols, "Table_type")
+	// fieldNames returns the columns names.
+	var fieldNames = func(version string, sizes []int) (cols []string) {
+		nbCol := len(sizes)
+		if nbCol == 0 {
+			return
+		}
+		cols = make([]string, nbCol)
+		switch nbCol {
+		case 2:
+			cols[1] = fmtColumnName("Table_type", sizes[1])
+			fallthrough
+		case 1:
+			cols[0] = fmtColumnName("Tables_in_"+version, sizes[0])
 		}
 		return cols
-	}
-	// fieldData returns the field properties.
-	var fieldData = func(t db.DataTable, full bool) []driver.Value {
-		data := []driver.Value{t.SourceName()}
-		if full {
-			kind := "BASE TABLE"
-			if t.IsView() {
-				kind = "VIEW"
-			}
-			data = append(data, kind)
-		}
-		return data
 	}
 
 	var tables []db.DataTable
@@ -711,14 +659,47 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	if size == 0 {
 		return &Rows{}, nil
 	}
-	rows := make([][]driver.Value, size)
-	for i := 0; i < size; i++ {
-		rows[i] = fieldData(tables[i], stmt.FullMode())
+	nbCol := 1
+	if stmt.FullMode() {
+		nbCol++
 	}
-	cols := fieldCols(s.db.Version, stmt.FullMode())
+	cs := make([]int, nbCol)
+	rs := make([][]driver.Value, size)
+	for i := 0; i < size; i++ {
+		rs[i] = make([]driver.Value, nbCol)
+		switch nbCol {
+		case 2:
+			var kind string
+			if tables[i].IsView() {
+				kind = "VIEW"
+			} else {
+				kind = "BASE TABLE"
+			}
+			rs[i][1] = kind
+			cs[1] = maxLen(kind, cs[1])
+			fallthrough
+		case 1:
+			rs[i][0] = tables[i].SourceName()
+			cs[0] = maxLen(tables[i].SourceName(), cs[0])
+		}
+	}
 	return &Rows{
-		cols: cols,
-		data: rows,
+		cols: fieldNames(s.db.Version, cs),
+		data: rs,
 		size: size,
 	}, nil
+}
+
+// maxLen returns the length in runes of the string, only if it is more bigger than minLen.
+func maxLen(name string, minLen int) (len int) {
+	len = utf8.RuneCountInString(name)
+	if len < minLen {
+		len = minLen
+	}
+	return
+}
+
+// fmtColumnName returns the name of the column formatted as expected to display it.
+func fmtColumnName(name string, minLen int) string {
+	return fmt.Sprintf("%-"+strconv.Itoa(maxLen(name, minLen))+"v", name)
 }
