@@ -65,6 +65,7 @@ func (r *Rows) Next(dest []driver.Value) error {
 		return io.EOF
 	}
 	for i := 0; i < len(r.cols); i++ {
+		// todo Improves with Scanner interface.
 		switch r.data[r.pos][i].(type) {
 		case AutoNullInt64:
 			dest[i], _ = r.data[r.pos][i].(AutoNullInt64).Value()

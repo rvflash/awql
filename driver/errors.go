@@ -9,6 +9,7 @@ import (
 var (
 	ErrMultipleQueries = NewError("unsupported multi queries")
 	ErrQuery           = NewError("unsupported query")
+	ErrNilPtr          = NewError("destination pointer is nil")
 )
 
 // Error represents a internal error.
