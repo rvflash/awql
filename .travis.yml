@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - 1.7
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - go test -race $(go list ./... | grep -v vendor)
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

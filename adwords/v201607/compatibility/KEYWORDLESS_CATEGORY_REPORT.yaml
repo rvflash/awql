@@ -1,9 +1,0 @@
-ConversionTypeName       : AverageCpc AverageCpm Clicks ConversionRate Conversions Cost CostPerConversion Ctr Impressions ValuePerConversion
-ConversionTrackerId      : AverageCpc AverageCpm Clicks ConversionRate Conversions Cost CostPerConversion Ctr Impressions ValuePerConversion
-ConversionCategoryName   : AverageCpc AverageCpm Clicks ConversionRate Conversions Cost CostPerConversion Ctr Impressions ValuePerConversion
-Ctr                      : ConversionCategoryName ConversionTrackerId ConversionTypeName
-Clicks                   : ConversionCategoryName ConversionTrackerId ConversionTypeName
-AverageCpc               : ConversionCategoryName ConversionTrackerId ConversionTypeName
-AverageCpm               : ConversionCategoryName ConversionTrackerId ConversionTypeName
-Impressions              : ConversionCategoryName ConversionTrackerId ConversionTypeName
-Cost                     : ConversionCategoryName ConversionTrackerId ConversionTypeName

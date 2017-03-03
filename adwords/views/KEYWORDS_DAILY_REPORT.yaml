@@ -1,6 +1,0 @@
-ORIGIN    : SELECT Date,Device,AdGroupId,Id,CampaignId,Impressions,CpcBid,Clicks,ConvertedClicks,Conversions,ConversionValue,Cost,AverageCpc,FirstPageCpc,AveragePosition,QualityScore,KeywordMatchType,SearchImpressionShare,TopOfPageCpc FROM KEYWORDS_PERFORMANCE_REPORT DURING LAST_30_DAYS ORDER BY Date ASC
-NAMES     : Date Device AdGroupId Id CampaignId Impressions CpcBid Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc FirstPageCpc AveragePosition QualityScore KeywordMatchType SearchImpressionShare TopOfPageCpc
-FIELDS    : Date Device AdGroupId Id CampaignId Impressions CpcBid Clicks ConvertedClicks Conversions ConversionValue Cost AverageCpc FirstPageCpc AveragePosition QualityScore KeywordMatchType SearchImpressionShare TopOfPageCpc
-TABLE     : KEYWORDS_PERFORMANCE_REPORT
-DURING    : LAST_30_DAYS
-ORDER     : Date ASC
