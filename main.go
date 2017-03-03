@@ -9,6 +9,25 @@ import (
 	"github.com/rvflash/awql/ui"
 )
 
+// main launches the AWQL Command-Line Tool.
+//
+// Usage of awql:
+// 	-A	Disables automatic rehashing
+// 	-B	Enables printing of results using comma as the column separator
+// 	-D string
+// 		Google OAuth developer token
+// 	-T string
+// 		Google OAuth access token
+// 	-V string
+// 		Google Adwords API version (default "v201702")
+// 	-c	Enables data caching
+// 	-e string
+// 		Execute AWQL statement, disables interactive use
+// 	-i string
+// 		Google Adwords account ID
+// 	-v	Enables verbose mode
+// 	-z	Enables fetching of reports with the support of zero impressions
+//
 func main() {
 	conf := conf.New()
 	if err := conf.Init(); err != nil {
@@ -26,7 +45,7 @@ func main() {
 	}
 }
 
-// Exit causes the current program to exit with the appropriate status code.
+// exit causes the current program to exit with the appropriate status code.
 func exit(err error) {
 	if err == nil {
 		// See you soon.
