@@ -63,7 +63,7 @@ func (n AutoNullInt64) Value() (driver.Value, error) {
 	return v, nil
 }
 
-// Float64Int represents a float64 that may be rounded by using its precision.
+// Float64 represents a float64 that may be rounded by using its precision.
 type Float64 struct {
 	Float64   float64
 	Precision int
@@ -88,7 +88,7 @@ func (n NullString) Value() (driver.Value, error) {
 	return n.String, nil
 }
 
-// NullTime represents a Time that may be not set.
+// Time represents a Time that may be not set.
 type Time struct {
 	Time   time.Time
 	Layout string

@@ -13,7 +13,7 @@ import (
 	cache "github.com/rvflash/csv-cache"
 )
 
-// Driver implements all methods to pretend as a sql database driver.
+// AdvancedDriver implements all methods to pretend as a sql database driver.
 // It is an advanced version of Awql driver.
 // It adds cache, the possibility to get database details.
 type AdvancedDriver struct{}
