@@ -18,7 +18,7 @@ const (
 	asciiBorderI = "+"
 )
 
-// Writer
+// Writer represents
 type Writer interface {
 	Error() error
 	Flush()
