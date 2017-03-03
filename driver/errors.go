@@ -18,12 +18,12 @@ type Error struct {
 	a interface{}
 }
 
-// NewDriverError returns an error of type Driver with the given text.
+// NewError returns an error of type Driver with the given text.
 func NewError(text string) error {
 	return &Error{s: formatError(text)}
 }
 
-// NewDriverError returns an error of type Driver with the given text.
+// NewXError returns an error of type Driver with the given text.
 func NewXError(text string, arg interface{}) error {
 	return &Error{s: formatError(text), a: arg}
 }
