@@ -19,7 +19,7 @@ import (
 const (
 	apiURL     = "https://adwords.google.com/api/adwords/reportdownload/"
 	apiFmt     = "CSV"
-	apiTimeout = time.Duration(30 * time.Second)
+	apiTimeout = time.Duration(10 * time.Minute)
 )
 
 // Stmt is a prepared statement.
