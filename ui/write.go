@@ -18,7 +18,7 @@ const (
 	asciiBorderI = "+"
 )
 
-// Writer represents
+// Writer represents a writer.
 type Writer interface {
 	Error() error
 	Flush()
@@ -26,28 +26,28 @@ type Writer interface {
 	WriteHead(record []string) error
 }
 
-// Positioner
+// Positioner is an interface used by Position.
 type Positioner interface {
 	Position() int
 }
 
-// PositionWriter
+// PositionWriter represents a writer using a positioner.
 type PositionWriter interface {
 	Positioner
 	Writer
 }
 
-// CsvWriter
+// CsvWriter is a writer that build a CSV string.
 type CsvWriter struct {
 	w *csv.Writer
 }
 
-// NewCsvWriter
+// NewCsvWriter returns a CSV writer.
 func NewCsvWriter(w io.Writer) Writer {
 	return &CsvWriter{w: csv.NewWriter(w)}
 }
 
-// Error
+// Error returns the error occurred during the writing.
 func (w *CsvWriter) Error() error {
 	return w.w.Error()
 }
@@ -57,17 +57,17 @@ func (w *CsvWriter) Flush() {
 	w.w.Flush()
 }
 
-// Write
+// Write writes the data as a CVS line.
 func (w *CsvWriter) Write(record []string) error {
 	return w.w.Write(record)
 }
 
-// WriteHead
+// WriteHead writes the head of the CSV.
 func (w *CsvWriter) WriteHead(record []string) error {
 	return w.Write(record)
 }
 
-// StatsWriter
+// StatsWriter represents a statistics's writer.
 type StatsWriter struct {
 	w        *bufio.Writer
 	affected bool
@@ -75,7 +75,7 @@ type StatsWriter struct {
 	t0, t1   time.Time
 }
 
-// NewStatsWriter
+// NewStatsWriter returns a writer of stream's statistics.
 func NewStatsWriter(w io.Writer, exec bool) PositionWriter {
 	return &StatsWriter{
 		w:        bufio.NewWriter(w),
@@ -84,19 +84,19 @@ func NewStatsWriter(w io.Writer, exec bool) PositionWriter {
 	}
 }
 
-// Error
+// Error returns nil. Just implements the writer of statistics.
 func (w *StatsWriter) Error() error {
 	return nil
 }
 
-// Write any buffered data to the underlying writer.
+// Flush writes any buffered data to the underlying writer.
+// It computes various information about the written data (duration, number, etc.).
 func (w *StatsWriter) Flush() {
 	// In case of the end date is not defined, sets it.
 	if w.t1.IsZero() {
 		// Statement using exec mode.
 		w.t1 = time.Now()
 	}
-
 	// Outputs statistics about the result set.
 	var format string
 	switch {
@@ -126,7 +126,7 @@ func (w *StatsWriter) Position() int {
 	return w.size + 1
 }
 
-// Write
+// Write increments the number of written lines.
 func (w *StatsWriter) Write(record []string) error {
 	// Increments the number of rows in the result set.
 	w.size++
@@ -134,7 +134,7 @@ func (w *StatsWriter) Write(record []string) error {
 	return nil
 }
 
-// WriteHead
+// WriteHead defines the start date of the writing job.
 func (w *StatsWriter) WriteHead(record []string) error {
 	// Stops the timer, data has been retrieved.
 	w.t1 = time.Now()
@@ -142,14 +142,14 @@ func (w *StatsWriter) WriteHead(record []string) error {
 	return nil
 }
 
-// AsciiWriter
+// AsciiWriter represents a terminal tables's writer.
 type AsciiWriter struct {
 	w        *bufio.Writer
 	s        PositionWriter
 	fmt, sep string
 }
 
-// NewAsciiWriter
+// NewAsciiWriter returns a writer of term tables.
 func NewAsciiWriter(w io.Writer) Writer {
 	return &AsciiWriter{
 		w:   bufio.NewWriter(w),
@@ -159,12 +159,12 @@ func NewAsciiWriter(w io.Writer) Writer {
 	}
 }
 
-// Error
+// Error returns any errors occurred during the job.
 func (w *AsciiWriter) Error() error {
 	return w.s.Error()
 }
 
-// Flush
+// Flush writes any buffered data to the underlying writer.
 func (w *AsciiWriter) Flush() {
 	// Outputs the terminal table.
 	if w.s.Position() > 1 {
@@ -177,7 +177,7 @@ func (w *AsciiWriter) Flush() {
 	w.s.Flush()
 }
 
-// Write
+// Write adds a line to the table.
 func (w *AsciiWriter) Write(record []string) error {
 	// Prints the records
 	data := make([]interface{}, len(record))
@@ -219,7 +219,7 @@ func (w *AsciiWriter) WriteHead(record []string) error {
 	return w.s.WriteHead(record)
 }
 
-// VAsciiWriter
+// VAsciiWriter represents a terminal writer whose prints one line per column value.
 type VAsciiWriter struct {
 	w    *bufio.Writer
 	s    PositionWriter
@@ -227,7 +227,7 @@ type VAsciiWriter struct {
 	head []string
 }
 
-// NewVAsciiWriter
+// NewVAsciiWriter returns a vertical writer.
 func NewVAsciiWriter(w io.Writer) Writer {
 	return &VAsciiWriter{
 		w: bufio.NewWriter(w),
@@ -235,12 +235,12 @@ func NewVAsciiWriter(w io.Writer) Writer {
 	}
 }
 
-// Error
+// Error returns any errors occurred during the job.
 func (w *VAsciiWriter) Error() error {
 	return w.s.Error()
 }
 
-// Flush
+// Flush writes any buffered data to the underlying writer.
 func (w *VAsciiWriter) Flush() {
 	// Writes any buffered data.
 	w.w.Flush()
@@ -248,7 +248,7 @@ func (w *VAsciiWriter) Flush() {
 	w.s.Flush()
 }
 
-// Write
+// Write prints a new line for each column value.
 func (w *VAsciiWriter) Write(record []string) error {
 	// Prints the separator line.
 	head := strings.Repeat("*", 28)
@@ -262,11 +262,8 @@ func (w *VAsciiWriter) Write(record []string) error {
 	return w.s.Write(record)
 }
 
-// WriteHead
+// WriteHead defines the prefix of each line. Each prefix is a column name.
 func (w *VAsciiWriter) WriteHead(record []string) error {
-	// Saves the column names.
-
-	// Get the length of the header column to define output format.
 	max := 0
 	size := len(record)
 	w.head = make([]string, size)
@@ -276,6 +273,7 @@ func (w *VAsciiWriter) WriteHead(record []string) error {
 			max = size
 		}
 	}
+	// Gets the length of the header column to define the output format.
 	w.fmt = "%" + strconv.Itoa(max) + "v: %v\n"
 
 	return w.s.WriteHead(record)

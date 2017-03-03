@@ -246,7 +246,7 @@ func NewCreateViewStmt(stmt *Stmt) Execer {
 	return &CreateViewStmt{stmt}
 }
 
-// Query executes a Create View query.
+// Exec executes a Create View query.
 func (s *CreateViewStmt) Exec() (driver.Result, error) {
 	// Creates the view in database.
 	// stmt, _ := s.p.(parser.CreateViewStmt)
