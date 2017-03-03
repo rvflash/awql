@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/rvflash/awql?status.svg)](https://godoc.org/github.com/rvflash/awql)
 [![Build Status](https://img.shields.io/travis/rvflash/awql.svg)](https://travis-ci.org/rvflash/awql)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rvflash/awql)](https://goreportcard.com/report/github.com/rvflash/awql)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rvflash/awql?)](https://goreportcard.com/report/github.com/rvflash/awql)
 
 
 Allows to request Google Adwords API reports with AWQL language.
@@ -67,7 +67,7 @@ Otherwise, with options `-T` to set the Google OAuth access token and `-D` to se
 * `*` can be used as shorthand to select all columns from all views
 * Caching data in order to don't request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * By default, all calls implicitly excludes zero impressions. This behavior can be changed with the option `-z`.
-* Uses
+* Uses the last available version of the Google Adwords API: v201702.
 
 ## SQL methods adding to AWQL grammar
 
