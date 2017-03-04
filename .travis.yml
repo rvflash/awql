@@ -1,7 +1,9 @@
 language: go
+go_import_path: github.com/rvflash/awql
 
 go:
-  - 1.7
+  - 1.7.x
+  - 1.8.x
 
 before_install:
   - go get -t -v ./...
