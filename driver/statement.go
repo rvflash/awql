@@ -301,16 +301,22 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		return nil, err
 	}
 	for i, c := range stmt.Fields {
-		// Converts parser.DynamicField to db.Field.
-		f, err := t.Field(c.Name())
+		// Manages the special case of the SQL method COUNT.
+		var m string
+		var f db.Field
+		if m, _ = c.UseFunction(); m == "COUNT" && c.Name() == "*" {
+			f, err = t.Field(t.AggregateFieldName())
+		} else {
+			f, err = t.Field(c.Name())
+		}
 		if err != nil {
 			return nil, err
 		}
 		// Casts to db.Column to merge it with statement properties.
 		col := f.(db.Column)
-		col.Unique = stmt.Fields[i].Distinct()
-		col.Label = stmt.Fields[i].Alias()
-		col.Method, _ = stmt.Fields[i].UseFunction()
+		col.Method = m
+		col.Label = c.Alias()
+		col.Unique = c.Distinct()
 		stmt.Fields[i] = col
 	}
 
@@ -368,6 +374,23 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		if v = strings.TrimPrefix(s, autoValue); v == s {
 			// Removes only `auto` as prefix
 			v = strings.TrimPrefix(s, auto)
+		}
+		return
+	}
+	// lenFloat64 returns the number of digit in the exponent.
+	var lenFloat64 = func(float64 Float64) (len int) {
+		len = 1
+		switch {
+		case float64.Float64 >= 1000000000000:
+			len += 12
+		case float64.Float64 >= 100000000:
+			len += 8
+		case float64.Float64 >= 10000:
+			len += 4
+		case float64.Float64 >= 100:
+			len += 2
+		case float64.Float64 >= 10:
+			len += 1
 		}
 		return
 	}
@@ -484,6 +507,8 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 				if method == "COUNT" {
 					// Increments the counter.
 					v.Float64++
+					// Calculates the length of the column.
+					cs[i] = lenFloat64(v)
 					row[i] = v
 					continue
 				}

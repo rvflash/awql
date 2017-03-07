@@ -51,6 +51,9 @@ func (r *Rows) Swap(i, j int) {
 
 // Columns returns the names of the columns.
 func (r *Rows) Columns() []string {
+	if r.size == 0 {
+		return nil
+	}
 	return r.cols
 }
 

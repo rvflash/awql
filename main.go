@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/rvflash/awql/conf"
@@ -56,8 +55,8 @@ func exit(err error) {
 	case *conf.FlagError:
 		fmt.Println(err)
 		conf.Usage()
-		os.Exit(1)
 	default:
-		log.Fatal(err)
+		fmt.Println(err)
 	}
+	os.Exit(1)
 }
