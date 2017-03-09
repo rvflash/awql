@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/rvflash/awql/conf"
 	"github.com/rvflash/awql/ui"
@@ -28,7 +31,13 @@ import (
 // 	-z	Enables fetching of reports with the support of zero impressions
 //
 func main() {
-	conf := conf.New()
+	// Gets the workspace directory (used to known the tool location after go install)
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		exit(errors.New("unable to retrieve the tool's location"))
+	}
+	// Initializes all environment properties.
+	conf := conf.New(filepath.Dir(file))
 	if err := conf.Init(); err != nil {
 		exit(err)
 	}
