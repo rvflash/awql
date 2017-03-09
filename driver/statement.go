@@ -377,20 +377,51 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
-	// lenFloat64 returns the number of digit in the exponent.
-	var lenFloat64 = func(float64 Float64) (len int) {
-		len = 1
+	// lenFloat64 returns the length of the float by calculating the number of digit + point.
+	var lenFloat64 = func(f Float64) (len int) {
 		switch {
-		case float64.Float64 >= 1000000000000:
-			len += 12
-		case float64.Float64 >= 100000000:
-			len += 8
-		case float64.Float64 >= 10000:
-			len += 4
-		case float64.Float64 >= 100:
-			len += 2
-		case float64.Float64 >= 10:
+		case f.Float64 >= 1000000000000:
 			len += 1
+			fallthrough
+		case f.Float64 >= 100000000000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 10000000000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 1000000000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 100000000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 10000000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 1000000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 100000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 10000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 1000:
+			len += 1
+			fallthrough
+		case f.Float64 >= 100:
+			len += 1
+			fallthrough
+		case f.Float64 >= 10:
+			len += 1
+			fallthrough
+		default:
+			len += 1
+		}
+		if f.Precision > 0 {
+			// Manages `.01`
+			len += f.Precision + 1
 		}
 		return
 	}
@@ -546,17 +577,18 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 				if strings.ToUpper(c.(db.Field).Kind()) == "DOUBLE" {
 					v.Precision = 2
 				}
+				// Calculates the size of the column in order to keep its max length.
+				cs[i] = lenFloat64(v)
 				row[i] = v
 			} else {
 				v, err := cast(f[i], c.(db.Field).Kind())
 				if err != nil {
 					return nil, nil, err
 				}
+				// Calculates the size of the column in order to keep its max length.
+				cs[i] = maxLen(f[i], cs[i])
 				row[i] = v
 			}
-
-			// Calculates the size of the column in order to keep its max length.
-			cs[i] = maxLen(f[i], cs[i])
 		}
 		data[key] = row
 	}

@@ -35,14 +35,15 @@ type Settings interface {
 
 // Context represents the program properties.
 type Context struct {
-	homeDir string
-	tk      *Credentials
-	opts    *Flag
+	wrkDir, homeDir string
+	tk              *Credentials
+	opts            *Flag
 }
 
 // New returns an instance of Credentials.
-func New() *Context {
-	return &Context{opts: Parse()}
+// The string dir contains the path of the current workspace.
+func New(dir string) *Context {
+	return &Context{wrkDir: dir, opts: Parse()}
 }
 
 // AccountID returns the Account ID.
@@ -65,11 +66,7 @@ func (c *Context) CacheDir() string {
 
 // DatabaseDir returns the path to the database.
 func (c *Context) DatabaseDir() string {
-	dir, err := filepath.Abs("vendor/github.com/rvflash/awql-db/src")
-	if err != nil {
-		return ""
-	}
-	return dir
+	return filepath.Join(c.wrkDir, "vendor/github.com/rvflash/awql-db/src")
 }
 
 // Dsn outputs the data source name.
