@@ -342,10 +342,14 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		return nil, err
 	}
 	// Initialises the result set.
+	size := len(data)
+	if size == 0 {
+		return nil, nil
+	}
 	rs := &Rows{
 		cols: fieldNames(stmt.Columns(), colSize),
 		data: data,
-		size: len(data),
+		size: size,
 	}
 	// Sorts rows by columns.
 	if len(stmt.OrderList()) > 0 {

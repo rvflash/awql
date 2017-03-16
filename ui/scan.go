@@ -136,12 +136,8 @@ func (e *CommandLine) Seek(s string) error {
 			}
 
 			// Get the column names.
-			cols, err := rs.Columns()
-			if err != nil {
-				// No more connection, an other error?
-				fmt.Println(err)
-				continue
-			} else if len(cols) == 0 {
+			cols, _ := rs.Columns()
+			if len(cols) == 0 {
 				// No data set.
 				w.Flush()
 				continue
