@@ -9,6 +9,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"database/sql"
+
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
@@ -371,6 +373,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	// Also indicates with the second parameter, if it's a automatic value or not.
 	var autoValued = func(s string) (v string, ok bool) {
 		if ok = strings.HasPrefix(s, auto); !ok {
+			// Not prefixed by auto keyword.
 			v = s
 			return
 		}
@@ -429,23 +432,28 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
-	// parseFloat64 parse a string and returns it as double.
-	var parseFloat64 = func(s string) (d AutoNullFloat64, err error) {
+	// parsePercentFloat64 parses a string and returns it as double that can be a percentage.
+	var parsePercentFloat64 = func(s string) (d PercentFloat64, err error) {
+		if d.Percent = strings.HasSuffix(s, "%"); d.Percent {
+			s = strings.TrimSuffix(s, "%")
+		}
+		d.Float64, err = strconv.ParseFloat(s, 64)
+
+		return
+	}
+	// parseNullFloat64 parses a string and returns it as a nullable double.
+	var parseNullFloat64 = func(s string) (d sql.NullFloat64, err error) {
 		if s == doubleDash {
 			// Not set, null value.
 			return
 		}
-		if s, d.Auto = autoValued(s); s == "" {
-			// Not set, null and automatic value.
-			return
-		}
-		if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
-			d.NullFloat64.Valid = true
+		if d.Float64, err = strconv.ParseFloat(s, 64); err == nil {
+			d.Valid = true
 		}
 		return
 	}
-	// parseFloat64 parse a string and returns it as integer.
-	var parseInt64 = func(s string) (d AutoNullInt64, err error) {
+	// parseAutoNullInt64 parses a string and returns it as integer.
+	var parseAutoNullInt64 = func(s string) (d AutoNullInt64, err error) {
 		if s == doubleDash {
 			// Not set, null value.
 			return
@@ -480,9 +488,9 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	var cast = func(s, kind string) (driver.Value, error) {
 		switch strings.ToUpper(kind) {
 		case "BID", "INT", "INTEGER", "LONG", "MONEY":
-			return parseInt64(s)
+			return parseAutoNullInt64(s)
 		case "DOUBLE":
-			return parseFloat64(s)
+			return parsePercentFloat64(s)
 		case "DATE":
 			return parseTime("2006-01-02", s)
 		case "DATETIME":
@@ -548,11 +556,11 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 					continue
 				}
 				// Casts to float the current column's value.
-				cv, err := parseFloat64(f[i])
+				cv, err := parseNullFloat64(f[i])
 				if err != nil {
 					return nil, nil, err
 				}
-				if !cv.NullFloat64.Valid {
+				if !cv.Valid {
 					// Nil value, skip it.
 					row[i] = v
 					continue
@@ -563,17 +571,17 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 					// ((previous average x number of elements seen) + current value) /
 					// current number of elements
 					fi := float64(i)
-					v.Float64 = ((v.Float64 * fi) + cv.NullFloat64.Float64) / (fi + 1)
+					v.Float64 = ((v.Float64 * fi) + cv.Float64) / (fi + 1)
 				case "MAX":
-					if v.Float64 < cv.NullFloat64.Float64 {
-						v.Float64 = cv.NullFloat64.Float64
+					if v.Float64 < cv.Float64 {
+						v.Float64 = cv.Float64
 					}
 				case "MIN":
-					if v.Float64 > cv.NullFloat64.Float64 {
-						v.Float64 = cv.NullFloat64.Float64
+					if v.Float64 > cv.Float64 {
+						v.Float64 = cv.Float64
 					}
 				case "SUM":
-					v.Float64 += cv.NullFloat64.Float64
+					v.Float64 += cv.Float64
 				default:
 					return nil, nil, NewXError("unknown method", method)
 				}
@@ -626,12 +634,12 @@ func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
 					return v1.NullInt64.Int64 > v2.NullInt64.Int64
 				}
 				return v1.NullInt64.Int64 < v2.NullInt64.Int64
-			case AutoNullFloat64:
-				v1, v2 := p1[pos].(AutoNullFloat64), p2[pos].(AutoNullFloat64)
+			case PercentFloat64:
+				v1, v2 := p1[pos].(PercentFloat64), p2[pos].(PercentFloat64)
 				if o.SortDescending() {
-					return v1.NullFloat64.Float64 > v2.NullFloat64.Float64
+					return v1.Float64 > v2.Float64
 				}
-				return v1.NullFloat64.Float64 < v2.NullFloat64.Float64
+				return v1.Float64 < v2.Float64
 			case Float64:
 				v1, v2 := p1[pos].(Float64), p2[pos].(Float64)
 				if o.SortDescending() {

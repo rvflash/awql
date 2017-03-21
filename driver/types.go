@@ -17,26 +17,18 @@ const (
 	doubleDash = " --"
 )
 
-// AutoNullFloat64 represents a float64 that may be null or defined as auto valuer.
-type AutoNullFloat64 struct {
-	NullFloat64 sql.NullFloat64
-	Auto        bool
+// PercentFloat64 represents a float64 that may be a percentage.
+type PercentFloat64 struct {
+	Float64 float64
+	Percent bool
 }
 
 // Value implements the driver Valuer interface.
-func (n AutoNullFloat64) Value() (driver.Value, error) {
-	var v string
-	if n.Auto {
-		if !n.NullFloat64.Valid {
-			return auto, nil
-		}
-		v = autoValue
+func (n PercentFloat64) Value() (driver.Value, error) {
+	v := strconv.FormatFloat(n.Float64, 'f', 2, 64)
+	if n.Percent {
+		return v + "%", nil
 	}
-	if !n.NullFloat64.Valid {
-		return doubleDash, nil
-	}
-	v += strconv.FormatFloat(n.NullFloat64.Float64, 'f', 2, 64)
-
 	return v, nil
 }
 
