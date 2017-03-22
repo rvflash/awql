@@ -431,6 +431,13 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
+	// parseDouble parses a double string from Google API.
+	// Required until the version v201702.
+	// todo Removes when v201609 is deprecated.
+	var parseDouble = func(s string) (float64, error) {
+		s = strings.Replace(s, ",", "", -1)
+		return strconv.ParseFloat(s, 64)
+	}
 	// parsePercentNullFloat64 parses a string and returns it as double that can be a percentage.
 	var parsePercentNullFloat64 = func(s string) (d PercentNullFloat64, err error) {
 		if s == doubleDash {
@@ -452,7 +459,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 			d.NullFloat64.Valid = true
 			d.Almost = true
 		default:
-			if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
+			if d.NullFloat64.Float64, err = parseDouble(s); err == nil {
 				d.NullFloat64.Valid = true
 			}
 		}
@@ -464,7 +471,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 			// Not set, null value.
 			return
 		}
-		if d.Float64, err = strconv.ParseFloat(s, 64); err == nil {
+		if d.Float64, err = parseDouble(s); err == nil {
 			d.Valid = true
 		}
 		return
@@ -776,6 +783,11 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	}, nil
 }
 
+// fmtColumnName returns the name of the column formatted as expected to display it.
+func fmtColumnName(name string, minLen int) string {
+	return fmt.Sprintf("%-"+strconv.Itoa(maxLen(name, minLen))+"v", name)
+}
+
 // maxLen returns the length in runes of the string, only if it is more bigger than minLen.
 func maxLen(name string, minLen int) (len int) {
 	len = utf8.RuneCountInString(name)
@@ -783,9 +795,4 @@ func maxLen(name string, minLen int) (len int) {
 		len = minLen
 	}
 	return
-}
-
-// fmtColumnName returns the name of the column formatted as expected to display it.
-func fmtColumnName(name string, minLen int) string {
-	return fmt.Sprintf("%-"+strconv.Itoa(maxLen(name, minLen))+"v", name)
 }
