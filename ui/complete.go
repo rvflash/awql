@@ -55,7 +55,7 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 // createCompleter
 func (c *completer) createCompleter(line []rune, pos int) ([][]rune, int) {
 	str := string(line[:pos])
-	t := stringSplitBySpace(str)
+	t := tokenize(str)
 
 	var i int
 	var s string
@@ -73,7 +73,7 @@ func (c *completer) createCompleter(line []rune, pos int) ([][]rune, int) {
 
 // describeCompleter
 func (c *completer) describeCompleter(line []rune, pos int) ([][]rune, int) {
-	t := stringSplitBySpace(string(line[:pos]))
+	t := tokenize(string(line[:pos]))
 	l := len(t)
 	if l < 2 {
 		// Expected: `[DESC ]`
@@ -102,7 +102,7 @@ func (c *completer) describeCompleter(line []rune, pos int) ([][]rune, int) {
 		}
 		v = c.listTableColumns(tb, t[l-1])
 	}
-	return stringsAsCandidate(v, len(t[l-1]))
+	return candidates(v, len(t[l-1]))
 }
 
 // token represents a kind of AWQL struct.
@@ -119,6 +119,12 @@ const (
 	during            // During values
 )
 
+var duringList = []string{
+	"TODAY", "YESTERDAY", "THIS_WEEK_SUN_TODAY", "THIS_WEEK_MON_TODAY",
+	"THIS_MONTH", "LAST_WEEK", "LAST_7_DAYS", "LAST_14_DAYS",
+	"LAST_30_DAYS", "LAST_BUSINESS_WEEK", "LAST_WEEK_SUN_SAT",
+}
+
 // selectCompleter
 func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	// isColumnName returns true if the string is only literal `[0-9A-Za-z]`.
@@ -130,10 +136,14 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	}
 
 	// columns parses the columns list to returns the column names.
-	// It also returns true as second parameter if the completion is still enable.
+	// If the completion is possible, it also returns true as second parameter.
 	var columns = func(s string) (list []string, incomplete bool) {
 		for _, s := range strings.Split(s, ",") {
-			p := stringSplitBySpace(s)
+			if p := strings.Index(s, "("); p > -1 {
+				// Method detected. Starts on the parenthesis to allow completion inside.
+				s = s[p+1:]
+			}
+			p := tokenize(s)
 			l := len(p)
 			if l > 0 && isColumnName(p[l-1]) {
 				list = append(list, p[l-1])
@@ -148,7 +158,7 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 		// Splits by the given pattern.
 		v := strings.Split(s, split)
 		// Splits around each instance of one or more consecutive white space characters.
-		return len(stringSplitBySpace(v[len(v)-1])) < 2
+		return len(tokenize(v[len(v)-1])) < 2
 	}
 
 	// keyword fetches current and previous word to verify if it's a keyword.
@@ -184,7 +194,7 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	}
 
 	// Parses the statement to find the kind of completion to do.
-	t := stringSplitBySpace(string(line[:pos]))
+	t := tokenize(string(line[:pos]))
 	l := len(t)
 	if l < 2 {
 		return nil, 0
@@ -195,7 +205,7 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	var bs, bw, bg, bo bytes.Buffer
 	var tb, s string
 	for i := 1; i < l; i++ {
-		// Searches keyword like FROM, WHERE, etc.
+		// Searches keyword like `FROM`, `WHERE`, etc.
 		nk, ok := keyword(t[i], t[i-1])
 		if ok {
 			// Keyword found. Checks if statement is not ending.
@@ -214,16 +224,16 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 				tk = void
 			}
 		case allColumn:
-			// Concatenates strings between SELECT and FROM
+			// Concatenates strings between `SELECT` and `FROM`
 			bs.WriteString(" " + s)
 		case column:
-			// Concatenates strings after WHERE, until the next SQL keyword.
+			// Concatenates strings after `WHERE`, until the next SQL keyword.
 			bw.WriteString(" " + s)
 		case groupColumn:
-			// Concatenates strings after GROUP BY, until the next SQL keyword.
+			// Concatenates strings after `GROUP BY`, until the next SQL keyword.
 			bg.WriteString(" " + s)
 		case orderColumn:
-			// Concatenates strings after ORDER BY, until the next SQL keyword.
+			// Concatenates strings after `ORDER BY`, until the next SQL keyword.
 			bo.WriteString(" " + s)
 		case during:
 			if strings.Contains(s, ",") {
@@ -235,6 +245,7 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	// Completes the analyze by retrieving the names of each selected column.
 	cols, ok := columns(bs.String())
 	if tk == allColumn && !ok {
+		// The `FROM` keyword does not occurred yet.
 		tk = void
 	}
 
@@ -266,16 +277,16 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 			v = stringsPrefixedBy(cols, s)
 		}
 	case during:
-		v = listDurings(s)
+		v = stringsPrefixedBy(duringList, s)
 	case void:
 		return nil, 0
 	}
-	return stringsAsCandidate(v, len(s))
+	return candidates(v, len(s))
 }
 
 // showCompleter
 func (c *completer) showCompleter(line []rune, pos int) ([][]rune, int) {
-	t := stringSplitBySpace(string(line[:pos]))
+	t := tokenize(string(line[:pos]))
 	l := len(t)
 	if l < 4 {
 		// Expected: `[SHOW TABLES WITH ]`
@@ -296,7 +307,7 @@ func (c *completer) showCompleter(line []rune, pos int) ([][]rune, int) {
 		// Expected: `[SHOW FULL TABLES WITH ]`
 		return nil, 0
 	}
-	return stringsAsCandidate(c.db.ColumnNamesPrefixedBy(t[cpos]), len(t[cpos]))
+	return candidates(c.db.ColumnNamesPrefixedBy(t[cpos]), len(t[cpos]))
 }
 
 // listTableColumns returns the name of column's table prefixed by this pattern.
@@ -334,20 +345,11 @@ func (c *completer) listTables(prefix string) (names []string) {
 	return
 }
 
-// listDurings returns the during values beginning by the prefix.
-func listDurings(prefix string) []string {
-	during := []string{
-		"TODAY", "YESTERDAY", "THIS_WEEK_SUN_TODAY", "THIS_WEEK_MON_TODAY", "THIS_MONTH",
-		"LAST_WEEK", "LAST_7_DAYS", "LAST_14_DAYS", "LAST_30_DAYS", "LAST_BUSINESS_WEEK",
-		"LAST_WEEK_SUN_SAT"}
-	if prefix == "" {
-		return during
-	}
-	return stringsPrefixedBy(during, prefix)
-}
-
-// stringSplitBySpace returns a slice of string by splitting it by space.
-func stringSplitBySpace(s string) []string {
+// tokenize returns a slice of string by splitting it by space.
+func tokenize(s string) []string {
+	// Also manages `(` as separator to manage the methods.
+	s = strings.Replace(s, "(", "( ", -1)
+	// Splits the string s around each instance of one or more consecutive space.
 	v := strings.Fields(s)
 	if strings.HasSuffix(s, " ") {
 		v = append(v, "")
@@ -355,8 +357,8 @@ func stringSplitBySpace(s string) []string {
 	return v
 }
 
-// stringAsCandidate returns a slice of runes with candidates for auto-completion.
-func stringsAsCandidate(list []string, start int) ([][]rune, int) {
+// candidates returns a slice of runes with candidates for auto-completion.
+func candidates(list []string, start int) ([][]rune, int) {
 	size := len(list)
 	if size == 0 {
 		return nil, 0
@@ -370,6 +372,10 @@ func stringsAsCandidate(list []string, start int) ([][]rune, int) {
 
 // stringsPrefixedBy returns a slice of strings with values matching the prefix.
 func stringsPrefixedBy(f []string, s string) (t []string) {
+	if s == "" {
+		// No given prefix, all values are available.
+		return f
+	}
 	for _, v := range f {
 		if strings.HasPrefix(v, s) {
 			t = append(t, v)
