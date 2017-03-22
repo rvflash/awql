@@ -431,22 +431,30 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
-	// parsePercentFloat64 parses a string and returns it as double that can be a percentage.
-	var parsePercentFloat64 = func(s string) (d PercentFloat64, err error) {
+	// parsePercentNullFloat64 parses a string and returns it as double that can be a percentage.
+	var parsePercentNullFloat64 = func(s string) (d PercentNullFloat64, err error) {
+		if s == doubleDash {
+			// Not set, null value.
+			return
+		}
 		if d.Percent = strings.HasSuffix(s, "%"); d.Percent {
 			s = strings.TrimSuffix(s, "%")
 		}
 		switch s {
 		case almost10:
 			// Sometimes, when it's less than 10, Google displays "< 10%".
-			d.Float64 = 9.999
+			d.NullFloat64.Float64 = 9.999
+			d.NullFloat64.Valid = true
 			d.Almost = true
 		case almost90:
 			// Or "> 90%" when it is the opposite.
-			d.Float64 = 90.001
+			d.NullFloat64.Float64 = 90.001
+			d.NullFloat64.Valid = true
 			d.Almost = true
 		default:
-			d.Float64, err = strconv.ParseFloat(s, 64)
+			if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
+				d.NullFloat64.Valid = true
+			}
 		}
 		return
 	}
@@ -499,7 +507,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		case "BID", "INT", "INTEGER", "LONG", "MONEY":
 			return parseAutoNullInt64(s)
 		case "DOUBLE":
-			return parsePercentFloat64(s)
+			return parsePercentNullFloat64(s)
 		case "DATE":
 			return parseTime("2006-01-02", s)
 		case "DATETIME":
@@ -643,12 +651,12 @@ func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
 					return v1.NullInt64.Int64 > v2.NullInt64.Int64
 				}
 				return v1.NullInt64.Int64 < v2.NullInt64.Int64
-			case PercentFloat64:
-				v1, v2 := p1[pos].(PercentFloat64), p2[pos].(PercentFloat64)
+			case PercentNullFloat64:
+				v1, v2 := p1[pos].(PercentNullFloat64), p2[pos].(PercentNullFloat64)
 				if o.SortDescending() {
-					return v1.Float64 > v2.Float64
+					return v1.NullFloat64.Float64 > v2.NullFloat64.Float64
 				}
-				return v1.Float64 < v2.Float64
+				return v1.NullFloat64.Float64 < v2.NullFloat64.Float64
 			case Float64:
 				v1, v2 := p1[pos].(Float64), p2[pos].(Float64)
 				if o.SortDescending() {
