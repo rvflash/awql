@@ -21,23 +21,26 @@ const (
 	almost90 = "> 90"
 )
 
-// PercentFloat64 represents a float64 that may be a percentage.
-type PercentFloat64 struct {
-	Float64         float64
+// PercentNullFloat64 represents a float64 that may be a percentage.
+type PercentNullFloat64 struct {
+	NullFloat64     sql.NullFloat64
 	Almost, Percent bool
 }
 
 // Value implements the driver Valuer interface.
-func (n PercentFloat64) Value() (driver.Value, error) {
+func (n PercentNullFloat64) Value() (driver.Value, error) {
+	if !n.NullFloat64.Valid {
+		return doubleDash, nil
+	}
 	var v string
 	if n.Almost {
-		if n.Float64 > 90 {
+		if n.NullFloat64.Float64 > 90 {
 			v = almost90
 		} else {
 			v = almost10
 		}
 	} else {
-		v = strconv.FormatFloat(n.Float64, 'f', 2, 64)
+		v = strconv.FormatFloat(n.NullFloat64.Float64, 'f', 2, 64)
 	}
 	if n.Percent {
 		return v + "%", nil
