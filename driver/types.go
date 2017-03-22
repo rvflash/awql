@@ -15,17 +15,30 @@ const (
 
 	// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
 	doubleDash = " --"
+
+	// Google sometimes uses special value like "> 90%".
+	almost10 = "< 10"
+	almost90 = "> 90"
 )
 
 // PercentFloat64 represents a float64 that may be a percentage.
 type PercentFloat64 struct {
-	Float64 float64
-	Percent bool
+	Float64         float64
+	Almost, Percent bool
 }
 
 // Value implements the driver Valuer interface.
 func (n PercentFloat64) Value() (driver.Value, error) {
-	v := strconv.FormatFloat(n.Float64, 'f', 2, 64)
+	var v string
+	if n.Almost {
+		if n.Float64 > 90 {
+			v = almost90
+		} else {
+			v = almost10
+		}
+	} else {
+		v = strconv.FormatFloat(n.Float64, 'f', 2, 64)
+	}
 	if n.Percent {
 		return v + "%", nil
 	}
