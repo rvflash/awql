@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"hash/fnv"
@@ -8,8 +9,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"database/sql"
 
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
@@ -437,8 +436,18 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		if d.Percent = strings.HasSuffix(s, "%"); d.Percent {
 			s = strings.TrimSuffix(s, "%")
 		}
-		d.Float64, err = strconv.ParseFloat(s, 64)
-
+		switch s {
+		case almost10:
+			// Sometimes, when it's less than 10, Google displays "< 10%".
+			d.Float64 = 9.999
+			d.Almost = true
+		case almost90:
+			// Or "> 90%" when it is the opposite.
+			d.Float64 = 90.001
+			d.Almost = true
+		default:
+			d.Float64, err = strconv.ParseFloat(s, 64)
+		}
 		return
 	}
 	// parseNullFloat64 parses a string and returns it as a nullable double.
