@@ -248,13 +248,13 @@ func NewCreateViewStmt(stmt *Stmt) Execer {
 }
 
 // Exec executes a Create View query.
+// todo Manages refresh of the auto-completion behavior.
 func (s *CreateViewStmt) Exec() (driver.Result, error) {
-	// Creates the view in database.
-	// stmt, _ := s.p.(parser.CreateViewStmt)
-	// if err := s.db.AddView(stmt); err != nil {
-	// 	return nil, err
-	// }
-	/// @todo
+	// Casts statement.
+	stmt := s.p.(*parser.CreateViewStatement)
+	if err := s.db.AddView(stmt); err != nil {
+		return nil, err
+	}
 	return &Result{}, nil
 }
 
@@ -281,7 +281,88 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	// Casts statement.
 	stmt := s.p.(*parser.SelectStatement)
 
-	// Replaces the display name of columns by their names or alias if exist.
+	// embellishField completes the field with data from the table.
+	var embellishField = func(c parser.DynamicField, t db.DataTable) (db.Field, error) {
+		// field returns a db.field representation of the given column or an error.
+		var field = func(c parser.DynamicField, t db.DataTable) (db.Field, error) {
+			if method, _ := c.UseFunction(); method == "COUNT" && c.Name() == "*" {
+				// Manages special case: COUNT(*).
+				return t.Field(t.AggregateFieldName())
+			}
+			return t.Field(c.Name())
+		}
+		f, err := field(c, t)
+		if err != nil {
+			return nil, err
+		}
+		// Merges with statement to complete field's data.
+		cf := f.(db.Column)
+		cf.Method, _ = c.UseFunction()
+		cf.Unique = c.Distinct()
+		if alias := c.Alias(); alias != "" {
+			cf.Label = alias
+		}
+
+		return cf, nil
+	}
+
+	// embellishFields adds more information about the table's fields.
+	var embellishFields = func(stmt *parser.SelectStatement, t db.DataTable) (err error) {
+		for i, c := range stmt.Fields {
+			stmt.Fields[i], err = embellishField(c, t)
+			if err != nil {
+				break
+			}
+		}
+		return err
+	}
+
+	// embellishView adds more information on the statement about view.
+	var embellishView = func(stmt *parser.SelectStatement, t db.DataTable) error {
+		// SelectClause.
+		if len(stmt.Fields) == 1 && stmt.Fields[0].Name() == "*" {
+			// Replaces the all pattern with the list of view's fields.
+			stmt.Fields = t.Columns()
+		} else {
+			// Merges statements with field's properties.
+			if err := embellishFields(stmt, t); err != nil {
+				return err
+			}
+		}
+		// FromClause.
+		view := t.SourceQuery()
+		stmt.TableName = view.SourceName()
+		// WhereClause.
+		// DuringClause.
+		// GroupByClause.
+		// OrderByClause. Overloads only if the statement has not it own sort order.
+		// todo
+		// LimitClause. Overloads bounds only in the limit of the view.
+		if view.StartIndex() > stmt.StartIndex() {
+			stmt.Offset = view.StartIndex()
+		}
+		if rc, ok := view.PageSize(); ok {
+			if src, ok := stmt.PageSize(); ok && src > rc {
+				stmt.RowCount = rc
+			} else {
+				stmt.RowCount = rc
+				stmt.WithRowCount = true
+			}
+		}
+
+		return nil
+	}
+
+	// embellish adds more information on the statement about table or view.
+	// Also manages special keywords and behavior like `*`.
+	var embellish = func(stmt *parser.SelectStatement, t db.DataTable) error {
+		if t.IsView() {
+			return embellishView(stmt, t)
+		}
+		return embellishFields(stmt, t)
+	}
+
+	// fieldNames replaces the display name of columns by their names or alias if exist.
 	var fieldNames = func(columns []parser.DynamicField, sizes []int) []string {
 		cols := make([]string, len(columns))
 		for i, c := range columns {
@@ -301,24 +382,8 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i, c := range stmt.Fields {
-		// Manages the special case of the SQL method COUNT.
-		var m string
-		var f db.Field
-		if m, _ = c.UseFunction(); m == "COUNT" && c.Name() == "*" {
-			f, err = t.Field(t.AggregateFieldName())
-		} else {
-			f, err = t.Field(c.Name())
-		}
-		if err != nil {
-			return nil, err
-		}
-		// Casts to db.Column to merge it with statement properties.
-		col := f.(db.Column)
-		col.Method = m
-		col.Label = c.Alias()
-		col.Unique = c.Distinct()
-		stmt.Fields[i] = col
+	if err := embellish(stmt, t); err != nil {
+		return nil, err
 	}
 
 	// Keeps only accepted Adwords Awql grammar as query.
@@ -592,8 +657,8 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 				// Applies the aggregate method on it valid value.
 				switch method {
 				case "AVG":
-					// ((previous average x number of elements seen) + current value) /
-					// current number of elements
+					// (((previous average x number of elements seen) + current value) /
+					// current number of elements)
 					fi := float64(i)
 					v.Float64 = ((v.Float64 * fi) + cv.Float64) / (fi + 1)
 				case "MAX":
