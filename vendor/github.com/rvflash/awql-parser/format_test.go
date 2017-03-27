@@ -42,6 +42,9 @@ func TestSelectStmt_String(t *testing.T) {
 			fq: `CREATE VIEW rv (Name, Cost) AS SELECT CampaignName, Cost FROM CAMPAIGN_PERFORMANCE_REPORT DURING TODAY`,
 		},
 		{
+			fq: `CREATE OR REPLACE VIEW rv AS SELECT CampaignId, Cost FROM CAMPAIGN_PERFORMANCE_REPORT DURING TODAY`,
+		},
+		{
 			fq: `SELECT CampaignName FROM CAMPAIGN_PERFORMANCE_REPORT`,
 		},
 		{
