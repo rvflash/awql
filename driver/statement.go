@@ -593,19 +593,18 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		h.Write([]byte(s))
 		return h.Sum64()
 	}
-	// useAggregate returns true if at least one columns uses a aggregate function.
-	var useAggregate = func(stmt parser.SelectStmt) bool {
-		for _, c := range stmt.Columns() {
-			if c.Distinct() {
-				return true
-			}
-			if _, use := c.UseFunction(); use {
-				return true
+	// useAggregate returns the list of aggregate and a boolean as second parameter.
+	// If at least one column uses a aggregate function, it will be true.
+	var useAggregate = func(stmt parser.SelectStmt) (aggr []int, ok bool) {
+		for p, c := range stmt.Columns() {
+			if _, use := c.UseFunction(); use || c.Distinct() {
+				aggr = append(aggr, p)
+				ok = true
 			}
 		}
-		return false
+		return
 	}
-	distinctLine := useAggregate(stmt)
+	aggrList, distinctLine := useAggregate(stmt)
 
 	// Bounds
 	groupSize := len(stmt.GroupList())
@@ -619,10 +618,14 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		// Picks the aggregate values.
 		var group []uint64
 		if groupSize > 0 {
-			for _, gb := range stmt.GroupList() {
-				group = append(group, hash(f[gb.Position()-1]))
+			for _, gc := range stmt.GroupList() {
+				group = append(group, hash(f[gc.Position()-1]))
 			}
-		} else if !distinctLine {
+		} else if distinctLine {
+			for _, ap := range aggrList {
+				group = append(group, hash(f[ap]))
+			}
+		} else {
 			group = append(group, uint64(p))
 		}
 		key := fmt.Sprint(group)
