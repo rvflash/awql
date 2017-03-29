@@ -10,6 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/jinzhu/now"
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
@@ -258,6 +259,9 @@ func (s *CreateViewStmt) Exec() (driver.Result, error) {
 	return &Result{}, nil
 }
 
+// dateFormat is the format of the date to use in Adwords API.
+const dateFormat = "20060102"
+
 // SelectStmt represents a Select statement.
 type SelectStmt struct {
 	*Stmt
@@ -319,6 +323,60 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 
 	// embellishView adds more information on the statement about view.
 	var embellishView = func(stmt *parser.SelectStatement, t db.DataTable) error {
+		// duringLiteralToDates converts during literal value into range of dates.
+		var duringLiteralToDates = func(l string) (d []string) {
+			today := time.Now()
+			d = make([]string, 2)
+			switch l {
+			case "TODAY":
+				d[0], d[1] = today.Format(dateFormat), today.Format(dateFormat)
+			case "YESTERDAY":
+				yesterday := today.AddDate(0, 0, -1)
+				d[0], d[1] = yesterday.Format(dateFormat), yesterday.Format(dateFormat)
+			case "THIS_WEEK_SUN_TODAY":
+				sunday := now.Sunday()
+				d[0], d[1] = sunday.Format(dateFormat), today.Format(dateFormat)
+			case "THIS_WEEK_MON_TODAY":
+				monday := now.Monday()
+				d[0], d[1] = monday.Format(dateFormat), today.Format(dateFormat)
+			case "THIS_MONTH":
+				month := now.BeginningOfMonth()
+				d[0], d[1] = month.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_WEEK":
+				now.FirstDayMonday = true
+				lastWeek := now.New(today.AddDate(0, 0, -7))
+				d[0] = lastWeek.BeginningOfWeek().Format(dateFormat)
+				d[1] = lastWeek.EndOfWeek().Format(dateFormat)
+			case "LAST_7_DAYS":
+				weekly := today.AddDate(0, 0, -7)
+				d[0], d[1] = weekly.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_14_DAYS":
+				fortnight := today.AddDate(0, 0, -14)
+				d[0], d[1] = fortnight.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_30_DAYS":
+				monthly := today.AddDate(0, 0, -30)
+				d[0], d[1] = monthly.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_BUSINESS_WEEK":
+				now.FirstDayMonday = true
+				monday := now.New(today.AddDate(0, 0, -7)).BeginningOfWeek()
+				friday := monday.AddDate(0, 0, 5)
+				d[0], d[1] = monday.Format(dateFormat), friday.Format(dateFormat)
+			case "LAST_WEEK_SUN_SAT":
+				now.FirstDayMonday = false
+				sunday := now.New(today.AddDate(0, 0, -7))
+				d[0], d[1] = sunday.BeginningOfWeek().Format(dateFormat), sunday.EndOfWeek().Format(dateFormat)
+			}
+			return
+		}
+		// inSelectClause returns true if the given field is in the select clause.
+		var inSelectClause = func(f parser.FieldPosition, fields []parser.DynamicField) bool {
+			for _, c := range fields {
+				if f.Name() == c.Name() || f.Name() == c.Alias() {
+					return true
+				}
+			}
+			return false
+		}
 		// SelectClause.
 		if len(stmt.Fields) == 1 && stmt.Fields[0].Name() == "*" {
 			// Replaces the all pattern with the list of view's fields.
@@ -332,11 +390,64 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		// FromClause.
 		view := t.SourceQuery()
 		stmt.TableName = view.SourceName()
-		// WhereClause.
-		// DuringClause.
-		// GroupByClause.
+		// WhereClause. Merges it if it's possible. If not, returns zero result.
+		if len(stmt.ConditionList()) > 0 || len(view.ConditionList()) > 0 {
+			// Tries to merge the where clauses.
+			for _, vw := range view.ConditionList() {
+				for _, sw := range stmt.ConditionList() {
+					if vw.Name() == sw.Name() {
+						// To improve, prevents to go out of view's scope.
+						return ErrOutRange
+					}
+				}
+				stmt.Where = append(stmt.Where, vw)
+			}
+		}
+		// DuringClause. Merges it if it's possible. If not, returns zero result.
+		if vds := len(view.DuringList()); vds > 0 {
+			switch len(stmt.DuringList()) {
+			case 0:
+				stmt.During = view.DuringList()
+			case 1:
+				stmt.During = duringLiteralToDates(stmt.During[0])
+				fallthrough
+			default:
+				vd := view.DuringList()
+				if vds == 1 {
+					vd = duringLiteralToDates(vd[0])
+				}
+				if stmt.During[0] < vd[0] {
+					if stmt.During[0] > vd[1] {
+						return ErrOutRange
+					}
+					stmt.During[0] = vd[0]
+				}
+				if stmt.During[1] > vd[1] {
+					if stmt.During[1] < vd[0] {
+						return ErrOutRange
+					}
+					stmt.During[1] = vd[1]
+				}
+			}
+		}
+		// GroupByClause. Overloads only if the statement has not it own aggregate.
+		if len(stmt.GroupList()) == 0 && len(view.GroupList()) > 0 {
+			// Tries to apply the sort order of the view.
+			for _, gb := range view.GroupList() {
+				if inSelectClause(gb, stmt.Columns()) {
+					stmt.GroupBy = append(stmt.GroupBy, gb)
+				}
+			}
+		}
 		// OrderByClause. Overloads only if the statement has not it own sort order.
-		// todo
+		if len(stmt.OrderList()) == 0 && len(view.OrderList()) > 0 {
+			// Tries to apply the sort order of the view.
+			for _, ob := range view.OrderList() {
+				if inSelectClause(ob, stmt.Columns()) {
+					stmt.OrderBy = append(stmt.OrderBy, ob)
+				}
+			}
+		}
 		// LimitClause. Overloads bounds only in the limit of the view.
 		if view.StartIndex() > stmt.StartIndex() {
 			stmt.Offset = view.StartIndex()
