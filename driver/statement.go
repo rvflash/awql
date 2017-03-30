@@ -421,6 +421,8 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 						return ErrOutRange
 					}
 					stmt.During[0] = vd[0]
+				} else if stmt.During[0] > vd[1] {
+					return ErrOutRange
 				}
 				if stmt.During[1] > vd[1] {
 					if stmt.During[1] < vd[0] {

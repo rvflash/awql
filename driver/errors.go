@@ -9,7 +9,7 @@ import (
 var (
 	ErrMultipleQueries = NewError("unsupported multi queries")
 	ErrQuery           = NewError("unsupported query")
-	ErrOutRange          = NewError("out of scope")
+	ErrOutRange        = NewError("out of scope of view")
 )
 
 // Error represents a internal error.
