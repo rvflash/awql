@@ -495,7 +495,7 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := embellish(stmt, t); err != nil {
+	if err = embellish(stmt, t); err != nil {
 		return nil, err
 	}
 
@@ -506,8 +506,8 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	var records [][]string
 	if records, err = s.fc.Get(s.Hash()); err != nil {
 		// Requests the Adwords API without any args, binding already done.
-		rows, err := s.si.Query(nil)
-		if err != nil {
+		var rows driver.Rows
+		if rows, err = s.si.Query(nil); err != nil {
 			return nil, err
 		}
 		records = rows.(*awql.Rows).Data
@@ -565,43 +565,43 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	var lenFloat64 = func(f Float64) (len int) {
 		switch {
 		case f.Float64 >= 1000000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 1000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 1000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 1000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10:
-			len += 1
+			len++
 			fallthrough
 		default:
-			len += 1
+			len++
 		}
 		if f.Precision > 0 {
 			// Manages `.01`

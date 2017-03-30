@@ -123,9 +123,9 @@ func (e *CommandLine) Seek(s string) error {
 			case e.c.UseBatchMode():
 				w = NewCsvWriter(os.Stdout)
 			case stmt.VerticalOutput():
-				w = NewVAsciiWriter(os.Stdout)
+				w = NewVASCIIWriter(os.Stdout)
 			default:
-				w = NewAsciiWriter(os.Stdout)
+				w = NewASCIIWriter(os.Stdout)
 			}
 
 			// Sends the query.
