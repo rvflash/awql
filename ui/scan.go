@@ -123,9 +123,9 @@ func (e *CommandLine) Seek(s string) error {
 			case e.c.UseBatchMode():
 				w = NewCsvWriter(os.Stdout)
 			case stmt.VerticalOutput():
-				w = NewVAsciiWriter(os.Stdout)
+				w = NewVASCIIWriter(os.Stdout)
 			default:
-				w = NewAsciiWriter(os.Stdout)
+				w = NewASCIIWriter(os.Stdout)
 			}
 
 			// Sends the query.
@@ -136,12 +136,8 @@ func (e *CommandLine) Seek(s string) error {
 			}
 
 			// Get the column names.
-			cols, err := rs.Columns()
-			if err != nil {
-				// No more connection, an other error?
-				fmt.Println(err)
-				continue
-			} else if len(cols) == 0 {
+			cols, _ := rs.Columns()
+			if len(cols) == 0 {
 				// No data set.
 				w.Flush()
 				continue

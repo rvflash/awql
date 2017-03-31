@@ -142,16 +142,16 @@ func (w *StatsWriter) WriteHead(record []string) error {
 	return nil
 }
 
-// AsciiWriter represents a terminal tables's writer.
-type AsciiWriter struct {
+// ASCIIWriter represents a terminal tables's writer.
+type ASCIIWriter struct {
 	w        *bufio.Writer
 	s        PositionWriter
 	fmt, sep string
 }
 
-// NewAsciiWriter returns a writer of term tables.
-func NewAsciiWriter(w io.Writer) Writer {
-	return &AsciiWriter{
+// NewASCIIWriter returns a writer of term tables.
+func NewASCIIWriter(w io.Writer) Writer {
+	return &ASCIIWriter{
 		w:   bufio.NewWriter(w),
 		s:   NewStatsWriter(w, false),
 		fmt: asciiBorderY,
@@ -160,12 +160,12 @@ func NewAsciiWriter(w io.Writer) Writer {
 }
 
 // Error returns any errors occurred during the job.
-func (w *AsciiWriter) Error() error {
+func (w *ASCIIWriter) Error() error {
 	return w.s.Error()
 }
 
 // Flush writes any buffered data to the underlying writer.
-func (w *AsciiWriter) Flush() {
+func (w *ASCIIWriter) Flush() {
 	// Outputs the terminal table.
 	if w.s.Position() > 1 {
 		// Prints the end of the table only if it contains at less one line.
@@ -178,7 +178,7 @@ func (w *AsciiWriter) Flush() {
 }
 
 // Write adds a line to the table.
-func (w *AsciiWriter) Write(record []string) error {
+func (w *ASCIIWriter) Write(record []string) error {
 	// Prints the records
 	data := make([]interface{}, len(record))
 	for i, v := range record {
@@ -190,7 +190,7 @@ func (w *AsciiWriter) Write(record []string) error {
 }
 
 // WriteHead writes the table header and defines column sizes.
-func (w *AsciiWriter) WriteHead(record []string) error {
+func (w *ASCIIWriter) WriteHead(record []string) error {
 	// Defines the format to use as separator line for a column.
 	var fmtColumn = func(size int, end string) string {
 		return " %-" + strconv.Itoa(size) + "v" + end
@@ -219,29 +219,29 @@ func (w *AsciiWriter) WriteHead(record []string) error {
 	return w.s.WriteHead(record)
 }
 
-// VAsciiWriter represents a terminal writer whose prints one line per column value.
-type VAsciiWriter struct {
+// VASCIIWriter represents a terminal writer whose prints one line per column value.
+type VASCIIWriter struct {
 	w    *bufio.Writer
 	s    PositionWriter
 	fmt  string
 	head []string
 }
 
-// NewVAsciiWriter returns a vertical writer.
-func NewVAsciiWriter(w io.Writer) Writer {
-	return &VAsciiWriter{
+// NewVASCIIWriter returns a vertical writer.
+func NewVASCIIWriter(w io.Writer) Writer {
+	return &VASCIIWriter{
 		w: bufio.NewWriter(w),
 		s: NewStatsWriter(w, false),
 	}
 }
 
 // Error returns any errors occurred during the job.
-func (w *VAsciiWriter) Error() error {
+func (w *VASCIIWriter) Error() error {
 	return w.s.Error()
 }
 
 // Flush writes any buffered data to the underlying writer.
-func (w *VAsciiWriter) Flush() {
+func (w *VASCIIWriter) Flush() {
 	// Writes any buffered data.
 	w.w.Flush()
 	// Outputs statistics about it.
@@ -249,7 +249,7 @@ func (w *VAsciiWriter) Flush() {
 }
 
 // Write prints a new line for each column value.
-func (w *VAsciiWriter) Write(record []string) error {
+func (w *VASCIIWriter) Write(record []string) error {
 	// Prints the separator line.
 	head := strings.Repeat("*", 28)
 	fmt.Fprintf(w.w, "%s %d. row %s\n", head, w.s.Position(), head)
@@ -263,7 +263,7 @@ func (w *VAsciiWriter) Write(record []string) error {
 }
 
 // WriteHead defines the prefix of each line. Each prefix is a column name.
-func (w *VAsciiWriter) WriteHead(record []string) error {
+func (w *VASCIIWriter) WriteHead(record []string) error {
 	max := 0
 	size := len(record)
 	w.head = make([]string, size)

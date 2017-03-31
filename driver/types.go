@@ -15,28 +15,36 @@ const (
 
 	// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
 	doubleDash = " --"
+
+	// Google sometimes uses special value like "> 90%".
+	almost10 = "< 10"
+	almost90 = "> 90"
 )
 
-// AutoNullFloat64 represents a float64 that may be null or defined as auto valuer.
-type AutoNullFloat64 struct {
-	NullFloat64 sql.NullFloat64
-	Auto        bool
+// PercentNullFloat64 represents a float64 that may be a percentage.
+type PercentNullFloat64 struct {
+	NullFloat64     sql.NullFloat64
+	Almost, Percent bool
 }
 
 // Value implements the driver Valuer interface.
-func (n AutoNullFloat64) Value() (driver.Value, error) {
-	var v string
-	if n.Auto {
-		if !n.NullFloat64.Valid {
-			return auto, nil
-		}
-		v = autoValue
-	}
+func (n PercentNullFloat64) Value() (driver.Value, error) {
 	if !n.NullFloat64.Valid {
 		return doubleDash, nil
 	}
-	v += strconv.FormatFloat(n.NullFloat64.Float64, 'f', 2, 64)
-
+	var v string
+	if n.Almost {
+		if n.NullFloat64.Float64 > 90 {
+			v = almost90
+		} else {
+			v = almost10
+		}
+	} else {
+		v = strconv.FormatFloat(n.NullFloat64.Float64, 'f', 2, 64)
+	}
+	if n.Percent {
+		return v + "%", nil
+	}
 	return v, nil
 }
 

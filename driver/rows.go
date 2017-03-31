@@ -72,8 +72,8 @@ func (r *Rows) Next(dest []driver.Value) error {
 		switch r.data[r.pos][i].(type) {
 		case AutoNullInt64:
 			dest[i], _ = r.data[r.pos][i].(AutoNullInt64).Value()
-		case AutoNullFloat64:
-			dest[i], _ = r.data[r.pos][i].(AutoNullFloat64).Value()
+		case PercentNullFloat64:
+			dest[i], _ = r.data[r.pos][i].(PercentNullFloat64).Value()
 		case Float64:
 			dest[i], _ = r.data[r.pos][i].(Float64).Value()
 		case Time:

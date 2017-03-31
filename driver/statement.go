@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"hash/fnv"
@@ -9,6 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/jinzhu/now"
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
@@ -247,15 +249,18 @@ func NewCreateViewStmt(stmt *Stmt) Execer {
 }
 
 // Exec executes a Create View query.
+// todo Manages refresh of the auto-completion behavior.
 func (s *CreateViewStmt) Exec() (driver.Result, error) {
-	// Creates the view in database.
-	// stmt, _ := s.p.(parser.CreateViewStmt)
-	// if err := s.db.AddView(stmt); err != nil {
-	// 	return nil, err
-	// }
-	/// @todo
+	// Casts statement.
+	stmt := s.p.(*parser.CreateViewStatement)
+	if err := s.db.AddView(stmt); err != nil {
+		return nil, err
+	}
 	return &Result{}, nil
 }
+
+// dateFormat is the format of the date to use in Adwords API.
+const dateFormat = "20060102"
 
 // SelectStmt represents a Select statement.
 type SelectStmt struct {
@@ -280,7 +285,197 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	// Casts statement.
 	stmt := s.p.(*parser.SelectStatement)
 
-	// Replaces the display name of columns by their names or alias if exist.
+	// embellishField completes the field with data from the table.
+	var embellishField = func(c parser.DynamicField, t db.DataTable) (db.Field, error) {
+		// field returns a db.field representation of the given column or an error.
+		var field = func(c parser.DynamicField, t db.DataTable) (db.Field, error) {
+			if method, _ := c.UseFunction(); method == "COUNT" && c.Name() == "*" {
+				// Manages special case: COUNT(*).
+				return t.Field(t.AggregateFieldName())
+			}
+			return t.Field(c.Name())
+		}
+		f, err := field(c, t)
+		if err != nil {
+			return nil, err
+		}
+		// Merges with statement to complete field's data.
+		cf := f.(db.Column)
+		cf.Method, _ = c.UseFunction()
+		cf.Unique = c.Distinct()
+		if alias := c.Alias(); alias != "" {
+			cf.Label = alias
+		}
+
+		return cf, nil
+	}
+
+	// embellishFields adds more information about the table's fields.
+	var embellishFields = func(stmt *parser.SelectStatement, t db.DataTable) (err error) {
+		for i, c := range stmt.Fields {
+			stmt.Fields[i], err = embellishField(c, t)
+			if err != nil {
+				break
+			}
+		}
+		return err
+	}
+
+	// embellishView adds more information on the statement about view.
+	var embellishView = func(stmt *parser.SelectStatement, t db.DataTable) error {
+		// duringLiteralToDates converts during literal value into range of dates.
+		var duringLiteralToDates = func(l string) (d []string) {
+			today := time.Now()
+			d = make([]string, 2)
+			switch l {
+			case "TODAY":
+				d[0], d[1] = today.Format(dateFormat), today.Format(dateFormat)
+			case "YESTERDAY":
+				yesterday := today.AddDate(0, 0, -1)
+				d[0], d[1] = yesterday.Format(dateFormat), yesterday.Format(dateFormat)
+			case "THIS_WEEK_SUN_TODAY":
+				sunday := now.Sunday()
+				d[0], d[1] = sunday.Format(dateFormat), today.Format(dateFormat)
+			case "THIS_WEEK_MON_TODAY":
+				monday := now.Monday()
+				d[0], d[1] = monday.Format(dateFormat), today.Format(dateFormat)
+			case "THIS_MONTH":
+				month := now.BeginningOfMonth()
+				d[0], d[1] = month.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_WEEK":
+				now.FirstDayMonday = true
+				lastWeek := now.New(today.AddDate(0, 0, -7))
+				d[0] = lastWeek.BeginningOfWeek().Format(dateFormat)
+				d[1] = lastWeek.EndOfWeek().Format(dateFormat)
+			case "LAST_7_DAYS":
+				weekly := today.AddDate(0, 0, -7)
+				d[0], d[1] = weekly.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_14_DAYS":
+				fortnight := today.AddDate(0, 0, -14)
+				d[0], d[1] = fortnight.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_30_DAYS":
+				monthly := today.AddDate(0, 0, -30)
+				d[0], d[1] = monthly.Format(dateFormat), today.Format(dateFormat)
+			case "LAST_BUSINESS_WEEK":
+				now.FirstDayMonday = true
+				monday := now.New(today.AddDate(0, 0, -7)).BeginningOfWeek()
+				friday := monday.AddDate(0, 0, 5)
+				d[0], d[1] = monday.Format(dateFormat), friday.Format(dateFormat)
+			case "LAST_WEEK_SUN_SAT":
+				now.FirstDayMonday = false
+				sunday := now.New(today.AddDate(0, 0, -7))
+				d[0], d[1] = sunday.BeginningOfWeek().Format(dateFormat), sunday.EndOfWeek().Format(dateFormat)
+			}
+			return
+		}
+		// inSelectClause returns true if the given field is in the select clause.
+		var inSelectClause = func(f parser.FieldPosition, fields []parser.DynamicField) bool {
+			for _, c := range fields {
+				if f.Name() == c.Name() || f.Name() == c.Alias() {
+					return true
+				}
+			}
+			return false
+		}
+		// SelectClause.
+		if len(stmt.Fields) == 1 && stmt.Fields[0].Name() == "*" {
+			// Replaces the all pattern with the list of view's fields.
+			stmt.Fields = t.Columns()
+		} else {
+			// Merges statements with field's properties.
+			if err := embellishFields(stmt, t); err != nil {
+				return err
+			}
+		}
+		// FromClause.
+		view := t.SourceQuery()
+		stmt.TableName = view.SourceName()
+		// WhereClause. Merges it if it's possible. If not, returns zero result.
+		if len(stmt.ConditionList()) > 0 || len(view.ConditionList()) > 0 {
+			// Tries to merge the where clauses.
+			for _, vw := range view.ConditionList() {
+				for _, sw := range stmt.ConditionList() {
+					if vw.Name() == sw.Name() {
+						// To improve, prevents to go out of view's scope.
+						return ErrOutRange
+					}
+				}
+				stmt.Where = append(stmt.Where, vw)
+			}
+		}
+		// DuringClause. Merges it if it's possible. If not, returns zero result.
+		if vds := len(view.DuringList()); vds > 0 {
+			switch len(stmt.DuringList()) {
+			case 0:
+				stmt.During = view.DuringList()
+			case 1:
+				stmt.During = duringLiteralToDates(stmt.During[0])
+				fallthrough
+			default:
+				vd := view.DuringList()
+				if vds == 1 {
+					vd = duringLiteralToDates(vd[0])
+				}
+				if stmt.During[0] < vd[0] {
+					if stmt.During[0] > vd[1] {
+						return ErrOutRange
+					}
+					stmt.During[0] = vd[0]
+				} else if stmt.During[0] > vd[1] {
+					return ErrOutRange
+				}
+				if stmt.During[1] > vd[1] {
+					if stmt.During[1] < vd[0] {
+						return ErrOutRange
+					}
+					stmt.During[1] = vd[1]
+				}
+			}
+		}
+		// GroupByClause. Overloads only if the statement has not it own aggregate.
+		if len(stmt.GroupList()) == 0 && len(view.GroupList()) > 0 {
+			// Tries to apply the sort order of the view.
+			for _, gb := range view.GroupList() {
+				if inSelectClause(gb, stmt.Columns()) {
+					stmt.GroupBy = append(stmt.GroupBy, gb)
+				}
+			}
+		}
+		// OrderByClause. Overloads only if the statement has not it own sort order.
+		if len(stmt.OrderList()) == 0 && len(view.OrderList()) > 0 {
+			// Tries to apply the sort order of the view.
+			for _, ob := range view.OrderList() {
+				if inSelectClause(ob, stmt.Columns()) {
+					stmt.OrderBy = append(stmt.OrderBy, ob)
+				}
+			}
+		}
+		// LimitClause. Overloads bounds only in the limit of the view.
+		if view.StartIndex() > stmt.StartIndex() {
+			stmt.Offset = view.StartIndex()
+		}
+		if rc, ok := view.PageSize(); ok {
+			if src, ok := stmt.PageSize(); ok && src > rc {
+				stmt.RowCount = rc
+			} else {
+				stmt.RowCount = rc
+				stmt.WithRowCount = true
+			}
+		}
+
+		return nil
+	}
+
+	// embellish adds more information on the statement about table or view.
+	// Also manages special keywords and behavior like `*`.
+	var embellish = func(stmt *parser.SelectStatement, t db.DataTable) error {
+		if t.IsView() {
+			return embellishView(stmt, t)
+		}
+		return embellishFields(stmt, t)
+	}
+
+	// fieldNames replaces the display name of columns by their names or alias if exist.
 	var fieldNames = func(columns []parser.DynamicField, sizes []int) []string {
 		cols := make([]string, len(columns))
 		for i, c := range columns {
@@ -300,24 +495,8 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i, c := range stmt.Fields {
-		// Manages the special case of the SQL method COUNT.
-		var m string
-		var f db.Field
-		if m, _ = c.UseFunction(); m == "COUNT" && c.Name() == "*" {
-			f, err = t.Field(t.AggregateFieldName())
-		} else {
-			f, err = t.Field(c.Name())
-		}
-		if err != nil {
-			return nil, err
-		}
-		// Casts to db.Column to merge it with statement properties.
-		col := f.(db.Column)
-		col.Method = m
-		col.Label = c.Alias()
-		col.Unique = c.Distinct()
-		stmt.Fields[i] = col
+	if err = embellish(stmt, t); err != nil {
+		return nil, err
 	}
 
 	// Keeps only accepted Adwords Awql grammar as query.
@@ -327,8 +506,8 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	var records [][]string
 	if records, err = s.fc.Get(s.Hash()); err != nil {
 		// Requests the Adwords API without any args, binding already done.
-		rows, err := s.si.Query(nil)
-		if err != nil {
+		var rows driver.Rows
+		if rows, err = s.si.Query(nil); err != nil {
 			return nil, err
 		}
 		records = rows.(*awql.Rows).Data
@@ -342,10 +521,14 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		return nil, err
 	}
 	// Initialises the result set.
+	size := len(data)
+	if size == 0 {
+		return nil, nil
+	}
 	rs := &Rows{
 		cols: fieldNames(stmt.Columns(), colSize),
 		data: data,
-		size: len(data),
+		size: size,
 	}
 	// Sorts rows by columns.
 	if len(stmt.OrderList()) > 0 {
@@ -367,6 +550,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	// Also indicates with the second parameter, if it's a automatic value or not.
 	var autoValued = func(s string) (v string, ok bool) {
 		if ok = strings.HasPrefix(s, auto); !ok {
+			// Not prefixed by auto keyword.
 			v = s
 			return
 		}
@@ -381,43 +565,43 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	var lenFloat64 = func(f Float64) (len int) {
 		switch {
 		case f.Float64 >= 1000000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 1000000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 1000000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 1000:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 100:
-			len += 1
+			len++
 			fallthrough
 		case f.Float64 >= 10:
-			len += 1
+			len++
 			fallthrough
 		default:
-			len += 1
+			len++
 		}
 		if f.Precision > 0 {
 			// Manages `.01`
@@ -425,23 +609,53 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
-	// parseFloat64 parse a string and returns it as double.
-	var parseFloat64 = func(s string) (d AutoNullFloat64, err error) {
+	// parseDouble parses a double string from Google API.
+	// Required until the version v201702.
+	// todo Removes when v201609 is deprecated.
+	var parseDouble = func(s string) (float64, error) {
+		s = strings.Replace(s, ",", "", -1)
+		return strconv.ParseFloat(s, 64)
+	}
+	// parsePercentNullFloat64 parses a string and returns it as double that can be a percentage.
+	var parsePercentNullFloat64 = func(s string) (d PercentNullFloat64, err error) {
 		if s == doubleDash {
 			// Not set, null value.
 			return
 		}
-		if s, d.Auto = autoValued(s); s == "" {
-			// Not set, null and automatic value.
-			return
+		if d.Percent = strings.HasSuffix(s, "%"); d.Percent {
+			s = strings.TrimSuffix(s, "%")
 		}
-		if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
+		switch s {
+		case almost10:
+			// Sometimes, when it's less than 10, Google displays "< 10%".
+			d.NullFloat64.Float64 = 9.999
 			d.NullFloat64.Valid = true
+			d.Almost = true
+		case almost90:
+			// Or "> 90%" when it is the opposite.
+			d.NullFloat64.Float64 = 90.001
+			d.NullFloat64.Valid = true
+			d.Almost = true
+		default:
+			if d.NullFloat64.Float64, err = parseDouble(s); err == nil {
+				d.NullFloat64.Valid = true
+			}
 		}
 		return
 	}
-	// parseFloat64 parse a string and returns it as integer.
-	var parseInt64 = func(s string) (d AutoNullInt64, err error) {
+	// parseNullFloat64 parses a string and returns it as a nullable double.
+	var parseNullFloat64 = func(s string) (d sql.NullFloat64, err error) {
+		if s == doubleDash {
+			// Not set, null value.
+			return
+		}
+		if d.Float64, err = parseDouble(s); err == nil {
+			d.Valid = true
+		}
+		return
+	}
+	// parseAutoNullInt64 parses a string and returns it as integer.
+	var parseAutoNullInt64 = func(s string) (d AutoNullInt64, err error) {
 		if s == doubleDash {
 			// Not set, null value.
 			return
@@ -476,9 +690,9 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	var cast = func(s, kind string) (driver.Value, error) {
 		switch strings.ToUpper(kind) {
 		case "BID", "INT", "INTEGER", "LONG", "MONEY":
-			return parseInt64(s)
+			return parseAutoNullInt64(s)
 		case "DOUBLE":
-			return parseFloat64(s)
+			return parsePercentNullFloat64(s)
 		case "DATE":
 			return parseTime("2006-01-02", s)
 		case "DATETIME":
@@ -492,19 +706,20 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		h.Write([]byte(s))
 		return h.Sum64()
 	}
-	// useAggregate returns true if at least one columns uses a aggregate function.
-	var useAggregate = func(stmt parser.SelectStmt) bool {
-		for _, c := range stmt.Columns() {
+	// useAggregate returns the list of aggregate and a boolean as second parameter.
+	// If at least one column uses a aggregate function, it will be true.
+	var useAggregate = func(stmt parser.SelectStmt) (aggr []int, ok bool) {
+		for p, c := range stmt.Columns() {
 			if c.Distinct() {
-				return true
-			}
-			if _, use := c.UseFunction(); use {
-				return true
+				aggr = append(aggr, p)
+				ok = true
+			} else if _, use := c.UseFunction(); use {
+				ok = true
 			}
 		}
-		return false
+		return
 	}
-	distinctLine := useAggregate(stmt)
+	aggrList, distinctLine := useAggregate(stmt)
 
 	// Bounds
 	groupSize := len(stmt.GroupList())
@@ -518,10 +733,14 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		// Picks the aggregate values.
 		var group []uint64
 		if groupSize > 0 {
-			for _, gb := range stmt.GroupList() {
-				group = append(group, hash(f[gb.Position()-1]))
+			for _, gc := range stmt.GroupList() {
+				group = append(group, hash(f[gc.Position()-1]))
 			}
-		} else if !distinctLine {
+		} else if distinctLine {
+			for _, ap := range aggrList {
+				group = append(group, hash(f[ap]))
+			}
+		} else {
 			group = append(group, uint64(p))
 		}
 		key := fmt.Sprint(group)
@@ -544,11 +763,11 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 					continue
 				}
 				// Casts to float the current column's value.
-				cv, err := parseFloat64(f[i])
+				cv, err := parseNullFloat64(f[i])
 				if err != nil {
 					return nil, nil, err
 				}
-				if !cv.NullFloat64.Valid {
+				if !cv.Valid {
 					// Nil value, skip it.
 					row[i] = v
 					continue
@@ -556,20 +775,20 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 				// Applies the aggregate method on it valid value.
 				switch method {
 				case "AVG":
-					// ((previous average x number of elements seen) + current value) /
-					// current number of elements
+					// (((previous average x number of elements seen) + current value) /
+					// current number of elements)
 					fi := float64(i)
-					v.Float64 = ((v.Float64 * fi) + cv.NullFloat64.Float64) / (fi + 1)
+					v.Float64 = ((v.Float64 * fi) + cv.Float64) / (fi + 1)
 				case "MAX":
-					if v.Float64 < cv.NullFloat64.Float64 {
-						v.Float64 = cv.NullFloat64.Float64
+					if v.Float64 < cv.Float64 {
+						v.Float64 = cv.Float64
 					}
 				case "MIN":
-					if v.Float64 > cv.NullFloat64.Float64 {
-						v.Float64 = cv.NullFloat64.Float64
+					if v.Float64 > cv.Float64 {
+						v.Float64 = cv.Float64
 					}
 				case "SUM":
-					v.Float64 += cv.NullFloat64.Float64
+					v.Float64 += cv.Float64
 				default:
 					return nil, nil, NewXError("unknown method", method)
 				}
@@ -622,8 +841,8 @@ func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
 					return v1.NullInt64.Int64 > v2.NullInt64.Int64
 				}
 				return v1.NullInt64.Int64 < v2.NullInt64.Int64
-			case AutoNullFloat64:
-				v1, v2 := p1[pos].(AutoNullFloat64), p2[pos].(AutoNullFloat64)
+			case PercentNullFloat64:
+				v1, v2 := p1[pos].(PercentNullFloat64), p2[pos].(PercentNullFloat64)
 				if o.SortDescending() {
 					return v1.NullFloat64.Float64 > v2.NullFloat64.Float64
 				}
@@ -747,6 +966,11 @@ func (s *ShowStmt) Query() (driver.Rows, error) {
 	}, nil
 }
 
+// fmtColumnName returns the name of the column formatted as expected to display it.
+func fmtColumnName(name string, minLen int) string {
+	return fmt.Sprintf("%-"+strconv.Itoa(maxLen(name, minLen))+"v", name)
+}
+
 // maxLen returns the length in runes of the string, only if it is more bigger than minLen.
 func maxLen(name string, minLen int) (len int) {
 	len = utf8.RuneCountInString(name)
@@ -754,9 +978,4 @@ func maxLen(name string, minLen int) (len int) {
 		len = minLen
 	}
 	return
-}
-
-// fmtColumnName returns the name of the column formatted as expected to display it.
-func fmtColumnName(name string, minLen int) string {
-	return fmt.Sprintf("%-"+strconv.Itoa(maxLen(name, minLen))+"v", name)
 }
