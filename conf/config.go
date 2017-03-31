@@ -76,7 +76,6 @@ func (c *Context) Dsn() string {
 	dsn.APIVersion = c.APIVersion()
 	dsn.SupportsZeroImpressions = c.SupportsZeroImpressions()
 	dsn.SkipColumnHeader = true
-	dsn.UseRawEnumValues = true
 
 	// Credentials.
 	dsn.AccessToken = c.tk.AccessToken
