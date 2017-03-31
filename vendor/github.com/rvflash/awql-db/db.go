@@ -132,8 +132,8 @@ func (d *Database) AddView(stmt awql.CreateViewStmt) error {
 	copy(views, d.vw)
 	var exists bool
 	for i, ov := range d.vw {
-		if exists := ov.SourceName() == v.SourceName(); exists {
-			// View already exists, so replace it!
+		// View already exists, so replace it!
+		if exists = ov.SourceName() == v.SourceName(); exists {
 			d.vw[i] = v
 			break
 		}

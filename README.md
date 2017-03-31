@@ -64,6 +64,7 @@ Otherwise, with options `-T` to set the Google OAuth access token and `-D` to se
 * Also offers the SQL methods `DESC [FULL]`, `SHOW [FULL] TABLES [LIKE|WITH]` and `CREATE [OR REPLACE] VIEW`.
 * Adds management of `\G` modifier to display result vertically (each column on a line)
 * Also adds the aggregate functions: `AVG`, `COUNT`, `MAX`, `MIN`, `SUM` and `DISTINCT` keyword.
+* The view offers possibility to filter the AWQL reports to create your own report, with only the columns and scope that interest you.
 * `*` can be used as shorthand to select all columns from all views
 * Caching data in order to don't request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * By default, all calls implicitly excludes zero impressions. This behavior can be changed with the option `-z`.
@@ -161,6 +162,29 @@ $ awql> show full tables with Url;
 | URL_PERFORMANCE_REPORT   | BASE TABLE |
 +--------------------------+------------+
 2 rows in set (0.000 sec)
+```
+
+
+#### CREATE [OR REPLACE] VIEW view_name [(column_list)] AS select_statement
+
+```bash
+$ awql> create view CAMPAIGN_COST_WEEK (name, cost) as select CampaignName, Cost from CAMPAIGN_PERFORMANCE_REPORT during LAST_WEEK;
+```
+
+
+#### SELECT * FROM view_name
+
+Only works on a view. Adwords tables are not designed for that. Too much columns and fields incompatibles between them.
+
+```bash
+$ awql> select * from CAMPAIGN_COST_WEEK;
++-------------+------------+
+| name        | cost       |
++-------------+------------+
+| Campaign #1 | 60000      |
+| Campaign #2 | 10000      |
+| Campaign #3 | 20000      |
++-------------+------------+
 ```
 
 

@@ -7,7 +7,11 @@ func (s CreateViewStatement) String() (q string) {
 	if s.SourceName() == "" {
 		return
 	}
-	q = "CREATE VIEW " + s.SourceName()
+	q = "CREATE "
+	if s.ReplaceMode() {
+		q += "OR REPLACE "
+	}
+	q += "VIEW " + s.SourceName()
 
 	// Concatenates field names.
 	cols := s.Columns()

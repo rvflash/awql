@@ -2,6 +2,7 @@ package awqldb
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	awql "github.com/rvflash/awql-parser"
@@ -61,6 +62,10 @@ func (t Table) ColumnsPrefixedBy(pattern string) (columns []awql.DynamicField) {
 // Field returns the field with this column name or an error.
 func (t Table) Field(name string) (Field, error) {
 	for _, c := range t.Cols {
+		if t.IsView() && c.Label == name {
+			// In view, also searches by alias name.
+			return c, nil
+		}
 		if c.Head == name {
 			return c, nil
 		}
@@ -95,13 +100,11 @@ func (t Table) ReplaceMode() bool {
 //
 // Output example:
 //   - name: ADGROUP_DAILY
-//     rprt: ADGROUP_PERFORMANCE_REPORT
 //     cols:
 //       - name: AdGroupId
 //         psnm: Id
 //     view:
 //       name: ADGROUP_DAILY
-//       rprt: ADGROUP_PERFORMANCE_REPORT
 //       cols:
 //         - name: AdGroupId
 //       where:
@@ -364,7 +367,7 @@ func (o Order) SortDescending() bool {
 //         - cpos: 1
 //           desc: false
 func (o Order) String() string {
-	s := qsep + sep + "- cpos: " + string(o.Position()) + newline
+	s := qsep + sep + "- cpos: " + formatInt(o.Position()) + newline
 	if o.SortDescending() {
 		s += qsep + dsep + "desc: true" + newline
 	}
@@ -387,9 +390,9 @@ func (l Limit) String() (s string) {
 	if l.RowCount == 0 {
 		return
 	}
-	s = qsep + "limit:" + newline
-	s += qsep + sep + "offs:" + string(l.Offset) + newline
-	s += qsep + sep + "rcnt:" + string(l.RowCount) + newline
+	s = dsep + sep + "limit:" + newline
+	s += qsep + "offs: " + formatInt(l.Offset) + newline
+	s += qsep + "rcnt: " + formatInt(l.RowCount) + newline
 
 	return
 }
@@ -495,7 +498,6 @@ func (t View) StartIndex() int {
 // Output example:
 //     view:
 //       name: ADGROUP_DAILY
-//       rprt: ADGROUP_PERFORMANCE_REPORT
 //       cols:
 //         - name: AdGroupId
 //       where:
@@ -513,19 +515,19 @@ func (t View) StartIndex() int {
 //         rcnt: 15
 //
 func (t View) String() string {
-	s := dsep + sep + "view:" + newline
-	s += qsep + "name: " + t.Name + newline
-	s += qsep + "aggr: " + t.PrimaryKey + newline
+	s := dsep + "view:" + newline
+	s += dsep + sep + "name: " + t.Name + newline
+	s += dsep + sep + "aggr: " + t.PrimaryKey + newline
 
 	// Fields.
-	s += qsep + "cols:" + newline
+	s += dsep + sep + "cols:" + newline
 	for _, c := range t.Cols {
 		s += c.String(true)
 	}
 
 	// Where clause.
 	if where := t.Where; len(where) > 0 {
-		s += qsep + "where:" + newline
+		s += dsep + sep + "where:" + newline
 		for _, w := range where {
 			s += w.String()
 		}
@@ -533,7 +535,7 @@ func (t View) String() string {
 
 	// During clause.
 	if during := t.During; len(during) > 0 {
-		s += qsep + "during: [ " + strings.Join(during, ", ") + " ]" + newline
+		s += dsep + sep + "during: [ " + strings.Join(during, ", ") + " ]" + newline
 	}
 
 	// Group by clause.
@@ -543,12 +545,12 @@ func (t View) String() string {
 		for i, o := range group {
 			val[i] = o.String()
 		}
-		s += qsep + "group: [ " + strings.Join(val, ", ") + " ]" + newline
+		s += dsep + sep + "group: [ " + strings.Join(val, ", ") + " ]" + newline
 	}
 
 	// Order by clause.
 	if order := t.OrderBy; len(order) > 0 {
-		s += qsep + "order:" + newline
+		s += dsep + sep + "order:" + newline
 		for _, o := range order {
 			s += o.String()
 		}
@@ -618,4 +620,9 @@ func newOrderBy(o awql.Orderer) Order {
 		ColumnPosition: o.Position(),
 		SortDesc:       o.SortDescending(),
 	}
+}
+
+// formatInt formats an integer as string
+func formatInt(i int) string {
+	return strconv.FormatInt(int64(i), 10)
 }
