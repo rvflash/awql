@@ -710,8 +710,10 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	// If at least one column uses a aggregate function, it will be true.
 	var useAggregate = func(stmt parser.SelectStmt) (aggr []int, ok bool) {
 		for p, c := range stmt.Columns() {
-			if _, use := c.UseFunction(); use || c.Distinct() {
+			if c.Distinct() {
 				aggr = append(aggr, p)
+				ok = true
+			} else if _, use := c.UseFunction(); use {
 				ok = true
 			}
 		}
