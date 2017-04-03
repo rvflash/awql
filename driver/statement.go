@@ -297,7 +297,7 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 		}
 		f, err := field(c, t)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s (%v)", err, c.Name())
 		}
 		// Merges with statement to complete field's data.
 		cf := f.(db.Column)
