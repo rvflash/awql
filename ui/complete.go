@@ -156,7 +156,7 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 	// withCompletion splits a string and returns true if the last element can be completed.
 	var withCompletion = func(s, split string) bool {
 		// Splits by the given pattern.
-		v := strings.Split(s, split)
+		v := regexp.MustCompile(split).Split(s, -1)
 		// Splits around each instance of one or more consecutive white space characters.
 		return len(tokenize(v[len(v)-1])) < 2
 	}
@@ -260,7 +260,8 @@ func (c *completer) selectCompleter(line []rune, pos int) ([][]rune, int) {
 		v = c.db.ColumnNamesPrefixedBy(s)
 	case column:
 		// Lists all columns of the specified table matching the prefix.
-		if withCompletion(bw.String(), " AND ") {
+		// Splits where clause with ` and ` in case-insensitive mode.
+		if withCompletion(bw.String(), "(?i) and ") {
 			tb, err := c.db.Table(tb)
 			if err != nil {
 				v = c.db.ColumnNamesPrefixedBy(s)
