@@ -654,10 +654,15 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
-	// parseAutoNullInt64 parses a string and returns it as integer.
-	var parseAutoNullInt64 = func(s string) (d AutoNullInt64, err error) {
+	// parseAutoExcludedNullInt64 parses a string and returns it as integer.
+	var parseAutoExcludedNullInt64 = func(s string) (d AutoExcludedNullInt64, err error) {
 		if s == doubleDash {
 			// Not set, null value.
+			return
+		}
+		if s == excluded {
+			// Voluntary null by scope.
+			d.Excluded = true
 			return
 		}
 		if s, d.Auto = autoValued(s); s == "" {
@@ -690,7 +695,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 	var cast = func(s, kind string) (driver.Value, error) {
 		switch strings.ToUpper(kind) {
 		case "BID", "INT", "INTEGER", "LONG", "MONEY":
-			return parseAutoNullInt64(s)
+			return parseAutoExcludedNullInt64(s)
 		case "DOUBLE":
 			return parsePercentNullFloat64(s)
 		case "DATE":
@@ -835,8 +840,8 @@ func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
 		pos := o.Position() - 1
 		orders[i] = func(p1, p2 []driver.Value) bool {
 			switch p1[pos].(type) {
-			case AutoNullInt64:
-				v1, v2 := p1[pos].(AutoNullInt64), p2[pos].(AutoNullInt64)
+			case AutoExcludedNullInt64:
+				v1, v2 := p1[pos].(AutoExcludedNullInt64), p2[pos].(AutoExcludedNullInt64)
 				if o.SortDescending() {
 					return v1.NullInt64.Int64 > v2.NullInt64.Int64
 				}
