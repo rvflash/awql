@@ -9,14 +9,17 @@ import (
 
 // Generic patterns in Google reports.
 const (
-	// Google can prefix a value by auto: or just return auto to symbolize an automatic strategy.
+	// Google can prefix a value by `auto:` or just return auto to symbolize an automatic strategy.
 	auto      = "auto"
 	autoValue = auto + ": "
 
-	// Google uses ' --' instead of an empty string to symbolize the fact that the field was never set
+	// Google uses `Excluded` to tag null value by context.
+	excluded = "Excluded"
+
+	// Google uses ` --` instead of an empty string to symbolize the fact that the field was never set.
 	doubleDash = " --"
 
-	// Google sometimes uses special value like "> 90%".
+	// Google sometimes uses special value like `> 90%` or `< 10%`.
 	almost10 = "< 10"
 	almost90 = "> 90"
 )
@@ -48,20 +51,24 @@ func (n PercentNullFloat64) Value() (driver.Value, error) {
 	return v, nil
 }
 
-// AutoNullInt64 represents a int64 that may be null or defined as auto valuer.
-type AutoNullInt64 struct {
+// AutoExcludedNullInt64 represents a int64 that may be null or defined as auto valuer.
+type AutoExcludedNullInt64 struct {
 	NullInt64 sql.NullInt64
-	Auto      bool
+	Auto,
+	Excluded bool
 }
 
 // Value implements the driver Valuer interface.
-func (n AutoNullInt64) Value() (driver.Value, error) {
+func (n AutoExcludedNullInt64) Value() (driver.Value, error) {
 	var v string
 	if n.Auto {
 		if !n.NullInt64.Valid {
 			return auto, nil
 		}
 		v = autoValue
+	}
+	if n.Excluded {
+		return excluded, nil
 	}
 	if !n.NullInt64.Valid {
 		return doubleDash, nil

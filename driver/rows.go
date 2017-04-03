@@ -70,8 +70,8 @@ func (r *Rows) Next(dest []driver.Value) error {
 	for i := 0; i < len(r.cols); i++ {
 		// todo Improves with Scanner interface.
 		switch r.data[r.pos][i].(type) {
-		case AutoNullInt64:
-			dest[i], _ = r.data[r.pos][i].(AutoNullInt64).Value()
+		case AutoExcludedNullInt64:
+			dest[i], _ = r.data[r.pos][i].(AutoExcludedNullInt64).Value()
 		case PercentNullFloat64:
 			dest[i], _ = r.data[r.pos][i].(PercentNullFloat64).Value()
 		case Float64:
