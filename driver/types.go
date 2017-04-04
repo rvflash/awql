@@ -9,7 +9,7 @@ import (
 
 // Generic patterns in Google reports.
 const (
-	// Google can prefix a value by `auto:` or just return auto to symbolize an automatic strategy.
+	// Google can prefix a value by `auto:` or just return `auto` to symbolize an automatic strategy.
 	auto      = "auto"
 	autoValue = auto + ": "
 
