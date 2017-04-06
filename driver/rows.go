@@ -97,8 +97,8 @@ func (r *Rows) Limit(offset, rowCount int) {
 	r.pos = offset
 
 	rowCount += offset
-	if rowCount >= r.size {
-		rowCount = r.size - 1
+	if rowCount > r.size {
+		rowCount = r.size
 	}
 	r.size = rowCount
 }
