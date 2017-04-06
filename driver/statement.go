@@ -311,14 +311,27 @@ func (s *SelectStmt) Query() (driver.Rows, error) {
 	}
 
 	// embellishFields adds more information about the table's fields.
-	var embellishFields = func(stmt *parser.SelectStatement, t db.DataTable) (err error) {
-		for i, c := range stmt.Fields {
-			stmt.Fields[i], err = embellishField(c, t)
+	var embellishFields = func(stmt *parser.SelectStatement, t db.DataTable) error {
+		// As Google Adwords API, ignores all redundant columns.
+		fieldNames := make(map[string]bool)
+
+		var fields []parser.DynamicField
+		for _, c := range stmt.Fields {
+			field, err := embellishField(c, t)
 			if err != nil {
-				break
+				// Invalid field.
+				return err
 			}
+			if _, ok := fieldNames[field.Name()]; ok {
+				// Redundant field, skip it.
+				continue
+			}
+			fieldNames[field.Name()] = true
+			fields = append(fields, field)
 		}
-		return err
+		stmt.Fields = fields
+
+		return nil
 	}
 
 	// embellishView adds more information on the statement about view.
