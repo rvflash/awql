@@ -61,7 +61,7 @@ The client customer ID is the account number of the AdWords client account you w
 ```
 Type:           string
 Valid Values:   <version>
-Default:        v201702
+Default:        v201705
 ```
 Version of the Adwords API to use.
 
