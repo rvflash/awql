@@ -9,15 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rvflash/awql-db/internal/schema"
+
 	awql "github.com/rvflash/awql-parser"
 	"gopkg.in/yaml.v2"
-)
-
-// Environment.
-const (
-	dbDir   = "./src"
-	rptFile = "%s/reports.yml"
-	vwFile  = "views.yml"
 )
 
 // Error messages.
@@ -73,7 +68,7 @@ func Open(dsn string) (*Database, error) {
 		return db, err
 	}
 	if viewFile == "" {
-		db.vwFile = filepath.Join(db.dir, vwFile)
+		db.vwFile = filepath.Join(db.dir, "views.yml")
 	} else {
 		db.vwFile = viewFile
 	}
@@ -300,30 +295,13 @@ func (d *Database) buildColumnsIndex() error {
 	return nil
 }
 
-// loadFile retrieves the content of the given file path.
-func (d *Database) loadFile(path string) ([]byte, error) {
-	// Gets path of reports reference.
-	p, err := filepath.Abs(path)
-	if err != nil {
-		return []byte{}, err
-	}
-	// Gets reference in yaml format.
-	ymlFile, err := ioutil.ReadFile(p)
-	if err != nil {
-		return []byte{}, err
-	}
-	return ymlFile, nil
-}
-
 // loadReports loads all report table and returns it as Database or error.
 func (d *Database) loadReports() error {
-	// Gets the content of the Yaml configuration file.
-	file := filepath.Join(d.dir, fmt.Sprintf(rptFile, d.Version))
-	ymlFile, err := d.loadFile(file)
+	// Gets the static content of the Yaml configuration file.
+	ymlFile, err := schema.Asset(fmt.Sprintf("src/%s/reports.yml", d.Version))
 	if err != nil {
 		return err
 	}
-
 	// Reports represents all reports from the configuration file.
 	type Reports struct {
 		Reports []Table `yaml:"reports"`
@@ -332,7 +310,6 @@ func (d *Database) loadReports() error {
 	if err := yaml.Unmarshal(ymlFile, &r); err != nil {
 		return err
 	}
-
 	// Converts slice of Table in slice of awql.CreateViewStmt.
 	d.tb = make([]DataTable, len(r.Reports))
 	for i := range r.Reports {
@@ -344,12 +321,16 @@ func (d *Database) loadReports() error {
 
 // loadReports loads all report table and returns it as Database or error.
 func (d *Database) loadViews() error {
-	// Gets the content of the Yaml configuration file.
-	ymlFile, err := d.loadFile(d.vwFile)
+	// Validates the path.
+	p, err := filepath.Abs(d.vwFile)
 	if err != nil {
 		return err
 	}
-
+	// Gets reference in Yaml format.
+	ymlFile, err := ioutil.ReadFile(p)
+	if err != nil {
+		return err
+	}
 	// Views represents all views from the configuration file.
 	type Views struct {
 		Views []Table
@@ -358,7 +339,6 @@ func (d *Database) loadViews() error {
 	if err := yaml.Unmarshal(ymlFile, &v); err != nil {
 		return err
 	}
-
 	// Converts slice of Table in slice of awql.CreateViewStmt.
 	d.vw = make([]DataTable, len(v.Views))
 	for i, w := range v.Views {
@@ -482,7 +462,7 @@ func (d *Database) newView(stmt awql.CreateViewStmt) (DataTable, error) {
 func (d *Database) setDir(dir string) (err error) {
 	if dir == "" {
 		// Set default directory if the path is empty.
-		dir = dbDir
+		dir = "./internal/schema/src"
 	}
 	d.dir, err = filepath.Abs(dir)
 	if err != nil {
