@@ -66,7 +66,7 @@ func (c *Context) CacheDir() string {
 
 // DatabaseDir returns the path to the database.
 func (c *Context) DatabaseDir() string {
-	return filepath.Join(c.wrkDir, "vendor/github.com/rvflash/awql-db/src")
+	return filepath.Join(c.wrkDir, "vendor/github.com/rvflash/awql-db/internal/schema/src")
 }
 
 // Dsn outputs the data source name.
