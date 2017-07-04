@@ -3,7 +3,6 @@ package awqldb
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -64,8 +63,9 @@ func Open(dsn string) (*Database, error) {
 	dir, viewFile, version, noOp := parseDsn(dsn)
 
 	db := &Database{}
-	if err := db.setDir(dir); err != nil {
-		return db, err
+	if dir == "" {
+		// Sets the default directory if the path is empty.
+		db.dir = "./internal/schema/src"
 	}
 	if viewFile == "" {
 		db.vwFile = filepath.Join(db.dir, "views.yml")
@@ -456,22 +456,6 @@ func (d *Database) newView(stmt awql.CreateViewStmt) (DataTable, error) {
 	view.View = data
 
 	return view, nil
-}
-
-// setDir defines the database root directory.
-func (d *Database) setDir(dir string) (err error) {
-	if dir == "" {
-		// Set default directory if the path is empty.
-		dir = "./internal/schema/src"
-	}
-	d.dir, err = filepath.Abs(dir)
-	if err != nil {
-		return NewXDatabaseError("connection failed", err.Error())
-	}
-	if _, err = os.Stat(d.dir); os.IsNotExist(err) {
-		return NewXDatabaseError("connection failed", err.Error())
-	}
-	return nil
 }
 
 // setVersion defines the API version to use.
