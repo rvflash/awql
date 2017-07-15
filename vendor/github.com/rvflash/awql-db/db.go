@@ -100,14 +100,8 @@ func (d *Database) HasVersion(version string) bool {
 
 // SupportedVersions returns the list of Adwords API versions supported.
 func (d *Database) SupportedVersions() (versions []string) {
-	files, err := ioutil.ReadDir(d.dir)
-	if err != nil {
-		return
-	}
-	for _, f := range files {
-		if f.IsDir() {
-			versions = append(versions, f.Name())
-		}
+	for _, f := range schema.AssetNames() {
+		versions = append(versions, strings.Split(f, "/")[1])
 	}
 	return
 }
