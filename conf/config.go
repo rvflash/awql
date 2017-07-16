@@ -110,7 +110,7 @@ func (c *Context) Init() error {
 	}
 	// Checks if it's a supported Adwords API versions.
 	// Opens a connection to Awql DB without load anything.
-	if _, err := db.Open(c.APIVersion() + ":true|" + c.DatabaseDir()); err != nil {
+	if _, err := db.Open(c.APIVersion() + ":true"); err != nil {
 		return err
 	}
 	// Create the tool home directory.
