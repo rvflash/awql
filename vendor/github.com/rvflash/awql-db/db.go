@@ -3,21 +3,15 @@ package awqldb
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/rvflash/awql-db/internal/schema"
+
 	awql "github.com/rvflash/awql-parser"
 	"gopkg.in/yaml.v2"
-)
-
-// Environment.
-const (
-	dbDir   = "./src"
-	rptFile = "%s/reports.yml"
-	vwFile  = "views.yml"
 )
 
 // Error messages.
@@ -66,22 +60,29 @@ func Open(dsn string) (*Database, error) {
 		}
 		return
 	}
-	dir, viewFile, version, noOp := parseDsn(dsn)
 
+	var noOp bool
 	db := &Database{}
-	if err := db.setDir(dir); err != nil {
-		return db, err
-	}
-	if viewFile == "" {
-		db.vwFile = filepath.Join(db.dir, vwFile)
-	} else {
-		db.vwFile = viewFile
-	}
+	db.dir, db.vwFile, db.Version, noOp = parseDsn(dsn)
 
-	if err := db.setVersion(version); err != nil {
-		return db, err
+	// Uses the default directory if the path is empty.
+	if db.dir == "" {
+		db.dir = "./internal/schema/src"
 	}
-
+	// Uses the default view file if the path is empty.
+	if db.vwFile == "" {
+		db.vwFile = filepath.Join(db.dir, "views.yml")
+	}
+	if db.Version == "" {
+		// Set the latest API version if it is undefined.
+		vs := db.SupportedVersions()
+		sort.Strings(vs)
+		db.Version = vs[len(vs)-1]
+	}
+	// Checks if it's a valid API version.
+	if !db.HasVersion(db.Version) {
+		return db, ErrVersion
+	}
 	if !noOp {
 		if err := db.Load(); err != nil {
 			return db, err
@@ -105,14 +106,8 @@ func (d *Database) HasVersion(version string) bool {
 
 // SupportedVersions returns the list of Adwords API versions supported.
 func (d *Database) SupportedVersions() (versions []string) {
-	files, err := ioutil.ReadDir(d.dir)
-	if err != nil {
-		return
-	}
-	for _, f := range files {
-		if f.IsDir() {
-			versions = append(versions, f.Name())
-		}
+	for _, f := range schema.AssetNames() {
+		versions = append(versions, strings.Split(f, "/")[1])
 	}
 	return
 }
@@ -300,30 +295,13 @@ func (d *Database) buildColumnsIndex() error {
 	return nil
 }
 
-// loadFile retrieves the content of the given file path.
-func (d *Database) loadFile(path string) ([]byte, error) {
-	// Gets path of reports reference.
-	p, err := filepath.Abs(path)
-	if err != nil {
-		return []byte{}, err
-	}
-	// Gets reference in yaml format.
-	ymlFile, err := ioutil.ReadFile(p)
-	if err != nil {
-		return []byte{}, err
-	}
-	return ymlFile, nil
-}
-
 // loadReports loads all report table and returns it as Database or error.
 func (d *Database) loadReports() error {
-	// Gets the content of the Yaml configuration file.
-	file := filepath.Join(d.dir, fmt.Sprintf(rptFile, d.Version))
-	ymlFile, err := d.loadFile(file)
+	// Gets the static content of the Yaml configuration file.
+	ymlFile, err := schema.Asset(fmt.Sprintf("src/%s/reports.yml", d.Version))
 	if err != nil {
 		return err
 	}
-
 	// Reports represents all reports from the configuration file.
 	type Reports struct {
 		Reports []Table `yaml:"reports"`
@@ -332,7 +310,6 @@ func (d *Database) loadReports() error {
 	if err := yaml.Unmarshal(ymlFile, &r); err != nil {
 		return err
 	}
-
 	// Converts slice of Table in slice of awql.CreateViewStmt.
 	d.tb = make([]DataTable, len(r.Reports))
 	for i := range r.Reports {
@@ -344,12 +321,16 @@ func (d *Database) loadReports() error {
 
 // loadReports loads all report table and returns it as Database or error.
 func (d *Database) loadViews() error {
-	// Gets the content of the Yaml configuration file.
-	ymlFile, err := d.loadFile(d.vwFile)
+	// Validates the path.
+	p, err := filepath.Abs(d.vwFile)
 	if err != nil {
 		return err
 	}
-
+	// Gets reference in Yaml format.
+	ymlFile, err := ioutil.ReadFile(p)
+	if err != nil {
+		return nil
+	}
 	// Views represents all views from the configuration file.
 	type Views struct {
 		Views []Table
@@ -358,7 +339,6 @@ func (d *Database) loadViews() error {
 	if err := yaml.Unmarshal(ymlFile, &v); err != nil {
 		return err
 	}
-
 	// Converts slice of Table in slice of awql.CreateViewStmt.
 	d.vw = make([]DataTable, len(v.Views))
 	for i, w := range v.Views {
@@ -417,15 +397,17 @@ func (d *Database) newView(stmt awql.CreateViewStmt) (DataTable, error) {
 	}
 
 	// Manages columns.
-	cnames := stmt.Columns()
-	cols := stmt.SourceQuery().Columns()
-	csize := len(cols)
-	if size := len(cnames); size > 0 && size != csize {
-		return nil, ErrMismatchColumns
-	}
-	data.Cols = make([]Column, csize)
-	for i := 0; i < csize; i++ {
-		col, err := t.newColumn(cols[i], cnames[i])
+	cols, cnames := stmt.SourceQuery().Columns(), stmt.Columns()
+	size, csize := len(cols), len(cnames)
+	data.Cols = make([]Column, size)
+	for i := 0; i < size; i++ {
+		var alias awql.DynamicField
+		if i >= csize {
+			alias = cols[i]
+		} else {
+			alias = cnames[i]
+		}
+		col, err := t.newColumn(cols[i], alias)
 		if err != nil {
 			return nil, err
 		}
@@ -469,44 +451,11 @@ func (d *Database) newView(stmt awql.CreateViewStmt) (DataTable, error) {
 	}
 
 	// Copy columns of the data source, merged with view's columns names, on the view.
-	view.Cols = make([]Column, csize)
+	view.Cols = make([]Column, size)
 	copy(view.Cols, data.Cols)
 
 	// Finally adds the table source.
 	view.View = data
 
 	return view, nil
-}
-
-// setDir defines the database root directory.
-func (d *Database) setDir(dir string) (err error) {
-	if dir == "" {
-		// Set default directory if the path is empty.
-		dir = dbDir
-	}
-	d.dir, err = filepath.Abs(dir)
-	if err != nil {
-		return NewXDatabaseError("connection failed", err.Error())
-	}
-	if _, err = os.Stat(d.dir); os.IsNotExist(err) {
-		return NewXDatabaseError("connection failed", err.Error())
-	}
-	return nil
-}
-
-// setVersion defines the API version to use.
-func (d *Database) setVersion(version string) error {
-	if version == "" {
-		// Set the latest API version if it is undefined.
-		vs := d.SupportedVersions()
-		sort.Strings(vs)
-		version = vs[len(vs)-1]
-	}
-	d.Version = version
-
-	// Checks if it's a valid API version.
-	if !d.HasVersion(d.Version) {
-		return ErrVersion
-	}
-	return nil
 }
