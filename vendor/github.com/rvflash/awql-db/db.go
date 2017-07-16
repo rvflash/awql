@@ -60,23 +60,29 @@ func Open(dsn string) (*Database, error) {
 		}
 		return
 	}
-	dir, viewFile, version, noOp := parseDsn(dsn)
 
+	var noOp bool
 	db := &Database{}
-	if dir == "" {
-		// Sets the default directory if the path is empty.
+	db.dir, db.vwFile, db.Version, noOp = parseDsn(dsn)
+
+	// Uses the default directory if the path is empty.
+	if db.dir == "" {
 		db.dir = "./internal/schema/src"
 	}
-	if viewFile == "" {
+	// Uses the default view file if the path is empty.
+	if db.vwFile == "" {
 		db.vwFile = filepath.Join(db.dir, "views.yml")
-	} else {
-		db.vwFile = viewFile
 	}
-
-	if err := db.setVersion(version); err != nil {
-		return db, err
+	if db.Version == "" {
+		// Set the latest API version if it is undefined.
+		vs := db.SupportedVersions()
+		sort.Strings(vs)
+		db.Version = vs[len(vs)-1]
 	}
-
+	// Checks if it's a valid API version.
+	if !db.HasVersion(db.Version) {
+		return db, ErrVersion
+	}
 	if !noOp {
 		if err := db.Load(); err != nil {
 			return db, err
@@ -323,7 +329,7 @@ func (d *Database) loadViews() error {
 	// Gets reference in Yaml format.
 	ymlFile, err := ioutil.ReadFile(p)
 	if err != nil {
-		return err
+		return nil
 	}
 	// Views represents all views from the configuration file.
 	type Views struct {
@@ -391,15 +397,17 @@ func (d *Database) newView(stmt awql.CreateViewStmt) (DataTable, error) {
 	}
 
 	// Manages columns.
-	cnames := stmt.Columns()
-	cols := stmt.SourceQuery().Columns()
-	csize := len(cols)
-	if size := len(cnames); size > 0 && size != csize {
-		return nil, ErrMismatchColumns
-	}
-	data.Cols = make([]Column, csize)
-	for i := 0; i < csize; i++ {
-		col, err := t.newColumn(cols[i], cnames[i])
+	cols, cnames := stmt.SourceQuery().Columns(), stmt.Columns()
+	size, csize := len(cols), len(cnames)
+	data.Cols = make([]Column, size)
+	for i := 0; i < size; i++ {
+		var alias awql.DynamicField
+		if i >= csize {
+			alias = cols[i]
+		} else {
+			alias = cnames[i]
+		}
+		col, err := t.newColumn(cols[i], alias)
 		if err != nil {
 			return nil, err
 		}
@@ -443,28 +451,11 @@ func (d *Database) newView(stmt awql.CreateViewStmt) (DataTable, error) {
 	}
 
 	// Copy columns of the data source, merged with view's columns names, on the view.
-	view.Cols = make([]Column, csize)
+	view.Cols = make([]Column, size)
 	copy(view.Cols, data.Cols)
 
 	// Finally adds the table source.
 	view.View = data
 
 	return view, nil
-}
-
-// setVersion defines the API version to use.
-func (d *Database) setVersion(version string) error {
-	if version == "" {
-		// Set the latest API version if it is undefined.
-		vs := d.SupportedVersions()
-		sort.Strings(vs)
-		version = vs[len(vs)-1]
-	}
-	d.Version = version
-
-	// Checks if it's a valid API version.
-	if !d.HasVersion(d.Version) {
-		return ErrVersion
-	}
-	return nil
 }
