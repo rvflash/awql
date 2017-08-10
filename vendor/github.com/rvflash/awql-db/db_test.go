@@ -39,6 +39,7 @@ func TestDatabase_HasVersion(t *testing.T) {
 		{"v201609", true},
 		{"v201702", true},
 		{"v201705", true},
+		{"v201708", true},
 	}
 
 	d, err := db.Open("")
@@ -55,7 +56,7 @@ func TestDatabase_HasVersion(t *testing.T) {
 func ExampleDatabase_SupportedVersions() {
 	d, _ := db.Open("")
 	fmt.Println(d.SupportedVersions())
-	// Output: [v201609 v201702 v201705]
+	// Output: [v201609 v201702 v201705 v201708]
 }
 
 func ExampleDatabase_Tables() {
