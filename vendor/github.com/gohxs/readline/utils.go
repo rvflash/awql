@@ -50,6 +50,7 @@ const (
 	MetaDelete
 	MetaBackspace
 	MetaTranspose
+	MetaShiftTab
 )
 
 // WaitForResume need to call before current process got suspend.
@@ -82,7 +83,9 @@ func Restore(fd int, state *State) error {
 	if err != nil {
 		// errno 0 means everything is ok :)
 		if err.Error() == "errno 0" {
-			err = nil
+			return nil
+		} else {
+			return err
 		}
 	}
 	return nil
@@ -97,6 +100,8 @@ func IsPrintable(key rune) bool {
 func escapeExKey(key *escapeKeyPair) rune {
 	var r rune
 	switch key.typ {
+	case 'Z':
+		r = MetaShiftTab
 	case 'D':
 		r = CharBackward
 	case 'C':
@@ -110,8 +115,13 @@ func escapeExKey(key *escapeKeyPair) rune {
 	case 'F':
 		r = CharLineEnd
 	case '~':
-		if key.attr == "3" {
+		switch key.attr {
+		case "3":
 			r = CharDelete
+		case "1":
+			r = CharLineStart
+		case "4":
+			r = CharLineEnd
 		}
 	default:
 	}
