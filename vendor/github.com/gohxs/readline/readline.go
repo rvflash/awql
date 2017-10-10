@@ -40,6 +40,9 @@ type Config struct {
 	// AutoCompleter will called once user press TAB
 	AutoComplete AutoCompleter
 
+	// Output will transform the input buffer for display i.e (highlighting)
+	Output func(string) string
+
 	// Any key press will pass to Listener
 	// NOTE: Listener will be triggered by (nil, 0, 0) immediately
 	Listener Listener
@@ -239,6 +242,11 @@ func (i *Instance) Line() *Result {
 
 // err is one of (nil, io.EOF, readline.ErrInterrupt)
 func (i *Instance) Readline() (string, error) {
+	return i.Operation.String()
+}
+
+func (i *Instance) ReadlineWithDefault(what string) (string, error) {
+	i.Operation.SetBuffer(what)
 	return i.Operation.String()
 }
 
