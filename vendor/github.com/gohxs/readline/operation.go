@@ -32,6 +32,10 @@ type Operation struct {
 	*opVim
 }
 
+func (o *Operation) SetBuffer(what string) {
+	o.buf.Set([]rune(what))
+}
+
 type wrapWriter struct {
 	r      *Operation
 	t      *Terminal
@@ -306,6 +310,8 @@ func (o *Operation) ioloop() {
 			isUpdateHistory = false
 			o.history.Revert()
 			o.errchan <- &InterruptError{remain}
+		case MetaShiftTab:
+			// do nothing
 		default:
 			if o.IsSearchMode() {
 				o.SearchChar(r)

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/chzyer/readline"
+	"github.com/gohxs/readline"
 	db "github.com/rvflash/awql-db"
 	awql "github.com/rvflash/awql-driver"
 	parser "github.com/rvflash/awql-parser"
