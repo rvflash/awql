@@ -8,24 +8,28 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	d, err := db.Open("v201609")
+	d, err := db.Open("v201710")
 	if err != nil {
 		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
 	}
 	if _, err := d.Table("AD_PERFORMANCE_REPORT"); err != nil {
 		t.Errorf("Expected a table named AD_PERFORMANCE_REPORT, received %s", err)
 	}
-	if tables := d.TablesPrefixedBy("CAMPAIGN"); len(tables) != 8 {
-		t.Error("Expected only 8 tables prefixed by 'CAMPAIGN'")
+	tables := d.TablesPrefixedBy("CAMPAIGN")
+	if l := len(tables); l != 7 {
+		t.Errorf("Expected only 8 tables prefixed by 'CAMPAIGN': got=%v", l)
 	}
-	if tables := d.TablesSuffixedBy("_REPORT"); len(tables) != 45 {
-		t.Error("Expected only 45 tables suffixed by '_REPORT'")
+	tables = d.TablesSuffixedBy("_REPORT")
+	if l := len(tables); l != 44 {
+		t.Errorf("Expected only 45 tables suffixed by '_REPORT': got=%v", l)
 	}
-	if tables := d.TablesContains("NEGATIVE"); len(tables) != 3 {
-		t.Error("Expected only 3 tables with 'NEGATIVE' in its name")
+	tables = d.TablesContains("NEGATIVE")
+	if l := len(tables); l != 3 {
+		t.Errorf("Expected only 3 tables with 'NEGATIVE' in its name: got=%v", l)
 	}
-	if tables := d.TablesWithColumn("TrackingUrlTemplate"); len(tables) != 13 {
-		t.Error("Expected 13 tables using TrackingUrlTemplate as column")
+	tables = d.TablesWithColumn("TrackingUrlTemplate")
+	if l := len(tables); l != 13 {
+		t.Errorf("Expected 13 tables using TrackingUrlTemplate as column: got=%v", l)
 	}
 }
 
@@ -36,10 +40,11 @@ func TestDatabase_HasVersion(t *testing.T) {
 	}{
 		{"", false},
 		{"v201607", false},
-		{"v201609", true},
+		{"v201609", false},
 		{"v201702", true},
 		{"v201705", true},
 		{"v201708", true},
+		{"v201710", true},
 	}
 
 	d, err := db.Open("")
@@ -56,7 +61,7 @@ func TestDatabase_HasVersion(t *testing.T) {
 func ExampleDatabase_SupportedVersions() {
 	d, _ := db.Open("")
 	fmt.Println(d.SupportedVersions())
-	// Output: [v201609 v201702 v201705 v201708]
+	// Output: [v201702 v201705 v201708 v201710]
 }
 
 func ExampleDatabase_Tables() {
