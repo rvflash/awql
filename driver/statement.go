@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"hash/fnv"
@@ -575,50 +574,54 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		return
 	}
 	// lenFloat64 returns the length of the float by calculating the number of digit + point.
-	var lenFloat64 = func(f Float64) (len int) {
+	var lenFloat64 = func(f AggregatedNullFloat64) (i int) {
+		if i = len(f.Layout); i > 0 {
+			// It's a datetime.
+			return
+		}
 		switch {
-		case f.Float64 >= 1000000000000:
-			len++
+		case f.NullFloat64.Float64 >= 1000000000000:
+			i++
 			fallthrough
-		case f.Float64 >= 100000000000:
-			len++
+		case f.NullFloat64.Float64 >= 100000000000:
+			i++
 			fallthrough
-		case f.Float64 >= 10000000000:
-			len++
+		case f.NullFloat64.Float64 >= 10000000000:
+			i++
 			fallthrough
-		case f.Float64 >= 1000000000:
-			len++
+		case f.NullFloat64.Float64 >= 1000000000:
+			i++
 			fallthrough
-		case f.Float64 >= 100000000:
-			len++
+		case f.NullFloat64.Float64 >= 100000000:
+			i++
 			fallthrough
-		case f.Float64 >= 10000000:
-			len++
+		case f.NullFloat64.Float64 >= 10000000:
+			i++
 			fallthrough
-		case f.Float64 >= 1000000:
-			len++
+		case f.NullFloat64.Float64 >= 1000000:
+			i++
 			fallthrough
-		case f.Float64 >= 100000:
-			len++
+		case f.NullFloat64.Float64 >= 100000:
+			i++
 			fallthrough
-		case f.Float64 >= 10000:
-			len++
+		case f.NullFloat64.Float64 >= 10000:
+			i++
 			fallthrough
-		case f.Float64 >= 1000:
-			len++
+		case f.NullFloat64.Float64 >= 1000:
+			i++
 			fallthrough
-		case f.Float64 >= 100:
-			len++
+		case f.NullFloat64.Float64 >= 100:
+			i++
 			fallthrough
-		case f.Float64 >= 10:
-			len++
+		case f.NullFloat64.Float64 >= 10:
+			i++
 			fallthrough
 		default:
-			len++
+			i++
 		}
 		if f.Precision > 0 {
 			// Manages `.01`
-			len += f.Precision + 1
+			i += f.Precision + 1
 		}
 		return
 	}
@@ -646,17 +649,6 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 			if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
 				d.NullFloat64.Valid = true
 			}
-		}
-		return
-	}
-	// parseNullFloat64 parses a string and returns it as a nullable double.
-	var parseNullFloat64 = func(s string) (d sql.NullFloat64, err error) {
-		if s == doubleDash {
-			// Not set, null value.
-			return
-		}
-		if d.Float64, err = strconv.ParseFloat(s, 64); err == nil {
-			d.Valid = true
 		}
 		return
 	}
@@ -711,6 +703,28 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return parseString(s)
 	}
+	// aggregate parses a string and returns it as a nullable double.
+	var aggregate = func(s string, kind string) (d AggregatedNullFloat64, err error) {
+		var v driver.Value
+		if v, err = cast(s, kind); err != nil {
+			return
+		}
+		switch c := v.(type) {
+		case AutoExcludedNullInt64:
+			d.NullFloat64.Float64 = float64(c.NullInt64.Int64)
+			d.NullFloat64.Valid = c.NullInt64.Valid
+		case PercentNullFloat64:
+			d.NullFloat64.Float64 = c.NullFloat64.Float64
+			d.NullFloat64.Valid = c.NullFloat64.Valid
+		case Time:
+			d.NullFloat64.Float64 = float64(c.Time.Unix())
+			d.NullFloat64.Valid = true
+			d.Layout = c.Layout
+		default:
+			err = ErrQuery
+		}
+		return
+	}
 	// hash returns a numeric hash for the given string.
 	var hash = func(s string) uint64 {
 		h := fnv.New64a()
@@ -761,24 +775,25 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		for i, c := range stmt.Columns() {
 			if method, ok := c.UseFunction(); ok {
 				// Retrieves the aggregate value if already set.
-				var v Float64
+				var v AggregatedNullFloat64
 				if r, ok := data[key]; ok {
-					v = r[i].(Float64)
+					v = r[i].(AggregatedNullFloat64)
 				}
 				if method == "COUNT" {
 					// Increments the counter.
-					v.Float64++
+					v.NullFloat64.Float64++
+					v.NullFloat64.Valid = true
 					// Calculates the length of the column.
 					cs[i] = lenFloat64(v)
 					row[i] = v
 					continue
 				}
 				// Casts to float the current column's value.
-				cv, err := parseNullFloat64(f[i])
+				cv, err := aggregate(f[i], c.(db.Field).Kind())
 				if err != nil {
 					return nil, nil, err
 				}
-				if !cv.Valid {
+				if !cv.NullFloat64.Valid {
 					// Nil value, skip it.
 					row[i] = v
 					continue
@@ -789,20 +804,21 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 					// (((previous average x number of elements seen) + current value) /
 					// current number of elements)
 					fi := float64(i)
-					v.Float64 = ((v.Float64 * fi) + cv.Float64) / (fi + 1)
+					v.NullFloat64.Float64 = ((v.NullFloat64.Float64 * fi) + cv.NullFloat64.Float64) / (fi + 1)
 				case "MAX":
-					if v.Float64 < cv.Float64 {
-						v.Float64 = cv.Float64
+					if !v.NullFloat64.Valid || v.NullFloat64.Float64 < cv.NullFloat64.Float64 {
+						v.NullFloat64.Float64 = cv.NullFloat64.Float64
 					}
 				case "MIN":
-					if v.Float64 > cv.Float64 {
-						v.Float64 = cv.Float64
+					if !v.NullFloat64.Valid || v.NullFloat64.Float64 > cv.NullFloat64.Float64 {
+						v.NullFloat64.Float64 = cv.NullFloat64.Float64
 					}
 				case "SUM":
-					v.Float64 += cv.Float64
-				default:
-					return nil, nil, NewXError("unknown method", method)
+					v.NullFloat64.Float64 += cv.NullFloat64.Float64
 				}
+				v.NullFloat64.Valid = true
+				v.Layout = cv.Layout
+
 				// Determines the precision to use in order to round it.
 				if strings.ToUpper(c.(db.Field).Kind()) == "DOUBLE" {
 					v.Precision = 2
@@ -858,12 +874,12 @@ func sortFuncs(stmt parser.SelectStmt) (orders []lessFunc) {
 					return v1.NullFloat64.Float64 > v2.NullFloat64.Float64
 				}
 				return v1.NullFloat64.Float64 < v2.NullFloat64.Float64
-			case Float64:
-				v1, v2 := p1[pos].(Float64), p2[pos].(Float64)
+			case AggregatedNullFloat64:
+				v1, v2 := p1[pos].(AggregatedNullFloat64), p2[pos].(AggregatedNullFloat64)
 				if o.SortDescending() {
-					return v1.Float64 > v2.Float64
+					return v1.NullFloat64.Float64 > v2.NullFloat64.Float64
 				}
-				return v1.Float64 < v2.Float64
+				return v1.NullFloat64.Float64 < v2.NullFloat64.Float64
 			case Time:
 				v1, v2 := p1[pos].(Time), p2[pos].(Time)
 				if o.SortDescending() {
