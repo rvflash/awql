@@ -74,8 +74,8 @@ func (r *Rows) Next(dest []driver.Value) error {
 			dest[i], _ = r.data[r.pos][i].(AutoExcludedNullInt64).Value()
 		case PercentNullFloat64:
 			dest[i], _ = r.data[r.pos][i].(PercentNullFloat64).Value()
-		case Float64:
-			dest[i], _ = r.data[r.pos][i].(Float64).Value()
+		case AggregatedNullFloat64:
+			dest[i], _ = r.data[r.pos][i].(AggregatedNullFloat64).Value()
 		case Time:
 			dest[i], _ = r.data[r.pos][i].(Time).Value()
 		case NullString:

@@ -78,15 +78,23 @@ func (n AutoExcludedNullInt64) Value() (driver.Value, error) {
 	return v, nil
 }
 
-// Float64 represents a float64 that may be rounded by using its precision.
-type Float64 struct {
-	Float64   float64
-	Precision int
+// AggregatedNullFloat64 represents a float64 that may be null and rounded by using its precision.
+type AggregatedNullFloat64 struct {
+	NullFloat64 sql.NullFloat64
+	Precision   int
+	Layout      string
 }
 
 // Value implements the driver Valuer interface.
-func (n Float64) Value() (driver.Value, error) {
-	return strconv.FormatFloat(n.Float64, 'f', n.Precision, 64), nil
+func (n AggregatedNullFloat64) Value() (driver.Value, error) {
+	if !n.NullFloat64.Valid {
+		return doubleDash, nil
+	}
+	if n.Layout == "" {
+		return strconv.FormatFloat(n.NullFloat64.Float64, 'f', n.Precision, 64), nil
+	}
+	// A layout is provided, it's a date.
+	return time.Unix(int64(n.NullFloat64.Float64), 0).Format(n.Layout), nil
 }
 
 // NullString represents a string that may be null.
