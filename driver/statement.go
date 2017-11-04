@@ -622,13 +622,6 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 		}
 		return
 	}
-	// parseDouble parses a double string from Google API.
-	// Required until the version v201702.
-	// todo Removes when v201609 is deprecated.
-	var parseDouble = func(s string) (float64, error) {
-		s = strings.Replace(s, ",", "", -1)
-		return strconv.ParseFloat(s, 64)
-	}
 	// parsePercentNullFloat64 parses a string and returns it as double that can be a percentage.
 	var parsePercentNullFloat64 = func(s string) (d PercentNullFloat64, err error) {
 		if s == doubleDash {
@@ -650,7 +643,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 			d.NullFloat64.Valid = true
 			d.Almost = true
 		default:
-			if d.NullFloat64.Float64, err = parseDouble(s); err == nil {
+			if d.NullFloat64.Float64, err = strconv.ParseFloat(s, 64); err == nil {
 				d.NullFloat64.Valid = true
 			}
 		}
@@ -662,7 +655,7 @@ func aggregateData(stmt parser.SelectStmt, records [][]string) ([][]driver.Value
 			// Not set, null value.
 			return
 		}
-		if d.Float64, err = parseDouble(s); err == nil {
+		if d.Float64, err = strconv.ParseFloat(s, 64); err == nil {
 			d.Valid = true
 		}
 		return
