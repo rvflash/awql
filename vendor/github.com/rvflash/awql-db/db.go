@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/rvflash/awql-db/internal/schema"
-
 	awql "github.com/rvflash/awql-parser"
+
 	"gopkg.in/yaml.v2"
 )
 

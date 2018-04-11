@@ -8,7 +8,7 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	d, err := db.Open("v201710")
+	d, err := db.Open("v201802")
 	if err != nil {
 		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
 	}
@@ -20,7 +20,7 @@ func TestOpen(t *testing.T) {
 		t.Errorf("Expected only 8 tables prefixed by 'CAMPAIGN': got=%v", l)
 	}
 	tables = d.TablesSuffixedBy("_REPORT")
-	if l := len(tables); l != 44 {
+	if l := len(tables); l != 45 {
 		t.Errorf("Expected only 45 tables suffixed by '_REPORT': got=%v", l)
 	}
 	tables = d.TablesContains("NEGATIVE")
@@ -41,15 +41,16 @@ func TestDatabase_HasVersion(t *testing.T) {
 		{"", false},
 		{"v201607", false},
 		{"v201609", false},
-		{"v201702", true},
-		{"v201705", true},
-		{"v201708", true},
+		{"v201702", false},
+		{"v201705", false},
+		{"v201708", false},
 		{"v201710", true},
+		{"v201802", true},
 	}
 
 	d, err := db.Open("")
 	if err != nil {
-		t.Fatalf("Expected no error with no version in DSN, received %s", err)
+		t.Fatalf("Expected no error with no version in DSN, received: %q", err)
 	}
 	for i, vt := range vTests {
 		if ok := d.HasVersion(vt.v); vt.ok != ok {
@@ -61,12 +62,12 @@ func TestDatabase_HasVersion(t *testing.T) {
 func ExampleDatabase_SupportedVersions() {
 	d, _ := db.Open("")
 	fmt.Println(d.SupportedVersions())
-	// Output: [v201702 v201705 v201708 v201710]
+	// Output: [v201710 v201802]
 }
 
 func ExampleDatabase_Tables() {
 	// Ignores errors for the demo.
-	d, _ := db.Open("v201702")
+	d, _ := db.Open("v201802")
 	tb, _ := d.Tables()
 	for _, t := range tb {
 		fmt.Println(t.SourceName())
@@ -102,6 +103,7 @@ func ExampleDatabase_Tables() {
 	// KEYWORDLESS_QUERY_REPORT
 	// KEYWORDS_PERFORMANCE_REPORT
 	// LABEL_REPORT
+	// LANDING_PAGE_REPORT
 	// PAID_ORGANIC_QUERY_REPORT
 	// PARENTAL_STATUS_PERFORMANCE_REPORT
 	// PLACEHOLDER_FEED_ITEM_REPORT
