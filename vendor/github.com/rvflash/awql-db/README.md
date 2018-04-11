@@ -24,7 +24,7 @@ The first part with `APIVersion` can contains an option to disable auto-loading.
 ```
 Type:           string
 Valid Values:   <version>
-Default:        v201710
+Default:        v201802
 ```
 Version of the Adwords API to use.
 
@@ -51,7 +51,7 @@ Enables to overload the path to the views configuration file.
 ```go
 import db "github.com/rvflash/awql-db"
 
-awql, _ := db.Open("v201710")
+awql, _ := db.Open("v201802")
 for _, table := range awql.TablesPrefixedBy("VIDEO") {
     fmt.Println(table.SourceName())
 }

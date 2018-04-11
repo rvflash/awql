@@ -28,7 +28,7 @@ $ go get -u github.com/rvflash/awql
 $ awql -i "123-456-7890"
 Welcome to the AWQL monitor. Commands end with ; or \G.
 Your AWQL connection implicitly excludes zero impressions.
-Adwords API version: v201710
+Adwords API version: v201802
     
 Reading table information for completion of table and column names.
 You can turn off this feature to get a quicker startup with -A
@@ -68,7 +68,7 @@ Otherwise, with options `-T` to set the Google OAuth access token and `-D` to se
 * `*` can be used as shorthand to select all columns from all views
 * Caching data in order to don't request Google Adwords services with queries already fetch in the day. This feature can be enable with option `-c`. 
 * By default, all calls implicitly excludes zero impressions. This behavior can be changed with the option `-z`.
-* Uses by default the last available version of the Google Adwords API: v201710.
+* Uses by default the last available version of the Google Adwords API: v201802.
 
 ## SQL methods adding to AWQL grammar
 
@@ -125,7 +125,7 @@ $ awql> desc full CAMPAIGN_PERFORMANCE_REPORT EnhancedCpcEnabled;
 ```bash
 $ awql> show tables like "CAMPAIGN%";
 +-------------------------------------------------+
-| Tables_in_v201710                               |
+| Tables_in_v201802                               |
 +-------------------------------------------------+
 | CAMPAIGN_AD_SCHEDULE_TARGET_REPORT              |
 | CAMPAIGN_LOCATION_TARGET_REPORT                 |
@@ -143,7 +143,7 @@ The FULL modifier is supported such that SHOW FULL TABLES displays a second outp
 ```bash
 $ awql> show full tables like "ADGROUP%";
 +----------------------------+------------+
-| Tables_in_v201710          | Table_type |
+| Tables_in_v201802          | Table_type |
 +----------------------------+------------+
 | ADGROUP_PERFORMANCE_REPORT | BASE TABLE |
 +----------------------------+------------+
@@ -156,7 +156,7 @@ $ awql> show full tables like "ADGROUP%";
 ```bash
 $ awql> show full tables with Url;
 +--------------------------+------------+
-| Tables_in_v201710        | Table_type |
+| Tables_in_v201802        | Table_type |
 +--------------------------+------------+
 | KEYWORDLESS_QUERY_REPORT | BASE TABLE |
 | URL_PERFORMANCE_REPORT   | BASE TABLE |
