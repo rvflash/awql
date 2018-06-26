@@ -1,36 +1,25 @@
 package awqldb
 
 import (
-	"fmt"
 	"strings"
 )
 
 // DatabaseError represents an database error.
 type DatabaseError struct {
-	s string
-	a interface{}
+	text string
 }
 
-// NewDatabaseError returns an error about the database.
+// NewDatabaseError returns an error about the database based on the given text.
 func NewDatabaseError(text string) error {
-	return &DatabaseError{s: formatError(text)}
-}
-
-// NewDatabaseError returns an error about the database.
-func NewXDatabaseError(text string, arg interface{}) error {
-	return &DatabaseError{s: formatError(text), a: arg}
+	return &DatabaseError{text: formatError(text)}
 }
 
 // Error returns the error message.
 func (e *DatabaseError) Error() string {
-	if e.a != nil {
-		return fmt.Sprintf("ParserError.%v (%v)", e.s, e.a)
-	}
-	return "DatabaseError." + e.s
+	return "DatabaseError." + e.text
 }
 
-// formatError returns a string in upper case with underscore instead of space.
-// As the Adwords API outputs its errors.
-func formatError(s string) string {
-	return strings.Replace(strings.ToUpper(strings.TrimSpace(s)), " ", "_", -1)
+// As the Adwords API, formatError returns a string in upper case with underscore instead of space.
+func formatError(text string) string {
+	return strings.Replace(strings.ToUpper(strings.TrimSpace(text)), " ", "_", -1)
 }
