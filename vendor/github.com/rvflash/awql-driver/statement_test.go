@@ -74,8 +74,8 @@ func TestStmt_Hash(t *testing.T) {
 		e error
 	}{
 		{s: &awql.Stmt{}, e: awql.ErrQuery},
-		{s: &awql.Stmt{nil, "Select CampaignId FROM CAMPAIGN_PERFORMANCE_REPORT"}, h: "9028008530673448812"},
-		{s: &awql.Stmt{nil, "select CampaignId from CAMPAIGN_PERFORMANCE_REPORT"}, h: "9028008530673448812"},
+		{s: &awql.Stmt{SrcQuery: "Select CampaignId FROM CAMPAIGN_PERFORMANCE_REPORT"}, h: "9028008530673448812"},
+		{s: &awql.Stmt{SrcQuery: "select CampaignId from CAMPAIGN_PERFORMANCE_REPORT"}, h: "9028008530673448812"},
 	}
 	for i, st := range stmtTests {
 		hash, err := st.s.Hash()
@@ -94,8 +94,8 @@ func TestStmt_NumInput(t *testing.T) {
 		n int
 	}{
 		{s: &awql.Stmt{}},
-		{s: &awql.Stmt{nil, "select CampaignName FROM CAMPAIGN_PERFORMANCE_REPORT where CampaignId = ?"}, n: 1},
-		{s: &awql.Stmt{nil, "select CampaignName FROM CAMPAIGN_PERFORMANCE_REPORT where CampaignId = ? AND CampaignStatus = ?"}, n: 2},
+		{s: &awql.Stmt{SrcQuery: "select CampaignName FROM CAMPAIGN_PERFORMANCE_REPORT where CampaignId = ?"}, n: 1},
+		{s: &awql.Stmt{SrcQuery: "select CampaignName FROM CAMPAIGN_PERFORMANCE_REPORT where CampaignId = ? AND CampaignStatus = ?"}, n: 2},
 	}
 	for i, st := range stmtTests {
 		if st.s.NumInput() != st.n {
