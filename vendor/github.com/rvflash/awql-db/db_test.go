@@ -8,7 +8,7 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	d, err := db.Open("v201802")
+	d, err := db.Open("v201806")
 	if err != nil {
 		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
 	}
@@ -46,6 +46,7 @@ func TestDatabase_HasVersion(t *testing.T) {
 		{"v201708", false},
 		{"v201710", true},
 		{"v201802", true},
+		{"v201806", true},
 	}
 
 	d, err := db.Open("")
@@ -62,12 +63,12 @@ func TestDatabase_HasVersion(t *testing.T) {
 func ExampleDatabase_SupportedVersions() {
 	d, _ := db.Open("")
 	fmt.Println(d.SupportedVersions())
-	// Output: [v201710 v201802]
+	// Output: [v201710 v201802 v201806]
 }
 
 func ExampleDatabase_Tables() {
 	// Ignores errors for the demo.
-	d, _ := db.Open("v201802")
+	d, _ := db.Open("v201806")
 	tb, _ := d.Tables()
 	for _, t := range tb {
 		fmt.Println(t.SourceName())

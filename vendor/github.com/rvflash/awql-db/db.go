@@ -90,7 +90,7 @@ func Open(dsn string) (*Database, error) {
 	return db, nil
 }
 
-// IsSupported returns true if the version is supported.
+// HasVersion returns true if the given version is supported.
 func (d *Database) HasVersion(version string) bool {
 	if version == "" {
 		return false

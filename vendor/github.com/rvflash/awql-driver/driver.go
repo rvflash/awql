@@ -11,7 +11,7 @@ import (
 
 // Data source name.
 const (
-	APIVersion = "v201802"
+	APIVersion = "v201806"
 	DsnSep     = "|"
 	DsnOptSep  = ":"
 )
