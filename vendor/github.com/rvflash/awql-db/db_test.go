@@ -8,7 +8,7 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	d, err := db.Open("v201806")
+	d, err := db.Open("v201809")
 	if err != nil {
 		t.Fatalf("Expected no error on loading tables and views properties, received %s", err)
 	}
@@ -20,8 +20,8 @@ func TestOpen(t *testing.T) {
 		t.Errorf("Expected only 8 tables prefixed by 'CAMPAIGN': got=%v", l)
 	}
 	tables = d.TablesSuffixedBy("_REPORT")
-	if l := len(tables); l != 45 {
-		t.Errorf("Expected only 45 tables suffixed by '_REPORT': got=%v", l)
+	if l := len(tables); l != 44 {
+		t.Errorf("Expected only 44 tables suffixed by '_REPORT': got=%v", l)
 	}
 	tables = d.TablesContains("NEGATIVE")
 	if l := len(tables); l != 3 {
@@ -44,9 +44,10 @@ func TestDatabase_HasVersion(t *testing.T) {
 		{"v201702", false},
 		{"v201705", false},
 		{"v201708", false},
-		{"v201710", true},
+		{"v201710", false},
 		{"v201802", true},
 		{"v201806", true},
+		{"v201809", true},
 	}
 
 	d, err := db.Open("")
@@ -63,12 +64,12 @@ func TestDatabase_HasVersion(t *testing.T) {
 func ExampleDatabase_SupportedVersions() {
 	d, _ := db.Open("")
 	fmt.Println(d.SupportedVersions())
-	// Output: [v201710 v201802 v201806]
+	// Output: [v201802 v201806 v201809]
 }
 
 func ExampleDatabase_Tables() {
 	// Ignores errors for the demo.
-	d, _ := db.Open("v201806")
+	d, _ := db.Open("v201809")
 	tb, _ := d.Tables()
 	for _, t := range tb {
 		fmt.Println(t.SourceName())
@@ -94,7 +95,6 @@ func ExampleDatabase_Tables() {
 	// CLICK_PERFORMANCE_REPORT
 	// CREATIVE_CONVERSION_REPORT
 	// CRITERIA_PERFORMANCE_REPORT
-	// DESTINATION_URL_REPORT
 	// DISPLAY_KEYWORD_PERFORMANCE_REPORT
 	// DISPLAY_TOPICS_PERFORMANCE_REPORT
 	// FINAL_URL_REPORT
