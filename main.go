@@ -21,7 +21,7 @@ import (
 // 	-T string
 // 		Google OAuth access token
 // 	-V string
-// 		Google Adwords API version (default "v201806")
+// 		Google Adwords API version (default "v201809")
 // 	-c	Enables data caching
 // 	-e string
 // 		Execute AWQL statement, disables interactive use
